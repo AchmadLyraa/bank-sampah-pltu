@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { updateInventarisAction, penjualanSampahAction } from "@/app/actions/bank-sampah"
-import { Edit2, Package, Loader2 } from "lucide-react"
+import { deleteInventarisAction } from "@/app/actions/inventaris-management"
+import { Edit2, Package, Loader2, Trash2 } from "lucide-react"
 import type { InventarisSampah } from "@/types"
 
 interface InventarisTableProps {
@@ -18,6 +19,7 @@ export default function InventarisTable({ inventaris }: InventarisTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editPrice, setEditPrice] = useState<number>(0)
   const [loading, setLoading] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
 
   const handleEdit = (item: InventarisSampah) => {
     setEditingId(item.id)
@@ -33,6 +35,34 @@ export default function InventarisTable({ inventaris }: InventarisTableProps) {
     await updateInventarisAction(formData)
     setEditingId(null)
     setLoading(null)
+  }
+
+  const handleDelete = async (item: InventarisSampah) => {
+    if (item.stokKg > 0) {
+      alert("Tidak dapat menghapus jenis sampah yang masih memiliki stok!")
+      return
+    }
+
+    const confirmDelete = confirm(
+      `Apakah Anda yakin ingin menghapus jenis sampah "${item.jenisSampah}"?\n\nTindakan ini tidak dapat dibatalkan.`,
+    )
+
+    if (!confirmDelete) return
+
+    setDeleteLoading(item.id)
+    const formData = new FormData()
+    formData.append("id", item.id)
+
+    try {
+      const result = await deleteInventarisAction(formData)
+      if (result.error) {
+        alert(result.error)
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan saat menghapus jenis sampah")
+    } finally {
+      setDeleteLoading(null)
+    }
   }
 
   const handleSellWaste = async (item: InventarisSampah, beratKg: number, hargaJual: number) => {
@@ -105,9 +135,30 @@ export default function InventarisTable({ inventaris }: InventarisTableProps) {
                     <td className="py-3 px-4">{item.stokKg.toFixed(1)} kg</td>
                     <td className="py-3 px-4">Rp {(item.stokKg * item.hargaPerKg).toLocaleString()}</td>
                     <td className="py-3 px-4">
-                      {item.stokKg > 0 && (
-                        <SellWasteForm item={item} onSell={handleSellWaste} loading={loading === item.id} />
-                      )}
+                      <div className="flex items-center gap-2">
+                        {item.stokKg > 0 && (
+                          <SellWasteForm item={item} onSell={handleSellWaste} loading={loading === item.id} />
+                        )}
+
+                        {/* Delete Button */}
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(item)}
+                          disabled={deleteLoading === item.id}
+                          title={
+                            item.stokKg > 0
+                              ? "Tidak dapat menghapus sampah yang masih memiliki stok"
+                              : "Hapus jenis sampah"
+                          }
+                        >
+                          {deleteLoading === item.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

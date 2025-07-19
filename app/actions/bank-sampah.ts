@@ -140,38 +140,63 @@ export async function penarikanAction(data: PenarikanFormData) {
   return { success: true }
 }
 
+// FIXED: Penjualan sampah action - FOKUS DI SINI!
 export async function penjualanSampahAction(formData: FormData) {
-  const inventarisSampahId = formData.get("inventarisSampahId") as string
-  const beratKg = Number.parseFloat(formData.get("beratKg") as string)
-  const hargaJual = Number.parseFloat(formData.get("hargaJual") as string)
+  try {
+    const inventarisSampahId = formData.get("inventarisSampahId") as string
+    const beratKg = Number.parseFloat(formData.get("beratKg") as string)
+    const hargaJual = Number.parseFloat(formData.get("hargaJual") as string)
 
-  const inventaris = await prisma.inventarisSampah.findUnique({
-    where: { id: inventarisSampahId },
-  })
+    console.log("Penjualan sampah data:", { inventarisSampahId, beratKg, hargaJual })
 
-  if (!inventaris) throw new Error("Inventaris tidak ditemukan")
-  if (inventaris.stokKg < beratKg) throw new Error("Stok tidak mencukupi")
+    // Validasi input
+    if (!inventarisSampahId || !beratKg || !hargaJual || beratKg <= 0 || hargaJual <= 0) {
+      throw new Error("Data tidak valid")
+    }
 
-  const totalNilai = beratKg * hargaJual
+    const inventaris = await prisma.inventarisSampah.findUnique({
+      where: { id: inventarisSampahId },
+    })
 
-  // Create transaction
-  await prisma.transaksi.create({
-    data: {
-      jenis: "PENJUALAN_SAMPAH",
-      totalNilai,
-      keterangan: `Penjualan ${inventaris.jenisSampah} ${beratKg}kg`,
-      nasabahId: "", // Empty for bank sampah transactions
-      bankSampahId: inventaris.bankSampahId,
-    },
-  })
+    if (!inventaris) {
+      throw new Error("Inventaris tidak ditemukan")
+    }
 
-  // Update stok
-  await prisma.inventarisSampah.update({
-    where: { id: inventarisSampahId },
-    data: { stokKg: { decrement: beratKg } },
-  })
+    if (inventaris.stokKg < beratKg) {
+      throw new Error(`Stok tidak mencukupi. Stok tersedia: ${inventaris.stokKg}kg`)
+    }
 
-  revalidatePath("/bank-sampah")
-  revalidatePath("/bank-sampah/inventaris")
-  return { success: true }
+    const totalNilai = beratKg * hargaJual
+
+    console.log("Creating transaction...")
+
+    // Create transaction - TANPA nasabahId
+    const transaksi = await prisma.transaksi.create({
+      data: {
+        jenis: "PENJUALAN_SAMPAH",
+        totalNilai,
+        keterangan: `Penjualan ${inventaris.jenisSampah} ${beratKg}kg @ Rp${hargaJual}/kg`,
+        nasabahId: null, // EXPLICITLY NULL
+        bankSampahId: inventaris.bankSampahId,
+      },
+    })
+
+    console.log("Transaction created:", transaksi.id)
+
+    // Update stok
+    await prisma.inventarisSampah.update({
+      where: { id: inventarisSampahId },
+      data: { stokKg: { decrement: beratKg } },
+    })
+
+    console.log("Stock updated successfully")
+
+    revalidatePath("/bank-sampah")
+    revalidatePath("/bank-sampah/inventaris")
+
+    return { success: true, message: "Penjualan sampah berhasil!" }
+  } catch (error) {
+    console.error("Error in penjualanSampahAction:", error)
+    throw error
+  }
 }

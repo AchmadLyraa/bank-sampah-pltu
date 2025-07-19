@@ -59,12 +59,12 @@ model Transaksi {
   jenis           JenisTransaksi
   totalNilai      Float
   keterangan      String?
-  nasabahId       String
+  nasabahId       String?
   bankSampahId    String
   createdAt       DateTime          @default(now())
   detailTransaksi DetailTransaksi[]
   bankSampah      BankSampah        @relation(fields: [bankSampahId], references: [id])
-  nasabah         Nasabah           @relation(fields: [nasabahId], references: [id])
+  nasabah         Nasabah?           @relation(fields: [nasabahId], references: [id])
 
   @@map("transaksi")
 }
