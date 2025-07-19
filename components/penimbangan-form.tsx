@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { NasabahCombobox } from "@/components/nasabah-combobox"
 import { penimbanganAction } from "@/app/actions/bank-sampah"
 import { Plus, Trash2, Loader2 } from "lucide-react"
 import type { Nasabah, InventarisSampah } from "@/types"
@@ -82,18 +83,12 @@ export default function PenimbanganForm({ nasabahList, inventarisList }: Penimba
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label>Pilih Nasabah</Label>
-            <Select value={selectedNasabah} onValueChange={setSelectedNasabah}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih nasabah..." />
-              </SelectTrigger>
-              <SelectContent>
-                {nasabahList.map((nasabah) => (
-                  <SelectItem key={nasabah.id} value={nasabah.id}>
-                    {nasabah.nama} - Saldo: Rp {nasabah.saldo.toLocaleString()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <NasabahCombobox
+              nasabahList={nasabahList}
+              value={selectedNasabah}
+              onValueChange={setSelectedNasabah}
+              placeholder="Cari dan pilih nasabah..."
+            />
           </div>
 
           <div className="space-y-4">

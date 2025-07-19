@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, Scale, Package, CreditCard, History, LogOut } from "lucide-react"
+import { Home, Scale, Package, CreditCard, History, Users, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { logoutAction } from "@/app/actions/auth"
 
@@ -16,6 +16,11 @@ const bankSampahNavItems = [
     href: "/bank-sampah",
     label: "Dashboard",
     icon: Home,
+  },
+  {
+    href: "/bank-sampah/nasabah",
+    label: "Nasabah",
+    icon: Users,
   },
   {
     href: "/bank-sampah/penimbangan",
