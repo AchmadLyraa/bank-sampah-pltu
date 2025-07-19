@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/session"
 import { getNasabahData } from "@/app/actions/nasabah"
-import Header from "@/components/header"
+import LayoutWrapper from "@/components/layout-wrapper"
 import NasabahDashboard from "@/components/nasabah-dashboard"
 
 export default async function NasabahPage() {
@@ -14,12 +14,10 @@ export default async function NasabahPage() {
   const data = await getNasabahData(session.userId)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header userType="nasabah" />
-
-      <main className="max-w-4xl mx-auto py-6 px-4">
+    <LayoutWrapper userType="nasabah">
+      <div className="max-w-4xl mx-auto py-6 px-4">
         <NasabahDashboard data={data} />
-      </main>
-    </div>
+      </div>
+    </LayoutWrapper>
   )
 }

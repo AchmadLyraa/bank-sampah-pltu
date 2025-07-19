@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import Header from "@/components/header"
 import PenarikanForm from "@/components/penarikan-form"
+import LayoutWrapper from "@/components/layout-wrapper"
 
 export default async function PenarikanPage() {
   const session = await getSession()
@@ -20,17 +20,15 @@ export default async function PenarikanPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header userType="bank-sampah" />
-
-      <main className="max-w-4xl mx-auto py-6 px-4">
+    <LayoutWrapper userType="bank-sampah">
+      <div className="max-w-4xl mx-auto py-6 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Penarikan Saldo</h1>
           <p className="text-gray-600">Proses penarikan saldo nasabah</p>
         </div>
 
         <PenarikanForm nasabahList={nasabahList} />
-      </main>
-    </div>
+      </div>
+    </LayoutWrapper>
   )
 }
