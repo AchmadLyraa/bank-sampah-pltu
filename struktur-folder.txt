@@ -1,0 +1,118 @@
+.
+├── app
+│   ├── actions
+│   │   ├── auth.ts
+│   │   ├── bank-sampah.ts
+│   │   └── nasabah.ts
+│   ├── bank-sampah
+│   │   ├── inventaris
+│   │   │   └── page.tsx
+│   │   ├── penarikan
+│   │   │   └── page.tsx
+│   │   ├── penimbangan
+│   │   │   └── page.tsx
+│   │   ├── transaksi
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── nasabah
+│   │   └── page.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components
+│   ├── ui
+│   │   ├── accordion.tsx
+│   │   ├── alert-dialog.tsx
+│   │   ├── alert.tsx
+│   │   ├── aspect-ratio.tsx
+│   │   ├── avatar.tsx
+│   │   ├── badge.tsx
+│   │   ├── breadcrumb.tsx
+│   │   ├── button.tsx
+│   │   ├── calendar.tsx
+│   │   ├── card.tsx
+│   │   ├── carousel.tsx
+│   │   ├── chart.tsx
+│   │   ├── checkbox.tsx
+│   │   ├── collapsible.tsx
+│   │   ├── command.tsx
+│   │   ├── context-menu.tsx
+│   │   ├── dialog.tsx
+│   │   ├── drawer.tsx
+│   │   ├── dropdown-menu.tsx
+│   │   ├── form.tsx
+│   │   ├── hover-card.tsx
+│   │   ├── input-otp.tsx
+│   │   ├── input.tsx
+│   │   ├── label.tsx
+│   │   ├── menubar.tsx
+│   │   ├── navigation-menu.tsx
+│   │   ├── pagination.tsx
+│   │   ├── popover.tsx
+│   │   ├── progress.tsx
+│   │   ├── radio-group.tsx
+│   │   ├── resizable.tsx
+│   │   ├── scroll-area.tsx
+│   │   ├── select.tsx
+│   │   ├── separator.tsx
+│   │   ├── sheet.tsx
+│   │   ├── sidebar.tsx
+│   │   ├── skeleton.tsx
+│   │   ├── slider.tsx
+│   │   ├── sonner.tsx
+│   │   ├── switch.tsx
+│   │   ├── table.tsx
+│   │   ├── tabs.tsx
+│   │   ├── textarea.tsx
+│   │   ├── toaster.tsx
+│   │   ├── toast.tsx
+│   │   ├── toggle-group.tsx
+│   │   ├── toggle.tsx
+│   │   ├── tooltip.tsx
+│   │   ├── use-mobile.tsx
+│   │   └── use-toast.ts
+│   ├── dashboard-stats.tsx
+│   ├── header.tsx
+│   ├── inventaris-table.tsx
+│   ├── login-form.tsx
+│   ├── nasabah-dashboard.tsx
+│   ├── penarikan-form.tsx
+│   ├── penimbangan-form.tsx
+│   ├── quick-actions.tsx
+│   ├── recent-transactions.tsx
+│   ├── theme-provider.tsx
+│   └── transaksi-table.tsx
+├── hooks
+│   ├── use-mobile.tsx
+│   └── use-toast.ts
+├── lib
+│   ├── auth.ts
+│   ├── prisma.ts
+│   ├── session.ts
+│   └── utils.ts
+├── prisma
+│   ├── schema.prisma
+│   └── seed.ts
+├── public
+│   ├── placeholder.jpg
+│   ├── placeholder-logo.png
+│   ├── placeholder-logo.svg
+│   ├── placeholder.svg
+│   └── placeholder-user.jpg
+├── styles
+│   └── globals.css
+├── types
+│   └── index.ts
+├── archive.txt
+├── components.json
+├── next.config.mjs
+├── next-env.d.ts
+├── package.json
+├── pnpm-lock.yaml
+├── postcss.config.mjs
+├── README.md
+├── struktur-folder.txt
+├── tailwind.config.ts
+└── tsconfig.json
+
+17 directories, 99 files

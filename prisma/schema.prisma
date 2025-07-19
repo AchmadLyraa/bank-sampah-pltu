@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BankSampah {
+  id         String             @id @default(cuid())
+  nama       String
+  alamat     String
+  telepon    String
+  email      String             @unique
+  password   String
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  inventaris InventarisSampah[]
+  nasabah    Nasabah[]
+  transaksi  Transaksi[]
+
+  @@map("bank_sampah")
+}
+
+model Nasabah {
+  id           String      @id @default(cuid())
+  nama         String
+  alamat       String
+  telepon      String
+  email        String      @unique
+  password     String
+  saldo        Float       @default(0)
+  bankSampahId String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  bankSampah   BankSampah  @relation(fields: [bankSampahId], references: [id])
+  transaksi    Transaksi[]
+
+  @@map("nasabah")
+}
+
+model InventarisSampah {
+  id              String            @id @default(cuid())
+  jenisSampah     String
+  hargaPerKg      Float
+  stokKg          Float             @default(0)
+  bankSampahId    String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  detailTransaksi DetailTransaksi[]
+  bankSampah      BankSampah        @relation(fields: [bankSampahId], references: [id])
+
+  @@map("inventaris_sampah")
+}
+
+model Transaksi {
+  id              String            @id @default(cuid())
+  jenis           JenisTransaksi
+  totalNilai      Float
+  keterangan      String?
+  nasabahId       String
+  bankSampahId    String
+  createdAt       DateTime          @default(now())
+  detailTransaksi DetailTransaksi[]
+  bankSampah      BankSampah        @relation(fields: [bankSampahId], references: [id])
+  nasabah         Nasabah           @relation(fields: [nasabahId], references: [id])
+
+  @@map("transaksi")
+}
+
+model DetailTransaksi {
+  id                 String           @id @default(cuid())
+  transaksiId        String
+  inventarisSampahId String
+  beratKg            Float
+  hargaPerKg         Float
+  subtotal           Float
+  createdAt          DateTime         @default(now())
+  inventarisSampah   InventarisSampah @relation(fields: [inventarisSampahId], references: [id])
+  transaksi          Transaksi        @relation(fields: [transaksiId], references: [id])
+
+  @@map("detail_transaksi")
+}
+
+enum JenisTransaksi {
+  PEMASUKAN
+  PENGELUARAN
+  PENJUALAN_SAMPAH
+}
