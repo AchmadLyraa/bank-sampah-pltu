@@ -1,6 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Wallet, History } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Wallet, History, User, Lock } from "lucide-react"
+import EditProfileForm from "@/components/edit-profile-form"
+import ChangePasswordForm from "@/components/change-password-form"
 import type { Nasabah, Transaksi } from "@/types"
 
 interface NasabahDashboardProps {
@@ -36,7 +39,7 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Selamat Datang, {nasabah.nama}</h1>
-        <p className="text-gray-600">Kelola saldo dan lihat riwayat transaksi Anda</p>
+        <p className="text-gray-600">Kelola profil dan lihat riwayat transaksi Anda</p>
       </div>
 
       {/* Saldo Card */}
@@ -51,84 +54,87 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
         </CardContent>
       </Card>
 
-      {/* Profile Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Informasi Profil</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Nama</p>
-              <p className="text-base">{nasabah.nama}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Email</p>
-              <p className="text-base">{nasabah.email}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Telepon</p>
-              <p className="text-base">{nasabah.telepon}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Alamat</p>
-              <p className="text-base">{nasabah.alamat}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Tabs for different sections */}
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="profile" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Profil
+          </TabsTrigger>
+          <TabsTrigger value="password" className="flex items-center gap-2">
+            <Lock className="h-4 w-4" />
+            Password
+          </TabsTrigger>
+          <TabsTrigger value="transactions" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Transaksi
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Transaction History */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" />
-            Riwayat Transaksi
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {transaksi.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">Belum ada transaksi</p>
-            ) : (
-              transaksi.map((t) => (
-                <div key={t.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      {getTransactionBadge(t.jenis)}
-                      <span className="font-medium">{t.keterangan}</span>
-                    </div>
-                    {t.detailTransaksi && t.detailTransaksi.length > 0 && (
-                      <div className="text-sm text-gray-600">
-                        {t.detailTransaksi.map((detail, idx) => (
-                          <span key={detail.id}>
-                            {detail.inventarisSampah?.jenisSampah} ({detail.beratKg}kg)
-                            {idx < t.detailTransaksi!.length - 1 && ", "}
-                          </span>
-                        ))}
+        {/* Profile Tab */}
+        <TabsContent value="profile" className="space-y-4">
+          <EditProfileForm nasabah={nasabah} />
+        </TabsContent>
+
+        {/* Password Tab */}
+        <TabsContent value="password" className="space-y-4">
+          <ChangePasswordForm nasabah={nasabah} />
+        </TabsContent>
+
+        {/* Transaction History Tab */}
+        <TabsContent value="transactions" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5" />
+                Riwayat Transaksi
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {transaksi.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">Belum ada transaksi</p>
+                ) : (
+                  transaksi.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          {getTransactionBadge(t.jenis)}
+                          <span className="font-medium">{t.keterangan}</span>
+                        </div>
+                        {t.detailTransaksi && t.detailTransaksi.length > 0 && (
+                          <div className="text-sm text-gray-600">
+                            {t.detailTransaksi.map((detail, idx) => (
+                              <span key={detail.id}>
+                                {detail.inventarisSampah?.jenisSampah} ({detail.beratKg}kg)
+                                {idx < t.detailTransaksi!.length - 1 && ", "}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-400">
+                          {new Date(t.createdAt).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
                       </div>
-                    )}
-                    <p className="text-xs text-gray-400">
-                      {new Date(t.createdAt).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-bold ${t.jenis === "PEMASUKAN" ? "text-green-600" : "text-red-600"}`}>
-                      {t.jenis === "PENGELUARAN" ? "-" : "+"}Rp {t.totalNilai.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                      <div className="text-right">
+                        <p className={`font-bold ${t.jenis === "PEMASUKAN" ? "text-green-600" : "text-red-600"}`}>
+                          {t.jenis === "PENGELUARAN" ? "-" : "+"}Rp {t.totalNilai.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
