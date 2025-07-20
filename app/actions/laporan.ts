@@ -2,14 +2,34 @@
 
 import { prisma } from "@/lib/prisma"
 
-export async function getLaporanPendapatan(bankSampahId: string) {
-  // Get all transactions for this bank sampah
+// 🗓️ UPDATED: Tambah parameter filter tanggal
+export async function getLaporanPendapatan(bankSampahId: string, startDate?: Date, endDate?: Date) {
+  // 📅 Setup date filter
+  const dateFilter =
+    startDate && endDate
+      ? {
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+        }
+      : {}
+
+  console.log("📊 Laporan filter:", {
+    bankSampahId,
+    startDate: startDate?.toISOString(),
+    endDate: endDate?.toISOString(),
+    dateFilter,
+  })
+
+  // Get all transactions for this bank sampah with date filter
   const [pemasukan, penjualanSampah, pengeluaran] = await Promise.all([
     // Pemasukan dari nasabah (sampah masuk)
     prisma.transaksi.findMany({
       where: {
         bankSampahId,
         jenis: "PEMASUKAN",
+        ...dateFilter, // 🗓️ Apply date filter
       },
       include: {
         nasabah: { select: { nama: true } },
@@ -27,6 +47,7 @@ export async function getLaporanPendapatan(bankSampahId: string) {
       where: {
         bankSampahId,
         jenis: "PENJUALAN_SAMPAH",
+        ...dateFilter, // 🗓️ Apply date filter
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -36,6 +57,7 @@ export async function getLaporanPendapatan(bankSampahId: string) {
       where: {
         bankSampahId,
         jenis: "PENGELUARAN",
+        ...dateFilter, // 🗓️ Apply date filter
       },
       include: {
         nasabah: { select: { nama: true } },
@@ -52,13 +74,14 @@ export async function getLaporanPendapatan(bankSampahId: string) {
   // Calculate profit (penjualan - pembelian dari nasabah)
   const keuntungan = totalPenjualan - totalPemasukan
 
-  // Get summary by waste type
+  // Get summary by waste type with date filter
   const summaryByType = await prisma.detailTransaksi.groupBy({
     by: ["inventarisSampahId"],
     where: {
       transaksi: {
         bankSampahId,
         jenis: "PEMASUKAN",
+        ...dateFilter, // 🗓️ Apply date filter
       },
     },
     _sum: {
@@ -102,5 +125,11 @@ export async function getLaporanPendapatan(bankSampahId: string) {
     penjualanSampah,
     pengeluaran,
     summaryByType: summaryWithNames,
+    // 📊 Return filter info
+    filterInfo: {
+      startDate,
+      endDate,
+      totalTransaksi: pemasukan.length + penjualanSampah.length + pengeluaran.length,
+    },
   }
 }

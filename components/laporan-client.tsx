@@ -21,7 +21,8 @@ export default function LaporanClient({ initialData, bankSampahId }: LaporanClie
     try {
       console.log("🔄 Loading laporan with filter:", { startDate, endDate })
       // 🚀 Call the server action from client component
-      const data = await getLaporanPendapatan(bankSampahId, startDate, endDate)
+      // 🔧 FIXED: Convert null to undefined untuk match dengan parameter function
+      const data = await getLaporanPendapatan(bankSampahId, startDate || undefined, endDate || undefined)
       setLaporanData(data)
     } catch (error) {
       console.error("❌ Error loading laporan:", error)

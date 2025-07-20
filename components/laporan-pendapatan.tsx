@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { TrendingUp, TrendingDown, DollarSign, Package, ArrowUpDown } from "lucide-react"
+import { TrendingUp, TrendingDown, DollarSign, Package, ArrowUpDown, Calendar } from "lucide-react"
 
 interface LaporanPendapatanProps {
   data: {
@@ -17,6 +17,12 @@ interface LaporanPendapatanProps {
       totalNilai: number
       jumlahTransaksi: number
     }[]
+    // 🗓️ NEW: Filter info
+    filterInfo?: {
+      startDate?: Date | null
+      endDate?: Date | null
+      totalTransaksi: number
+    }
   }
 }
 
@@ -30,10 +36,44 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
     penjualanSampah,
     pengeluaran,
     summaryByType,
+    filterInfo,
   } = data
+
+  // 📅 Format filter info
+  const getFilterText = () => {
+    if (!filterInfo?.startDate || !filterInfo?.endDate) {
+      return "Semua Data"
+    }
+
+    const start = new Date(filterInfo.startDate).toLocaleDateString("id-ID")
+    const end = new Date(filterInfo.endDate).toLocaleDateString("id-ID")
+
+    if (start === end) {
+      return `Tanggal: ${start}`
+    }
+
+    return `Periode: ${start} - ${end}`
+  }
 
   return (
     <div className="space-y-6">
+      {/* 🗓️ Filter Info Banner */}
+      {filterInfo && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-900">📊 {getFilterText()}</span>
+              </div>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                {filterInfo.totalTransaksi} Transaksi
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
@@ -92,32 +132,39 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4">Jenis Sampah</th>
-                  <th className="text-left py-3 px-4">Total Berat (kg)</th>
-                  <th className="text-left py-3 px-4">Total Nilai Pembelian</th>
-                  <th className="text-left py-3 px-4">Jumlah Transaksi</th>
-                  <th className="text-left py-3 px-4">Rata-rata Harga/kg</th>
-                </tr>
-              </thead>
-              <tbody>
-                {summaryByType.map((item, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="py-3 px-4 font-medium">{item.jenisSampah}</td>
-                    <td className="py-3 px-4">{item.totalBerat.toFixed(1)} kg</td>
-                    <td className="py-3 px-4">Rp {item.totalNilai.toLocaleString()}</td>
-                    <td className="py-3 px-4">{item.jumlahTransaksi}</td>
-                    <td className="py-3 px-4">
-                      Rp {item.totalBerat > 0 ? Math.round(item.totalNilai / item.totalBerat).toLocaleString() : 0}
-                    </td>
+          {summaryByType.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>Tidak ada data untuk periode yang dipilih</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4">Jenis Sampah</th>
+                    <th className="text-left py-3 px-4">Total Berat (kg)</th>
+                    <th className="text-left py-3 px-4">Total Nilai Pembelian</th>
+                    <th className="text-left py-3 px-4">Jumlah Transaksi</th>
+                    <th className="text-left py-3 px-4">Rata-rata Harga/kg</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {summaryByType.map((item, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="py-3 px-4 font-medium">{item.jenisSampah}</td>
+                      <td className="py-3 px-4">{item.totalBerat.toFixed(1)} kg</td>
+                      <td className="py-3 px-4">Rp {item.totalNilai.toLocaleString()}</td>
+                      <td className="py-3 px-4">{item.jumlahTransaksi}</td>
+                      <td className="py-3 px-4">
+                        Rp {item.totalBerat > 0 ? Math.round(item.totalNilai / item.totalBerat).toLocaleString() : 0}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -134,7 +181,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
           <CardContent>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {penjualanSampah.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">Belum ada penjualan sampah</p>
+                <p className="text-gray-500 text-center py-4">Tidak ada penjualan untuk periode ini</p>
               ) : (
                 penjualanSampah.slice(0, 10).map((transaksi) => (
                   <div key={transaksi.id} className="flex justify-between items-center p-3 border rounded-lg">
@@ -165,7 +212,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
           <CardContent>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {pemasukan.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">Belum ada pembelian sampah</p>
+                <p className="text-gray-500 text-center py-4">Tidak ada pembelian untuk periode ini</p>
               ) : (
                 pemasukan.slice(0, 10).map((transaksi) => (
                   <div key={transaksi.id} className="flex justify-between items-center p-3 border rounded-lg">
