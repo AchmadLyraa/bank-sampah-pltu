@@ -5,9 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { loginAction } from "@/app/actions/auth"
-import { Loader2 } from "lucide-react"
+import { Loader2, Mail, Lock, LogIn } from "lucide-react"
 
 export default function LoginForm() {
   const [loading, setLoading] = useState(false)
@@ -30,49 +29,67 @@ export default function LoginForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Login</CardTitle>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="text-center">
+        <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+          <LogIn className="h-6 w-6 text-green-600" />
+          Login
+        </CardTitle>
+        <p className="text-gray-600">Masuk ke akun Anda</p>
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="email@example.com" required />
+            <Label htmlFor="email" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Email
+            </Label>
+            <Input id="email" name="email" type="email" placeholder="email@example.com" required className="pl-4" />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" name="password" type="password" placeholder="Password" required />
+            <Label htmlFor="password" className="flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              Password
+            </Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Masukkan password"
+              required
+              className="pl-4"
+            />
           </div>
 
-          <div className="space-y-2">
-            <Label>Tipe User</Label>
-            <RadioGroup name="userType" defaultValue="nasabah" className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="nasabah" id="nasabah" />
-                <Label htmlFor="nasabah">Nasabah</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="bank-sampah" id="bank-sampah" />
-                <Label htmlFor="bank-sampah">Bank Sampah</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {error && <div className="text-red-600 text-sm">{error}</div>}
+          {error && (
+            <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+          )}
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Login
+            {loading ? "Memproses..." : "Masuk"}
           </Button>
         </form>
 
-        <div className="mt-6 text-sm text-gray-600">
-          <p className="font-semibold">Demo Accounts:</p>
-          <p>Bank Sampah: admin@banksampah.com</p>
-          <p>Nasabah: budi@email.com</p>
-          <p>Password: password123</p>
+        {/* Demo Accounts Info */}
+        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="font-semibold text-blue-900 mb-2">🔑 Akun Demo:</p>
+          <div className="space-y-2 text-sm">
+            <div className="bg-white p-2 rounded border">
+              <p className="font-medium text-blue-800">👨‍💼 Admin Bank Sampah:</p>
+              <p className="text-blue-700">📧 admin@banksampah.com</p>
+              <p className="text-blue-700">🔒 password123</p>
+            </div>
+            <div className="bg-white p-2 rounded border">
+              <p className="font-medium text-green-800">👤 Nasabah:</p>
+              <p className="text-green-700">📧 budi@email.com</p>
+              <p className="text-green-700">🔒 password123</p>
+            </div>
+          </div>
+          <p className="text-xs text-blue-600 mt-2">💡 Sistem akan otomatis mendeteksi jenis akun Anda</p>
         </div>
       </CardContent>
     </Card>

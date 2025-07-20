@@ -3,13 +3,12 @@
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { authenticateUser } from "@/lib/auth"
-import type { LoginFormData } from "@/types"
 
+// Update loginAction to remove userType parameter
 export async function loginAction(formData: FormData) {
-  const data: LoginFormData = {
+  const data = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
-    userType: formData.get("userType") as "bank-sampah" | "nasabah",
   }
 
   const result = await authenticateUser(data)

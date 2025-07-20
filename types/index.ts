@@ -60,7 +60,6 @@ export interface DetailTransaksi {
 export interface LoginFormData {
   email: string
   password: string
-  userType: "bank-sampah" | "nasabah"
 }
 
 export interface PenimbanganFormData {
