@@ -16,8 +16,12 @@ export default async function PenimbanganPage() {
       where: { bankSampahId: session.userId },
       orderBy: { nama: "asc" },
     }),
+    // 🆕 FILTER: Only show active inventaris
     prisma.inventarisSampah.findMany({
-      where: { bankSampahId: session.userId },
+      where: {
+        bankSampahId: session.userId,
+        isActive: true, // 🎯 ONLY ACTIVE ITEMS
+      },
       orderBy: { jenisSampah: "asc" },
     }),
   ])

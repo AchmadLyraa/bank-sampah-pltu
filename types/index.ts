@@ -28,6 +28,7 @@ export interface InventarisSampah {
   jenisSampah: string
   hargaPerKg: number
   stokKg: number
+  isActive: boolean // 🆕 NEW FIELD
   bankSampahId: string
   createdAt: Date
   updatedAt: Date

@@ -30,6 +30,7 @@ export async function createInventarisAction(formData: FormData) {
         jenisSampah,
         hargaPerKg,
         stokKg: 0,
+        isActive: true, // 🆕 Default active
         bankSampahId,
       },
     })
@@ -78,5 +79,25 @@ export async function deleteInventarisAction(formData: FormData) {
   } catch (error) {
     console.error("Error deleting inventaris:", error)
     return { error: "Terjadi kesalahan saat menghapus jenis sampah" }
+  }
+}
+
+// 🆕 NEW: Toggle active/inactive status
+export async function toggleInventarisStatusAction(formData: FormData) {
+  const id = formData.get("id") as string
+  const isActive = formData.get("isActive") === "true"
+
+  try {
+    await prisma.inventarisSampah.update({
+      where: { id },
+      data: { isActive: !isActive }, // Toggle status
+    })
+
+    revalidatePath("/bank-sampah/inventaris")
+    revalidatePath("/bank-sampah/penimbangan") // Refresh penimbangan page too
+    return { success: true }
+  } catch (error) {
+    console.error("Error toggling inventaris status:", error)
+    return { error: "Terjadi kesalahan saat mengubah status" }
   }
 }

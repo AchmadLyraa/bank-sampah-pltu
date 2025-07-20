@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { getLaporanPendapatan } from "@/app/actions/laporan" // Import Server Action
+import { getLaporanPendapatan } from "@/app/actions/laporan"
 import LaporanPendapatan from "@/components/laporan-pendapatan"
 import DateFilter from "@/components/date-filter"
+import BackupDownloadButton from "@/components/backup-download-button" // 🆕 Import
 import { Loader2 } from "lucide-react"
 
 interface LaporanClientProps {
@@ -15,13 +16,9 @@ export default function LaporanClient({ initialData, bankSampahId }: LaporanClie
   const [laporanData, setLaporanData] = useState(initialData)
   const [filterLoading, setFilterLoading] = useState(false)
 
-  // 📅 Function to load laporan data with date filter
   const loadLaporanData = async (startDate: Date | null, endDate: Date | null) => {
     setFilterLoading(true)
     try {
-      console.log("🔄 Loading laporan with filter:", { startDate, endDate })
-      // 🚀 Call the server action from client component
-      // 🔧 FIXED: Convert null to undefined untuk match dengan parameter function
       const data = await getLaporanPendapatan(bankSampahId, startDate || undefined, endDate || undefined)
       setLaporanData(data)
     } catch (error) {
@@ -31,20 +28,29 @@ export default function LaporanClient({ initialData, bankSampahId }: LaporanClie
     }
   }
 
-  // 🗓️ Handle filter change from DateFilter component
   const handleFilterChange = (startDate: Date | null, endDate: Date | null) => {
-    console.log("📅 Filter changed:", { startDate, endDate })
     loadLaporanData(startDate, endDate)
   }
 
   return (
     <>
-      {/* 🗓️ Date Filter */}
+      {/* 🆕 Backup Download Section */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-blue-900">💾 Backup Data</h3>
+            <p className="text-sm text-blue-700">Download semua data nasabah, inventaris, dan ringkasan untuk backup</p>
+          </div>
+          <BackupDownloadButton />
+        </div>
+      </div>
+
+      {/* Date Filter */}
       <div className="mb-6">
         <DateFilter onFilterChange={handleFilterChange} loading={filterLoading} />
       </div>
 
-      {/* 📊 Laporan Content */}
+      {/* Laporan Content */}
       {filterLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin" />
