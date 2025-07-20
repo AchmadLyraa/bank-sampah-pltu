@@ -5,6 +5,7 @@ import DashboardStats from "@/components/dashboard-stats"
 import RecentTransactions from "@/components/recent-transactions"
 import QuickActions from "@/components/quick-actions"
 import LayoutWrapper from "@/components/layout-wrapper"
+import type { Transaksi } from "@/types"
 
 export default async function BankSampahDashboard() {
   const session = await getSession()
@@ -25,7 +26,7 @@ export default async function BankSampahDashboard() {
 
         <DashboardStats data={data} />
         <QuickActions />
-        <RecentTransactions transactions={data.recentTransaksi} />
+        <RecentTransactions transactions={data.recentTransaksi as Transaksi[]} />
       </div>
     </LayoutWrapper>
   )

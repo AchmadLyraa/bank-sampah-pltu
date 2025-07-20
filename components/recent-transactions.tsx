@@ -35,11 +35,11 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
             <p className="text-gray-500 text-center py-4">Belum ada transaksi</p>
           ) : (
             transactions.map((transaksi) => (
-              <div key={transaksi.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div key={transaksi.id} className="flex items-center justify-between p-4 border rounded-lg flex-wrap md:flex-row flex-column">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex-1">
                     {getTransactionBadge(transaksi.jenis)}
-                    <span className="font-medium">{transaksi.nasabah?.nama || "Bank Sampah"}</span>
+                    <span className="font-medium ml-2">{transaksi.nasabah?.nama || "Bank Sampah"}</span>
                   </div>
                   <p className="text-sm text-gray-600">{transaksi.keterangan}</p>
                   <p className="text-xs text-gray-400">
@@ -52,7 +52,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                     })}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="sm:flex-1 sm:text-right flex-[100%]">
                   <p
                     className={`font-bold ${
                       transaksi.jenis === "PEMASUKAN" || transaksi.jenis === "PENJUALAN_SAMPAH"

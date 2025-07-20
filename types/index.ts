@@ -42,8 +42,8 @@ export interface Transaksi {
   nasabahId: string | null
   bankSampahId: string
   createdAt: Date
-  nasabah?: Nasabah | null
-  detailTransaksi?: DetailTransaksi[]
+  nasabah: Nasabah | null
+  detailTransaksi: DetailTransaksi[]
 }
 
 export interface DetailTransaksi {
