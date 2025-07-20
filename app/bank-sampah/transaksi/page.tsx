@@ -4,13 +4,30 @@ import { prisma } from "@/lib/prisma"
 import TransaksiTable from "@/components/transaksi-table"
 import LayoutWrapper from "@/components/layout-wrapper"
 
-export default async function TransaksiPage() {
+interface TransaksiPageProps {
+  searchParams: { page?: string }
+}
+
+export default async function TransaksiPage({ searchParams }: TransaksiPageProps) {
   const session = await getSession()
 
   if (!session || session.userType !== "bank-sampah") {
     redirect("/")
   }
 
+  // 📄 Pagination setup
+  const currentPage = Number(searchParams.page) || 1
+  const itemsPerPage = 20
+  const skip = (currentPage - 1) * itemsPerPage
+
+  // 📊 Get total count for pagination
+  const totalTransaksi = await prisma.transaksi.count({
+    where: { bankSampahId: session.userId },
+  })
+
+  const totalPages = Math.ceil(totalTransaksi / itemsPerPage)
+
+  // 📋 Get paginated transaksi
   const transaksi = await prisma.transaksi.findMany({
     where: { bankSampahId: session.userId },
     include: {
@@ -22,6 +39,8 @@ export default async function TransaksiPage() {
       },
     },
     orderBy: { createdAt: "desc" },
+    skip,
+    take: itemsPerPage,
   })
 
   return (
@@ -32,7 +51,12 @@ export default async function TransaksiPage() {
           <p className="text-gray-600">Semua transaksi bank sampah</p>
         </div>
 
-        <TransaksiTable transaksi={transaksi} />
+        <TransaksiTable
+          transaksi={transaksi}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalTransaksi}
+        />
       </div>
     </LayoutWrapper>
   )

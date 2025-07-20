@@ -1,13 +1,38 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { History } from "lucide-react"
-import type { Transaksi } from "@/types"
+import Pagination from "@/components/pagination"
 
-interface TransaksiTableProps {
-  transaksi: Transaksi[]
+// 🔧 FIXED: Create specific type for TransaksiTable that matches Prisma result
+interface TransaksiWithDetails {
+  id: string
+  jenis: "PEMASUKAN" | "PENGELUARAN" | "PENJUALAN_SAMPAH"
+  totalNilai: number
+  keterangan: string | null
+  nasabahId: string | null
+  bankSampahId: string
+  createdAt: Date
+  nasabah: { nama: string } | null
+  detailTransaksi: {
+    id: string
+    transaksiId: string
+    inventarisSampahId: string
+    beratKg: number
+    hargaPerKg: number
+    subtotal: number
+    createdAt: Date
+    inventarisSampah: { jenisSampah: string } | null
+  }[]
 }
 
-export default function TransaksiTable({ transaksi }: TransaksiTableProps) {
+interface TransaksiTableProps {
+  transaksi: TransaksiWithDetails[]
+  currentPage: number
+  totalPages: number
+  totalItems: number
+}
+
+export default function TransaksiTable({ transaksi, currentPage, totalPages, totalItems }: TransaksiTableProps) {
   const getTransactionBadge = (jenis: string) => {
     switch (jenis) {
       case "PEMASUKAN":
@@ -38,13 +63,13 @@ export default function TransaksiTable({ transaksi }: TransaksiTableProps) {
         <Card>
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-green-600">Rp {totalPemasukan.toLocaleString()}</div>
-            <p className="text-sm text-gray-600">Total Pemasukan</p>
+            <p className="text-sm text-gray-600">Total Pemasukan (Halaman Ini)</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
             <div className="text-2xl font-bold text-red-600">Rp {totalPengeluaran.toLocaleString()}</div>
-            <p className="text-sm text-gray-600">Total Pengeluaran</p>
+            <p className="text-sm text-gray-600">Total Pengeluaran (Halaman Ini)</p>
           </CardContent>
         </Card>
         <Card>
@@ -52,7 +77,7 @@ export default function TransaksiTable({ transaksi }: TransaksiTableProps) {
             <div className="text-2xl font-bold text-blue-600">
               Rp {(totalPemasukan - totalPengeluaran).toLocaleString()}
             </div>
-            <p className="text-sm text-gray-600">Selisih</p>
+            <p className="text-sm text-gray-600">Selisih (Halaman Ini)</p>
           </CardContent>
         </Card>
       </div>
@@ -62,7 +87,7 @@ export default function TransaksiTable({ transaksi }: TransaksiTableProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <History className="h-5 w-5" />
-            Semua Transaksi ({transaksi.length})
+            Transaksi (Halaman {currentPage} dari {totalPages})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -92,11 +117,11 @@ export default function TransaksiTable({ transaksi }: TransaksiTableProps) {
                     </td>
                     <td className="py-3 px-4">{getTransactionBadge(t.jenis)}</td>
                     <td className="py-3 px-4">{t.nasabah?.nama || "Bank Sampah"}</td>
-                    <td className="py-3 px-4 text-sm">{t.keterangan}</td>
+                    <td className="py-3 px-4 text-sm">{t.keterangan || "-"}</td>
                     <td className="py-3 px-4 text-sm">
                       {t.detailTransaksi && t.detailTransaksi.length > 0 && (
                         <div className="space-y-1">
-                          {t.detailTransaksi.map((detail, idx) => (
+                          {t.detailTransaksi.map((detail) => (
                             <div key={detail.id} className="text-xs text-gray-600">
                               {detail.inventarisSampah?.jenisSampah}: {detail.beratKg}kg
                             </div>
@@ -117,6 +142,11 @@ export default function TransaksiTable({ transaksi }: TransaksiTableProps) {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* 📄 Pagination Component */}
+          <div className="mt-6 pt-6 border-t">
+            <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} />
           </div>
         </CardContent>
       </Card>

@@ -37,11 +37,11 @@ export interface Transaksi {
   id: string
   jenis: "PEMASUKAN" | "PENGELUARAN" | "PENJUALAN_SAMPAH"
   totalNilai: number
-  keterangan?: string
-  nasabahId: string
+  keterangan?: string | null
+  nasabahId: string | null
   bankSampahId: string
   createdAt: Date
-  nasabah?: Nasabah
+  nasabah?: Nasabah | null
   detailTransaksi?: DetailTransaksi[]
 }
 
