@@ -33,7 +33,6 @@ export default function BackupDownloadButton() {
       window.URL.revokeObjectURL(url)
 
       // ✅ Success message
-      alert("✅ Laporan backup PDF berhasil diunduh!")
     } catch (error) {
       console.error("Error downloading backup:", error)
       alert("❌ Gagal mengunduh laporan backup. Silakan coba lagi.")

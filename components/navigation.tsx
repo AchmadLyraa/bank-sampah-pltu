@@ -28,24 +28,9 @@ const bankSampahNavItems = [
     icon: Scale,
   },
   {
-    href: "/bank-sampah/inventaris",
-    label: "Inventaris",
-    icon: Package,
-  },
-  {
     href: "/bank-sampah/penarikan",
     label: "Penarikan",
     icon: CreditCard,
-  },
-  {
-    href: "/bank-sampah/transaksi",
-    label: "Transaksi",
-    icon: History,
-  },
-  {
-    href: "/bank-sampah/laporan",
-    label: "Laporan",
-    icon: BarChart3,
   },
 ]
 

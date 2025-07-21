@@ -7,7 +7,7 @@ import '@/styles/globals.css';
 // const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Bank Sampah MVP",
+  title: "Bank Sampah",
   description: "Sistem Manajemen Bank Sampah",
 }
 

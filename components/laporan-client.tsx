@@ -36,8 +36,8 @@ export default function LaporanClient({ initialData, bankSampahId }: LaporanClie
     <>
       {/* 🆕 Backup Download Section */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex sm:items-center items-start justify-between sm:flex-row flex-col">
+          <div className="mb-3 sm:mb-0">
             <h3 className="font-semibold text-blue-900">💾 Backup Data</h3>
             <p className="text-sm text-blue-700">Download semua data nasabah, inventaris, dan ringkasan untuk backup</p>
           </div>

@@ -24,28 +24,14 @@ const bankSampahNavItems = [
   },
   {
     href: "/bank-sampah/penimbangan",
-    label: "Penimbangan",
+    label: "Timbang",
     icon: Scale,
-  },
-  {
-    href: "/bank-sampah/inventaris",
-    label: "Inventaris",
-    icon: Package,
+    special: true,
   },
   {
     href: "/bank-sampah/penarikan",
     label: "Penarikan",
     icon: CreditCard,
-  },
-  {
-    href: "/bank-sampah/transaksi",
-    label: "Transaksi",
-    icon: History,
-  },
-  {
-    href: "/bank-sampah/laporan",
-    label: "Laporan",
-    icon: BarChart3,
   },
 ]
 
@@ -74,18 +60,30 @@ function BottomNavigation({ userType }: ClientNavigationProps) {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
-      <div className="flex items-center justify-around py-2">
+      <div className="flex items-center justify-center py-1">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
-
+          if (item.special) {
+              return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className=
+                  "relative -mt-12 flex grow-1 bg-blue-600 text-white text-center flex-col items-center justify-center py-3 px-4 rounded-lg min-w-0 flex-1"
+              >
+                <Icon className="h-5 w-5 mb-1" />
+                <span className="text-xs font-medium truncate">{item.label}</span>
+              </Link>
+            )
+          }
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
                 "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-0 flex-1",
-                isActive ? "text-blue-600 bg-blue-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+                isActive ? "text-blue-600" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
               )}
             >
               <Icon className="h-5 w-5 mb-1" />
@@ -101,8 +99,8 @@ function BottomNavigation({ userType }: ClientNavigationProps) {
             variant="ghost"
             className="flex flex-col items-center justify-center py-2 px-3 w-full h-auto text-gray-600 hover:text-red-600 hover:bg-red-50"
           >
-            <LogOut className="h-5 w-5 mb-1" />
-            <span className="text-xs font-medium">Logout</span>
+            <LogOut className="h-5 w-5 mb-1 text-red-600" />
+            <span className="text-xs font-medium text-red-600">Logout</span>
           </Button>
         </form>
       </div>
