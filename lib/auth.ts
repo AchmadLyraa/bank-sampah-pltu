@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt"
+import bcrypt from "bcryptjs"
 import { prisma } from "./prisma"
 
 // Update authenticateUser function to automatically detect user type

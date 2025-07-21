@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import bcrypt from "bcrypt"
+import bcrypt from "bcryptjs"
 
 export async function getNasabahList(bankSampahId: string) {
   const nasabahList = await prisma.nasabah.findMany({
