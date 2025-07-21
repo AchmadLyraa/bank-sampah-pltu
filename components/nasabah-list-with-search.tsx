@@ -66,10 +66,10 @@ export default function NasabahListWithSearch({ nasabahList }: NasabahListWithSe
           <div className="space-y-4">
             {filteredNasabah.map((nasabah) => (
               <div key={nasabah.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start justify-between mb-3 flex-wrap sm:flex-row flex-col">
                   <div>
                     <h3 className="font-semibold text-lg text-gray-900">{nasabah.nama}</h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                    <div className="flex sm:items-center items-start sm:gap-4 gap-0 sm:flex-row flex-col text-sm text-gray-600 mt-1">
                       <span className="flex items-center gap-1">
                         <Mail className="h-3 w-3" />
                         {nasabah.email}
@@ -80,8 +80,8 @@ export default function NasabahListWithSearch({ nasabahList }: NasabahListWithSe
                       </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-1 text-green-600 font-semibold">
+                  <div className="sm:text-right text-left sm:flex-none flex-[100]">
+                    <div className="flex items-center sm:justify-end justify-normal gap-1 text-green-600 font-semibold">
                       <Wallet className="h-4 w-4" />
                       Rp {nasabah.saldo.toLocaleString()}
                     </div>
