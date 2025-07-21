@@ -44,7 +44,7 @@ export function NasabahCombobox({
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-gray-500">
+            <div className="flex items-center gap-2 text-gray-500 truncate">
               <User className="h-4 w-4" />
               {placeholder}
             </div>

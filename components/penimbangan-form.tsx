@@ -101,7 +101,7 @@ export default function PenimbanganForm({ nasabahList, inventarisList }: Penimba
             </div>
 
             {items.map((item, index) => (
-              <div key={index} className="flex gap-4 items-end p-4 border rounded-lg">
+              <div key={index} className="flex gap-4 items-end p-4 border rounded-lg flex-wrap">
                 <div className="flex-1">
                   <Label>Jenis Sampah</Label>
                   <Select
