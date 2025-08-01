@@ -12,6 +12,7 @@ import {
   Users,
   LogOut,
   BarChart3,
+  CircleUserRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/app/actions/auth";
@@ -109,17 +110,32 @@ function BottomNavigation({ userType, userName }: ClientNavigationProps) {
           );
         })}
 
-        {/* Logout button */}
-        <form action={logoutAction} className="flex-1">
-          <Button
-            type="submit"
-            variant="ghost"
-            className="flex flex-col items-center justify-center py-2 px-3 w-full h-auto text-gray-600 hover:text-red-600 hover:bg-red-50"
+        {/* Conditional last button: Logout for nasabah, Profile for bank-sampah */}
+        {userType === "nasabah" ? (
+          <form action={logoutAction} className="flex-1">
+            <Button
+              type="submit"
+              variant="ghost"
+              className="flex flex-col items-center justify-center py-2 px-3 w-full h-auto text-gray-600 hover:text-red-600 hover:bg-red-50"
+            >
+              <LogOut className="h-5 w-5 mb-1 text-red-600" />
+              <span className="text-xs font-medium text-red-600">Logout</span>
+            </Button>
+          </form>
+        ) : (
+          <Link
+            href="/bank-sampah/profile"
+            className={cn(
+              "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-0 flex-1",
+              pathname === "/bank-sampah/profile"
+                ? "text-blue-600"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+            )}
           >
-            <LogOut className="h-5 w-5 mb-1 text-red-600" />
-            <span className="text-xs font-medium text-red-600">Logout</span>
-          </Button>
-        </form>
+            <CircleUserRound className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium truncate">Profil</span>
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -143,9 +159,6 @@ function SidebarNavigation({ userType, userName }: ClientNavigationProps) {
               <h1 className="text-md font-bold text-gray-900">
                 Aplikasi Bank Sampah
               </h1>
-              {/*<p className="text-xs text-gray-500 capitalize">
-                {userType.replace("-", " ")}
-              </p>*/}
               <p className="text-xs text-gray-500 capitalize">{userName}</p>
             </div>
           </div>
@@ -175,18 +188,33 @@ function SidebarNavigation({ userType, userName }: ClientNavigationProps) {
           })}
         </nav>
 
-        {/* Logout */}
+        {/* Conditional last button: Logout for nasabah, Profile for bank-sampah */}
         <div className="flex-shrink-0 px-4 py-4 border-t border-gray-200">
-          <form action={logoutAction}>
-            <Button
-              type="submit"
-              variant="ghost"
-              className="w-full justify-start text-gray-700 hover:text-red-600 hover:bg-red-50"
+          {userType === "nasabah" ? (
+            <form action={logoutAction}>
+              <Button
+                type="submit"
+                variant="ghost"
+                className="w-full justify-start text-gray-700 hover:text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="mr-3 h-5 w-5" />
+                Logout
+              </Button>
+            </form>
+          ) : (
+            <Link
+              href="/bank-sampah/profile"
+              className={cn(
+                "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                pathname === "/bank-sampah/profile"
+                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900",
+              )}
             >
-              <LogOut className="mr-3 h-5 w-5" />
-              Logout
-            </Button>
-          </form>
+              <CircleUserRound className="mr-3 h-5 w-5" />
+              Profil
+            </Link>
+          )}
         </div>
       </div>
     </div>
