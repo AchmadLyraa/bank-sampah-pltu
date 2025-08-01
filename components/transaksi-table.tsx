@@ -1,38 +1,44 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { History } from "lucide-react"
-import Pagination from "@/components/pagination"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { History } from "lucide-react";
+import Pagination from "@/components/pagination";
+import { DateTime } from "luxon";
 
 // 🔧 FIXED: Create specific type for TransaksiTable that matches Prisma result
 interface TransaksiWithDetails {
-  id: string
-  jenis: "PEMASUKAN" | "PENGELUARAN" | "PENJUALAN_SAMPAH"
-  totalNilai: number
-  keterangan: string | null
-  nasabahId: string | null
-  bankSampahId: string
-  createdAt: Date
-  nasabah: { nama: string } | null
+  id: string;
+  jenis: "PEMASUKAN" | "PENGELUARAN" | "PENJUALAN_SAMPAH";
+  totalNilai: number;
+  keterangan: string | null;
+  nasabahId: string | null;
+  bankSampahId: string;
+  createdAt: Date;
+  nasabah: { nama: string } | null;
   detailTransaksi: {
-    id: string
-    transaksiId: string
-    inventarisSampahId: string
-    beratKg: number
-    hargaPerKg: number
-    subtotal: number
-    createdAt: Date
-    inventarisSampah: { jenisSampah: string } | null
-  }[]
+    id: string;
+    transaksiId: string;
+    inventarisSampahId: string;
+    beratKg: number;
+    hargaPerKg: number;
+    subtotal: number;
+    createdAt: Date;
+    inventarisSampah: { jenisSampah: string } | null;
+  }[];
 }
 
 interface TransaksiTableProps {
-  transaksi: TransaksiWithDetails[]
-  currentPage: number
-  totalPages: number
-  totalItems: number
+  transaksi: TransaksiWithDetails[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
 }
 
-export default function TransaksiTable({ transaksi, currentPage, totalPages, totalItems }: TransaksiTableProps) {
+export default function TransaksiTable({
+  transaksi,
+  currentPage,
+  totalPages,
+  totalItems,
+}: TransaksiTableProps) {
   const getTransactionBadge = (jenis: string) => {
     switch (jenis) {
       case "PEMASUKAN":
@@ -40,21 +46,23 @@ export default function TransaksiTable({ transaksi, currentPage, totalPages, tot
           <Badge variant="default" className="bg-green-100 text-green-800">
             Pemasukan
           </Badge>
-        )
+        );
       case "PENGELUARAN":
-        return <Badge variant="destructive">Pengeluaran</Badge>
+        return <Badge variant="destructive">Pengeluaran</Badge>;
       case "PENJUALAN_SAMPAH":
-        return <Badge variant="secondary">Penjualan</Badge>
+        return <Badge variant="secondary">Penjualan</Badge>;
       default:
-        return <Badge variant="outline">{jenis}</Badge>
+        return <Badge variant="outline">{jenis}</Badge>;
     }
-  }
+  };
 
   const totalPemasukan = transaksi
     .filter((t) => t.jenis === "PEMASUKAN" || t.jenis === "PENJUALAN_SAMPAH")
-    .reduce((sum, t) => sum + t.totalNilai, 0)
+    .reduce((sum, t) => sum + t.totalNilai, 0);
 
-  const totalPengeluaran = transaksi.filter((t) => t.jenis === "PENGELUARAN").reduce((sum, t) => sum + t.totalNilai, 0)
+  const totalPengeluaran = transaksi
+    .filter((t) => t.jenis === "PENGELUARAN")
+    .reduce((sum, t) => sum + t.totalNilai, 0);
 
   return (
     <div className="space-y-6">
@@ -62,14 +70,22 @@ export default function TransaksiTable({ transaksi, currentPage, totalPages, tot
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold text-green-600">Rp {totalPemasukan.toLocaleString()}</div>
-            <p className="text-sm text-gray-600">Total Pemasukan (Halaman Ini)</p>
+            <div className="text-2xl font-bold text-green-600">
+              Rp {totalPemasukan.toLocaleString()}
+            </div>
+            <p className="text-sm text-gray-600">
+              Total Pemasukan (Halaman Ini)
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-6">
-            <div className="text-2xl font-bold text-red-600">Rp {totalPengeluaran.toLocaleString()}</div>
-            <p className="text-sm text-gray-600">Total Pengeluaran (Halaman Ini)</p>
+            <div className="text-2xl font-bold text-red-600">
+              Rp {totalPengeluaran.toLocaleString()}
+            </div>
+            <p className="text-sm text-gray-600">
+              Total Pengeluaran (Halaman Ini)
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -107,23 +123,29 @@ export default function TransaksiTable({ transaksi, currentPage, totalPages, tot
                 {transaksi.map((t) => (
                   <tr key={t.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4 text-sm">
-                      {new Date(t.createdAt).toLocaleDateString("id-ID", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {DateTime.fromJSDate(new Date(t.createdAt))
+                        .setZone(
+                          Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        )
+                        .toFormat("dd/MM/yyyy HH:mm")}
                     </td>
-                    <td className="py-3 px-4">{getTransactionBadge(t.jenis)}</td>
-                    <td className="py-3 px-4">{t.nasabah?.nama || "Bank Sampah"}</td>
+                    <td className="py-3 px-4">
+                      {getTransactionBadge(t.jenis)}
+                    </td>
+                    <td className="py-3 px-4">
+                      {t.nasabah?.nama || "Bank Sampah"}
+                    </td>
                     <td className="py-3 px-4 text-sm">{t.keterangan || "-"}</td>
                     <td className="py-3 px-4 text-sm">
                       {t.detailTransaksi && t.detailTransaksi.length > 0 && (
                         <div className="space-y-1">
                           {t.detailTransaksi.map((detail) => (
-                            <div key={detail.id} className="text-xs text-gray-600">
-                              {detail.inventarisSampah?.jenisSampah}: {detail.beratKg}kg
+                            <div
+                              key={detail.id}
+                              className="text-xs text-gray-600"
+                            >
+                              {detail.inventarisSampah?.jenisSampah}:{" "}
+                              {detail.beratKg}kg
                             </div>
                           ))}
                         </div>
@@ -132,10 +154,14 @@ export default function TransaksiTable({ transaksi, currentPage, totalPages, tot
                     <td className="py-3 px-4 text-right">
                       <span
                         className={`font-bold ${
-                          t.jenis === "PEMASUKAN" || t.jenis === "PENJUALAN_SAMPAH" ? "text-green-600" : "text-red-600"
+                          t.jenis === "PEMASUKAN" ||
+                          t.jenis === "PENJUALAN_SAMPAH"
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
-                        {t.jenis === "PENGELUARAN" ? "-" : "+"}Rp {t.totalNilai.toLocaleString()}
+                        {t.jenis === "PENGELUARAN" ? "-" : "+"}Rp{" "}
+                        {t.totalNilai.toLocaleString()}
                       </span>
                     </td>
                   </tr>
@@ -146,10 +172,14 @@ export default function TransaksiTable({ transaksi, currentPage, totalPages, tot
 
           {/* 📄 Pagination Component */}
           <div className="mt-6 pt-6 border-t">
-            <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+            />
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
