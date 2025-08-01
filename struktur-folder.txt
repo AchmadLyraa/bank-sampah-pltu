@@ -2,10 +2,22 @@
 ├── app
 │   ├── actions
 │   │   ├── auth.ts
+│   │   ├── backup.ts
 │   │   ├── bank-sampah.ts
+│   │   ├── inventaris-management.ts
+│   │   ├── laporan.ts
+│   │   ├── nasabah-management.ts
+│   │   ├── nasabah-profile.ts
 │   │   └── nasabah.ts
+│   ├── api
+│   │   └── backup-pdf
+│   │       └── route.ts
 │   ├── bank-sampah
 │   │   ├── inventaris
+│   │   │   └── page.tsx
+│   │   ├── laporan
+│   │   │   └── page.tsx
+│   │   ├── nasabah
 │   │   │   └── page.tsx
 │   │   ├── penarikan
 │   │   │   └── page.tsx
@@ -16,8 +28,9 @@
 │   │   └── page.tsx
 │   ├── nasabah
 │   │   └── page.tsx
-│   ├── globals.css
+│   ├── favicon.ico
 │   ├── layout.tsx
+│   ├── manifest.ts
 │   └── page.tsx
 ├── components
 │   ├── ui
@@ -71,15 +84,29 @@
 │   │   ├── tooltip.tsx
 │   │   ├── use-mobile.tsx
 │   │   └── use-toast.ts
+│   ├── backup-download-button.tsx
+│   ├── change-password-form.tsx
+│   ├── client-navigation.tsx
 │   ├── dashboard-stats.tsx
+│   ├── date-filter.tsx
+│   ├── edit-profile-form.tsx
 │   ├── header.tsx
 │   ├── inventaris-table.tsx
+│   ├── laporan-client.tsx
+│   ├── laporan-pendapatan.tsx
+│   ├── layout-wrapper.tsx
 │   ├── login-form.tsx
+│   ├── nasabah-combobox.tsx
 │   ├── nasabah-dashboard.tsx
+│   ├── nasabah-list.tsx
+│   ├── nasabah-list-with-search.tsx
+│   ├── pagination.tsx
 │   ├── penarikan-form.tsx
 │   ├── penimbangan-form.tsx
 │   ├── quick-actions.tsx
 │   ├── recent-transactions.tsx
+│   ├── tambah-inventaris-modal.tsx
+│   ├── tambah-nasabah-modal.tsx
 │   ├── theme-provider.tsx
 │   └── transaksi-table.tsx
 ├── hooks
@@ -87,13 +114,29 @@
 │   └── use-toast.ts
 ├── lib
 │   ├── auth.ts
+│   ├── pdf-generator.ts
 │   ├── prisma.ts
 │   ├── session.ts
+│   ├── supabase.ts
 │   └── utils.ts
 ├── prisma
 │   ├── schema.prisma
 │   └── seed.ts
 ├── public
+│   ├── favicon
+│   │   ├── android-chrome-192x192.png
+│   │   ├── android-chrome-512x512.png
+│   │   ├── apple-icon.png
+│   │   ├── favicon-144x144.png
+│   │   ├── favicon-16x16.png
+│   │   ├── favicon-32x32.png
+│   │   ├── favicon-96x96.png
+│   │   ├── favicon.ico
+│   │   ├── favicon.svg
+│   │   ├── placeholder.jpg
+│   │   └── site.webmanifest
+│   ├── screenshots
+│   │   └── placeholder.jpg
 │   ├── placeholder.jpg
 │   ├── placeholder-logo.png
 │   ├── placeholder-logo.svg
@@ -115,4 +158,4 @@
 ├── tailwind.config.ts
 └── tsconfig.json
 
-17 directories, 99 files
+23 directories, 136 files

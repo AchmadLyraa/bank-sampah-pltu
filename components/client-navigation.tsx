@@ -1,14 +1,24 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Home, Scale, Package, CreditCard, History, Users, LogOut, BarChart3 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { logoutAction } from "@/app/actions/auth"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import {
+  Home,
+  Scale,
+  Package,
+  CreditCard,
+  History,
+  Users,
+  LogOut,
+  BarChart3,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { logoutAction } from "@/app/actions/auth";
 
 interface ClientNavigationProps {
-  userType: "bank-sampah" | "nasabah"
+  userType: "bank-sampah" | "nasabah";
+  userName: string;
 }
 
 const bankSampahNavItems = [
@@ -33,7 +43,7 @@ const bankSampahNavItems = [
     label: "Penarikan",
     icon: CreditCard,
   },
-]
+];
 
 const nasabahNavItems = [
   {
@@ -41,41 +51,46 @@ const nasabahNavItems = [
     label: "Dashboard",
     icon: Home,
   },
-]
+];
 
-export function ClientNavigation({ userType }: ClientNavigationProps) {
+export function ClientNavigation({
+  userType,
+  userName,
+}: ClientNavigationProps) {
   return (
     <>
       {/* Sidebar for desktop */}
-      <SidebarNavigation userType={userType} />
+      <SidebarNavigation userType={userType} userName={userName} />
       {/* Bottom navigation for mobile */}
-      <BottomNavigation userType={userType} />
+      <BottomNavigation userType={userType} userName={userName} />
     </>
-  )
+  );
 }
 
-function BottomNavigation({ userType }: ClientNavigationProps) {
-  const pathname = usePathname()
-  const navItems = userType === "bank-sampah" ? bankSampahNavItems : nasabahNavItems
+function BottomNavigation({ userType, userName }: ClientNavigationProps) {
+  const pathname = usePathname();
+  const navItems =
+    userType === "bank-sampah" ? bankSampahNavItems : nasabahNavItems;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
       <div className="flex items-center justify-center py-1">
         {navItems.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
           if (item.special) {
-              return (
+            return (
               <Link
                 key={item.href}
                 href={item.href}
-                className=
-                  "relative -mt-12 flex grow-1 bg-blue-600 text-white text-center flex-col items-center justify-center py-3 px-4 rounded-lg min-w-0 flex-1"
+                className="relative -mt-12 flex grow-1 bg-blue-600 text-white text-center flex-col items-center justify-center py-3 px-4 rounded-lg min-w-0 flex-1"
               >
                 <Icon className="h-5 w-5 mb-1" />
-                <span className="text-xs font-medium truncate">{item.label}</span>
+                <span className="text-xs font-medium truncate">
+                  {item.label}
+                </span>
               </Link>
-            )
+            );
           }
           return (
             <Link
@@ -83,13 +98,15 @@ function BottomNavigation({ userType }: ClientNavigationProps) {
               href={item.href}
               className={cn(
                 "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-0 flex-1",
-                isActive ? "text-blue-600" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+                isActive
+                  ? "text-blue-600"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
               )}
             >
               <Icon className="h-5 w-5 mb-1" />
               <span className="text-xs font-medium truncate">{item.label}</span>
             </Link>
-          )
+          );
         })}
 
         {/* Logout button */}
@@ -105,12 +122,13 @@ function BottomNavigation({ userType }: ClientNavigationProps) {
         </form>
       </div>
     </div>
-  )
+  );
 }
 
-function SidebarNavigation({ userType }: ClientNavigationProps) {
-  const pathname = usePathname()
-  const navItems = userType === "bank-sampah" ? bankSampahNavItems : nasabahNavItems
+function SidebarNavigation({ userType, userName }: ClientNavigationProps) {
+  const pathname = usePathname();
+  const navItems =
+    userType === "bank-sampah" ? bankSampahNavItems : nasabahNavItems;
 
   return (
     <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-50">
@@ -122,8 +140,13 @@ function SidebarNavigation({ userType }: ClientNavigationProps) {
               <Package className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Bank Sampah</h1>
-              <p className="text-xs text-gray-500 capitalize">{userType.replace("-", " ")}</p>
+              <h1 className="text-md font-bold text-gray-900">
+                Aplikasi Bank Sampah
+              </h1>
+              {/*<p className="text-xs text-gray-500 capitalize">
+                {userType.replace("-", " ")}
+              </p>*/}
+              <p className="text-xs text-gray-500 capitalize">{userName}</p>
             </div>
           </div>
         </div>
@@ -131,8 +154,8 @@ function SidebarNavigation({ userType }: ClientNavigationProps) {
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2">
           {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
 
             return (
               <Link
@@ -148,7 +171,7 @@ function SidebarNavigation({ userType }: ClientNavigationProps) {
                 <Icon className="mr-3 h-5 w-5" />
                 {item.label}
               </Link>
-            )
+            );
           })}
         </nav>
 
@@ -167,5 +190,5 @@ function SidebarNavigation({ userType }: ClientNavigationProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

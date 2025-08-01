@@ -1,14 +1,14 @@
-import { redirect } from "next/navigation"
-import { getSession } from "@/lib/session"
-import { prisma } from "@/lib/prisma"
-import PenarikanForm from "@/components/penarikan-form"
-import LayoutWrapper from "@/components/layout-wrapper"
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
+import PenarikanForm from "@/components/penarikan-form";
+import LayoutWrapper from "@/components/layout-wrapper";
 
 export default async function PenarikanPage() {
-  const session = await getSession()
+  const session = await getSession();
 
   if (!session || session.userType !== "bank-sampah") {
-    redirect("/")
+    redirect("/");
   }
 
   const nasabahList = await prisma.nasabah.findMany({
@@ -17,10 +17,10 @@ export default async function PenarikanPage() {
       saldo: { gt: 0 },
     },
     orderBy: { nama: "asc" },
-  })
+  });
 
   return (
-    <LayoutWrapper userType="bank-sampah">
+    <LayoutWrapper userType="bank-sampah" userName={session.nama || "Unknown"}>
       <div className="max-w-4xl mx-auto py-6 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Penarikan Saldo</h1>
@@ -30,5 +30,5 @@ export default async function PenarikanPage() {
         <PenarikanForm nasabahList={nasabahList} />
       </div>
     </LayoutWrapper>
-  )
+  );
 }

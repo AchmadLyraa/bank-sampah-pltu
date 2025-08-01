@@ -25,6 +25,7 @@ export async function loginAction(formData: FormData) {
       userId: result.user.id,
       userType: result.type,
       email: result.user.email,
+      nama: result.user.nama,
     }),
     {
       httpOnly: true,

@@ -1,31 +1,33 @@
-import { redirect } from "next/navigation"
-import { getSession } from "@/lib/session"
-import { prisma } from "@/lib/prisma"
-import TransaksiTable from "@/components/transaksi-table"
-import LayoutWrapper from "@/components/layout-wrapper"
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
+import TransaksiTable from "@/components/transaksi-table";
+import LayoutWrapper from "@/components/layout-wrapper";
 
 interface TransaksiPageProps {
-  searchParams: { page?: string }
+  searchParams: { page?: string };
 }
 
-export default async function TransaksiPage({ searchParams }: TransaksiPageProps) {
-  const session = await getSession()
+export default async function TransaksiPage({
+  searchParams,
+}: TransaksiPageProps) {
+  const session = await getSession();
 
   if (!session || session.userType !== "bank-sampah") {
-    redirect("/")
+    redirect("/");
   }
 
   // 📄 Pagination setup
-  const currentPage = Number(searchParams.page) || 1
-  const itemsPerPage = 20
-  const skip = (currentPage - 1) * itemsPerPage
+  const currentPage = Number(searchParams.page) || 1;
+  const itemsPerPage = 20;
+  const skip = (currentPage - 1) * itemsPerPage;
 
   // 📊 Get total count for pagination
   const totalTransaksi = await prisma.transaksi.count({
     where: { bankSampahId: session.userId },
-  })
+  });
 
-  const totalPages = Math.ceil(totalTransaksi / itemsPerPage)
+  const totalPages = Math.ceil(totalTransaksi / itemsPerPage);
 
   // 📋 Get paginated transaksi
   const transaksi = await prisma.transaksi.findMany({
@@ -41,13 +43,15 @@ export default async function TransaksiPage({ searchParams }: TransaksiPageProps
     orderBy: { createdAt: "desc" },
     skip,
     take: itemsPerPage,
-  })
+  });
 
   return (
-    <LayoutWrapper userType="bank-sampah">
+    <LayoutWrapper userType="bank-sampah" userName={session.nama || "Unknown"}>
       <div className="max-w-7xl mx-auto py-6 px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Riwayat Transaksi</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Riwayat Transaksi
+          </h1>
           <p className="text-gray-600">Semua transaksi bank sampah</p>
         </div>
 
@@ -59,5 +63,5 @@ export default async function TransaksiPage({ searchParams }: TransaksiPageProps
         />
       </div>
     </LayoutWrapper>
-  )
+  );
 }

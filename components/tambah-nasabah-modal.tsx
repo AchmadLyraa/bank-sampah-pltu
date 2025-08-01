@@ -1,50 +1,80 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { createNasabahAction } from "@/app/actions/nasabah-management"
-import { UserPlus, Loader2 } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { createNasabahAction } from "@/app/actions/nasabah-management";
+import { UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
 
 interface TambahNasabahModalProps {
-  bankSampahId: string
+  bankSampahId: string;
 }
 
-export default function TambahNasabahModal({ bankSampahId }: TambahNasabahModalProps) {
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+export default function TambahNasabahModal({
+  bankSampahId,
+}: TambahNasabahModalProps) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordMismatch, setPasswordMismatch] = useState(false);
 
   async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setMessage(null)
+    setLoading(true);
+    setMessage(null);
 
-    // Add bankSampahId to formData
-    formData.append("bankSampahId", bankSampahId)
+    const password = formData.get("password");
+    const confirmPassword = formData.get("confirmPassword");
+
+    if (password !== confirmPassword) {
+      setMessage({
+        type: "error",
+        text: "Password dan konfirmasi password tidak cocok",
+      });
+      setLoading(false);
+      return;
+    }
+
+    formData.append("bankSampahId", bankSampahId);
+    // Hapus confirmPassword dari formData agar backend tidak bingung
+    formData.delete("confirmPassword");
 
     try {
-      const result = await createNasabahAction(formData)
+      const result = await createNasabahAction(formData);
 
       if (result.error) {
-        setMessage({ type: "error", text: result.error })
+        setMessage({ type: "error", text: result.error });
       } else {
-        setMessage({ type: "success", text: "Nasabah berhasil ditambahkan!" })
-        // Reset form
-        const form = document.getElementById("modal-tambah-nasabah-form") as HTMLFormElement
-        form?.reset()
-        // Close modal after success
+        setMessage({ type: "success", text: "Nasabah berhasil ditambahkan!" });
+        const form = document.getElementById(
+          "modal-tambah-nasabah-form",
+        ) as HTMLFormElement;
+        form?.reset();
         setTimeout(() => {
-          setOpen(false)
-          setMessage(null)
-        }, 1500)
+          setOpen(false);
+          setMessage(null);
+        }, 1500);
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Terjadi kesalahan saat menambahkan nasabah" })
+      setMessage({
+        type: "error",
+        text: "Terjadi kesalahan saat menambahkan nasabah",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -56,7 +86,7 @@ export default function TambahNasabahModal({ bankSampahId }: TambahNasabahModalP
           Tambah Nasabah
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
@@ -64,30 +94,112 @@ export default function TambahNasabahModal({ bankSampahId }: TambahNasabahModalP
           </DialogTitle>
         </DialogHeader>
 
-        <form id="modal-tambah-nasabah-form" action={handleSubmit} className="space-y-4">
+        <form
+          id="modal-tambah-nasabah-form"
+          action={handleSubmit}
+          className="space-y-4"
+        >
           <div className="space-y-2">
             <Label htmlFor="modal-nama">Nama Lengkap</Label>
-            <Input id="modal-nama" name="nama" placeholder="Masukkan nama lengkap" required />
+            <Input
+              id="modal-nama"
+              name="nama"
+              placeholder="Masukkan nama lengkap"
+              required
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="modal-email">Email</Label>
-            <Input id="modal-email" name="email" type="email" placeholder="email@example.com" required />
+            <Input
+              id="modal-email"
+              name="email"
+              type="email"
+              placeholder="email@example.com"
+              required
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="modal-password">Password</Label>
-            <Input id="modal-password" name="password" type="password" placeholder="Password untuk login" required />
+            <div className="relative">
+              <Input
+                id="modal-password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Password untuk login"
+                required
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="modal-confirm-password">Konfirmasi Password</Label>
+            <div className="relative">
+              <Input
+                id="modal-confirm-password"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Konfirmasi password"
+                required
+                className="pr-10"
+                onChange={(e) => {
+                  setPasswordMismatch(
+                    e.target.value !==
+                      document.getElementById("modal-password")?.value,
+                  );
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+            {passwordMismatch && (
+              <p className="text-sm text-red-600">
+                Password dan konfirmasi password tidak cocok
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="modal-telepon">Telepon</Label>
-            <Input id="modal-telepon" name="telepon" placeholder="08xxxxxxxxxx" required />
+            <Input
+              id="modal-telepon"
+              name="telepon"
+              placeholder="08xxxxxxxxxx"
+              required
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="modal-alamat">Alamat</Label>
-            <Textarea id="modal-alamat" name="alamat" placeholder="Alamat lengkap nasabah" rows={3} required />
+            <Textarea
+              id="modal-alamat"
+              name="alamat"
+              placeholder="Alamat lengkap nasabah"
+              rows={3}
+              required
+            />
           </div>
 
           {message && (
@@ -120,5 +232,5 @@ export default function TambahNasabahModal({ bankSampahId }: TambahNasabahModalP
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
