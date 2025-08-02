@@ -1,7 +1,10 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Transaksi } from "@/types";
 import { DateTime } from "luxon";
+import { useEffect, useState } from "react";
 
 interface RecentTransactionsProps {
   transactions: Transaksi[];
@@ -10,6 +13,19 @@ interface RecentTransactionsProps {
 export default function RecentTransactions({
   transactions,
 }: RecentTransactionsProps) {
+  const [isClient, setIsClient] = useState(false);
+  const [userTimezone, setUserTimezone] = useState<string>("UTC");
+
+  // 🔧 FORCE CLIENT-SIDE ONLY RENDERING
+  useEffect(() => {
+    setIsClient(true);
+    setUserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log(
+      "🌍 User timezone:",
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+    );
+  }, []);
+
   const getTransactionBadge = (jenis: string) => {
     switch (jenis) {
       case "PEMASUKAN":
@@ -28,40 +44,64 @@ export default function RecentTransactions({
   };
 
   const formatDateTime = (dateString: string) => {
+    // 🚨 FORCE CLIENT-SIDE ONLY
+    if (!isClient) {
+      return "Loading...";
+    }
+
     try {
-      // 🔧 FIX: Use the same method as the working code
-      // Convert to Date first, then use Luxon with explicit timezone
-      const jsDate = new Date(dateString);
-      const dt = DateTime.fromJSDate(jsDate)
-        .setZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+      console.log("📅 Raw date:", dateString);
+      console.log("🌍 Using timezone:", userTimezone);
 
-      if (dt.isValid) {
-        return dt.toFormat("dd MMM yyyy HH:mm");
-      }
+      // Method 1: Pure JavaScript approach (most reliable)
+      const date = new Date(dateString);
+      console.log("📅 Parsed date (UTC):", date.toISOString());
 
-      // Method 2: Enhanced fallback with proper timezone handling
-      return jsDate.toLocaleString("id-ID", {
+      const formatted = date.toLocaleString("id-ID", {
         day: "2-digit",
         month: "short",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timeZone: userTimezone, // Use detected timezone
+        hour12: false,
       });
+
+      console.log("📅 Formatted result:", formatted);
+      return formatted;
     } catch (error) {
-      console.warn("⚠️ Date formatting error:", error);
-      // Method 3: Final fallback with explicit timezone
+      console.error("❌ Date formatting error:", error);
+
+      // Ultimate fallback - pure JS
       const fallbackDate = new Date(dateString);
-      return fallbackDate.toLocaleString("id-ID", {
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      });
+      return fallbackDate.toLocaleString("id-ID");
     }
   };
+
+  // 🔧 Show loading state during hydration
+  if (!isClient) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaksi Terbaru</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-gray-500 text-center py-4">
+              Loading timezone...
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Transaksi Terbaru</CardTitle>
+        {/* 🔍 DEBUG INFO - Remove this in production */}
+        <p className="text-xs text-gray-400">Timezone: {userTimezone}</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
