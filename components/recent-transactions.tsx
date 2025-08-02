@@ -29,15 +29,18 @@ export default function RecentTransactions({
 
   const formatDateTime = (dateString: string) => {
     try {
-      // Method 1: Using Luxon with explicit local timezone
-      const dt = DateTime.fromISO(dateString, { zone: "local" });
+      // 🔧 FIX: Use the same method as the working code
+      // Convert to Date first, then use Luxon with explicit timezone
+      const jsDate = new Date(dateString);
+      const dt = DateTime.fromJSDate(jsDate)
+        .setZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
       if (dt.isValid) {
         return dt.toFormat("dd MMM yyyy HH:mm");
       }
 
-      // Method 2: Fallback using native Date with proper locale formatting
-      const date = new Date(dateString);
-      return date.toLocaleString("id-ID", {
+      // Method 2: Enhanced fallback with proper timezone handling
+      return jsDate.toLocaleString("id-ID", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -46,8 +49,12 @@ export default function RecentTransactions({
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
     } catch (error) {
-      // Method 3: Final fallback
-      return new Date(dateString).toLocaleString();
+      console.warn("⚠️ Date formatting error:", error);
+      // Method 3: Final fallback with explicit timezone
+      const fallbackDate = new Date(dateString);
+      return fallbackDate.toLocaleString("id-ID", {
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
     }
   };
 
