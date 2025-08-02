@@ -1,7 +1,10 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { History } from "lucide-react";
 import Pagination from "@/components/pagination";
+import { useEffect, useState } from "react";
 
 // 🔧 FIXED: Create specific type for TransaksiTable that matches Prisma result
 interface TransaksiWithDetails {
@@ -38,21 +41,46 @@ export default function TransaksiTable({
   totalPages,
   totalItems,
 }: TransaksiTableProps) {
+  const [isClient, setIsClient] = useState(false);
+  const [userTimezone, setUserTimezone] = useState<string>("UTC");
+
+  // 🔧 FORCE CLIENT-SIDE ONLY RENDERING
+  useEffect(() => {
+    setIsClient(true);
+    setUserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    console.log(
+      "🌍 TransaksiTable timezone:",
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+    );
+  }, []);
+
   // 🕐 Format datetime with proper timezone handling
   const formatDateTime = (dateString: string | Date) => {
+    // 🚨 FORCE CLIENT-SIDE ONLY
+    if (!isClient) {
+      return "Loading...";
+    }
+
     try {
+      console.log("📅 Raw date (TransaksiTable):", dateString);
+
       const date = new Date(dateString);
 
       // Using native toLocaleString for consistent local timezone with time
-      return date.toLocaleString("id-ID", {
+      const formatted = date.toLocaleString("id-ID", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timeZone: userTimezone, // Use detected timezone
+        hour12: false,
       });
+
+      console.log("📅 Formatted result (TransaksiTable):", formatted);
+      return formatted;
     } catch (error) {
+      console.error("❌ Date formatting error (TransaksiTable):", error);
       // Fallback
       return new Date(dateString).toLocaleString("id-ID");
     }
@@ -82,6 +110,54 @@ export default function TransaksiTable({
   const totalPengeluaran = transaksi
     .filter((t) => t.jenis === "PENGELUARAN")
     .reduce((sum, t) => sum + t.totalNilai, 0);
+
+  // 🔧 Show loading state during hydration
+  if (!isClient) {
+    return (
+      <div className="space-y-6">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold text-gray-400">Loading...</div>
+              <p className="text-sm text-gray-600">
+                Total Pemasukan (Halaman Ini)
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold text-gray-400">Loading...</div>
+              <p className="text-sm text-gray-600">
+                Total Pengeluaran (Halaman Ini)
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold text-gray-400">Loading...</div>
+              <p className="text-sm text-gray-600">Selisih (Halaman Ini)</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Loading Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Loading Transaksi...
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <p className="text-gray-500">Loading timezone...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -124,6 +200,8 @@ export default function TransaksiTable({
             <History className="h-5 w-5" />
             Transaksi (Halaman {currentPage} dari {totalPages})
           </CardTitle>
+          {/* 🔍 DEBUG INFO - Remove this in production */}
+          <p className="text-xs text-gray-400">Timezone: {userTimezone}</p>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
