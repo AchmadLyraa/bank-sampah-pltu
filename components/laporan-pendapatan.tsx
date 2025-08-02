@@ -248,7 +248,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
                           .setZone(
                             Intl.DateTimeFormat().resolvedOptions().timeZone,
                           )
-                          .toFormat("dd/MM/yyyy")}
+                          .toFormat("dd/MM/yyyy HH:mm")}
                       </p>
                     </div>
                     <Badge
@@ -293,7 +293,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
                           .setZone(
                             Intl.DateTimeFormat().resolvedOptions().timeZone,
                           )
-                          .toFormat("dd/MM/yyyy")}
+                          .toFormat("dd/MM/yyyy HH:mm")}
                       </p>
                       {transaksi.detailTransaksi && (
                         <p className="text-xs text-gray-600">

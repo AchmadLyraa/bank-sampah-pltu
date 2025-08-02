@@ -27,6 +27,30 @@ export default function RecentTransactions({
     }
   };
 
+  const formatDateTime = (dateString: string) => {
+    try {
+      // Method 1: Using Luxon with explicit local timezone
+      const dt = DateTime.fromISO(dateString, { zone: "local" });
+      if (dt.isValid) {
+        return dt.toFormat("dd MMM yyyy HH:mm");
+      }
+
+      // Method 2: Fallback using native Date with proper locale formatting
+      const date = new Date(dateString);
+      return date.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+    } catch (error) {
+      // Method 3: Final fallback
+      return new Date(dateString).toLocaleString();
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -55,9 +79,7 @@ export default function RecentTransactions({
                     {transaksi.keterangan}
                   </p>
                   <p className="text-xs text-gray-400">
-                    {DateTime.fromJSDate(new Date(transaksi.createdAt))
-                      .setZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
-                      .toFormat("dd MMM yyyy HH:mm")}
+                    {formatDateTime(transaksi.createdAt)}
                   </p>
                 </div>
                 <div className="sm:flex-1 sm:text-right flex-[100%]">

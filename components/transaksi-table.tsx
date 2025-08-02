@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { History } from "lucide-react";
 import Pagination from "@/components/pagination";
-import { DateTime } from "luxon";
 
 // 🔧 FIXED: Create specific type for TransaksiTable that matches Prisma result
 interface TransaksiWithDetails {
@@ -39,6 +38,26 @@ export default function TransaksiTable({
   totalPages,
   totalItems,
 }: TransaksiTableProps) {
+  // 🕐 Format datetime with proper timezone handling
+  const formatDateTime = (dateString: string | Date) => {
+    try {
+      const date = new Date(dateString);
+
+      // Using native toLocaleString for consistent local timezone with time
+      return date.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+    } catch (error) {
+      // Fallback
+      return new Date(dateString).toLocaleString("id-ID");
+    }
+  };
+
   const getTransactionBadge = (jenis: string) => {
     switch (jenis) {
       case "PEMASUKAN":
@@ -123,11 +142,7 @@ export default function TransaksiTable({
                 {transaksi.map((t) => (
                   <tr key={t.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4 text-sm">
-                      {DateTime.fromJSDate(new Date(t.createdAt))
-                        .setZone(
-                          Intl.DateTimeFormat().resolvedOptions().timeZone,
-                        )
-                        .toFormat("dd/MM/yyyy HH:mm")}
+                      {formatDateTime(t.createdAt)}
                     </td>
                     <td className="py-3 px-4">
                       {getTransactionBadge(t.jenis)}
