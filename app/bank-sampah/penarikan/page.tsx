@@ -15,6 +15,7 @@ export default async function PenarikanPage() {
     where: {
       bankSampahId: session.userId,
       saldo: { gt: 0 },
+      isActive: true, // 🎯 ONLY ACTIVE NASABAH
     },
     orderBy: { nama: "asc" },
   });

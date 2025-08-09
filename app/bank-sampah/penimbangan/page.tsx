@@ -13,7 +13,10 @@ export default async function PenimbanganPage() {
 
   const [nasabahList, inventarisList] = await Promise.all([
     prisma.nasabah.findMany({
-      where: { bankSampahId: session.userId },
+      where: {
+        bankSampahId: session.userId,
+        isActive: true, // 🎯 ONLY ACTIVE NASABAH
+      },
       orderBy: { nama: "asc" },
     }),
     // 🆕 FILTER: Only show active inventaris

@@ -85,6 +85,7 @@ export async function toggleNasabahStatusAction(formData: FormData) {
 
     revalidatePath("/bank-sampah/nasabah");
     revalidatePath("/bank-sampah/penimbangan"); // Refresh penimbangan page too
+    revalidatePath("/bank-sampah/penarikan");
     return { success: true };
   } catch (error) {
     console.error("Error toggling nasabah status:", error);

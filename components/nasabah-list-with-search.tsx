@@ -16,6 +16,8 @@ import {
   PowerOff,
   Loader2,
   CreditCard,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { toggleNasabahStatusAction } from "@/app/actions/nasabah-management";
 import type { Nasabah } from "@/types";
@@ -33,20 +35,34 @@ export default function NasabahListWithSearch({
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [showInactive, setShowInactive] = useState(false);
 
   const filteredNasabah = useMemo(() => {
-    if (!searchTerm) return nasabahList;
+    let filtered = nasabahList;
 
-    const term = searchTerm.toLowerCase();
-    return nasabahList.filter(
-      (nasabah) =>
-        nasabah.nama.toLowerCase().includes(term) ||
-        nasabah.email.toLowerCase().includes(term) ||
-        nasabah.nik.includes(term) || // 🆕 Search by NIK
-        nasabah.telepon.includes(term) ||
-        nasabah.alamat.toLowerCase().includes(term),
-    );
-  }, [nasabahList, searchTerm]);
+    // Filter by active status
+    if (!showInactive) {
+      filtered = filtered.filter((nasabah) => nasabah.isActive);
+    }
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (nasabah) =>
+          nasabah.nama.toLowerCase().includes(term) ||
+          nasabah.nik.includes(term) ||
+          nasabah.email.toLowerCase().includes(term) ||
+          nasabah.telepon.includes(term) ||
+          nasabah.alamat.toLowerCase().includes(term),
+      );
+    }
+
+    return filtered;
+  }, [nasabahList, searchTerm, showInactive]);
+
+  const activeCount = nasabahList.filter((n) => n.isActive).length;
+  const inactiveCount = nasabahList.filter((n) => !n.isActive).length;
+  const totalCount = nasabahList.length;
 
   const handleToggleStatus = async (nasabah: Nasabah) => {
     const newStatus = !nasabah.isActive;
@@ -96,10 +112,47 @@ export default function NasabahListWithSearch({
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Daftar Nasabah ({filteredNasabah.length})
-          </CardTitle>
+          <div className="flex sm:items-center items-start sm:justify-between flex-col sm:flex-row">
+            <CardTitle className="flex sm:items-center items-start gap-2">
+              <Users className="h-5 w-5" />
+              Daftar Nasabah
+            </CardTitle>
+
+            {/* Toggle Show Inactive */}
+            <Button
+              variant={showInactive ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowInactive(!showInactive)}
+              className="flex items-center gap-2 sm:mt-0 sm:mb-0 mt-2 mb-4"
+            >
+              {showInactive ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+              {showInactive ? "Sembunyikan Non-aktif" : "Tampilkan Non-aktif"}
+            </Button>
+          </div>
+
+          {/* Statistics */}
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span>
+                Aktif: <strong>{activeCount}</strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+              <span>
+                Non-aktif: <strong>{inactiveCount}</strong>
+              </span>
+            </div>
+          </div>
+          <div className="text-gray-500 text-xs">
+            Total: <strong>{totalCount}</strong> | Ditampilkan:{" "}
+            <strong>{filteredNasabah.length}</strong>
+          </div>
 
           {/* Search Bar */}
           <div className="relative">

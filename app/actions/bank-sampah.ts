@@ -8,9 +8,17 @@ import type { PenimbanganFormData, PenarikanFormData } from "@/types";
 export async function getDashboardData(bankSampahId: string) {
   const [nasabahCount, totalSaldo, inventaris, recentTransaksi] =
     await Promise.all([
-      prisma.nasabah.count({ where: { bankSampahId } }),
+      prisma.nasabah.count({
+        where: {
+          bankSampahId,
+          isActive: true, // 🎯 ONLY ACTIVE NASABAH
+        },
+      }),
       prisma.nasabah.aggregate({
-        where: { bankSampahId },
+        where: {
+          bankSampahId,
+          isActive: true, // 🎯 ONLY ACTIVE NASABAH
+        },
         _sum: { saldo: true },
       }),
       prisma.inventarisSampah.findMany({

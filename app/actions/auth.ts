@@ -1,24 +1,28 @@
-"use server"
+"use server";
 
-import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
-import { authenticateUser } from "@/lib/auth"
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { authenticateUser } from "@/lib/auth";
 
 // Update loginAction to remove userType parameter
 export async function loginAction(formData: FormData) {
   const data = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
-  }
+  };
 
-  const result = await authenticateUser(data)
+  const result = await authenticateUser(data);
 
   if (!result) {
-    return { error: "Email atau password salah" }
+    return { error: "Email atau password salah" };
+  }
+
+  if ("error" in result) {
+    return { error: result.error };
   }
 
   // Set session cookie
-  const cookieStore = await cookies()
+  const cookieStore = await cookies();
   cookieStore.set(
     "session",
     JSON.stringify({
@@ -32,18 +36,18 @@ export async function loginAction(formData: FormData) {
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7, // 7 days
     },
-  )
+  );
 
   // Redirect based on user type
   if (result.type === "bank-sampah") {
-    redirect("/bank-sampah")
+    redirect("/bank-sampah");
   } else {
-    redirect("/nasabah")
+    redirect("/nasabah");
   }
 }
 
 export async function logoutAction() {
-  const cookieStore = await cookies()
-  cookieStore.delete("session")
-  redirect("/")
+  const cookieStore = await cookies();
+  cookieStore.delete("session");
+  redirect("/");
 }

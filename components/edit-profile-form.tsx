@@ -1,44 +1,53 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { updateNasabahProfileAction } from "@/app/actions/nasabah-profile"
-import { User, Loader2, MapPin, Phone } from "lucide-react"
-import type { Nasabah } from "@/types"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { updateNasabahProfileAction } from "@/app/actions/nasabah-profile";
+import { User, Loader2, MapPin, Phone, CreditCard } from "lucide-react";
+import type { Nasabah } from "@/types";
 
 interface EditProfileFormProps {
-  nasabah: Nasabah
+  nasabah: Nasabah;
 }
 
 export default function EditProfileForm({ nasabah }: EditProfileFormProps) {
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setMessage(null)
+    setLoading(true);
+    setMessage(null);
 
     // Add nasabahId to formData
-    formData.append("nasabahId", nasabah.id)
+    formData.append("nasabahId", nasabah.id);
 
     try {
-      const result = await updateNasabahProfileAction(formData)
+      const result = await updateNasabahProfileAction(formData);
 
       if (result.error) {
-        setMessage({ type: "error", text: result.error })
+        setMessage({ type: "error", text: result.error });
       } else {
-        setMessage({ type: "success", text: result.message || "Profil berhasil diperbarui!" })
+        setMessage({
+          type: "success",
+          text: result.message || "Profil berhasil diperbarui!",
+        });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Terjadi kesalahan saat memperbarui profil" })
+      setMessage({
+        type: "error",
+        text: "Terjadi kesalahan saat memperbarui profil",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
       // Clear message after 3 seconds
-      setTimeout(() => setMessage(null), 3000)
+      setTimeout(() => setMessage(null), 3000);
     }
   }
 
@@ -55,14 +64,40 @@ export default function EditProfileForm({ nasabah }: EditProfileFormProps) {
           {/* Nama - READ ONLY */}
           <div className="space-y-2">
             <Label htmlFor="nama">Nama Lengkap</Label>
-            <Input id="nama" value={nasabah.nama} disabled className="bg-gray-100 cursor-not-allowed" />
+            <Input
+              id="nama"
+              value={nasabah.nama}
+              disabled
+              className="bg-gray-100 cursor-not-allowed"
+            />
             <p className="text-xs text-gray-500">Nama tidak dapat diubah</p>
+          </div>
+
+          {/* NIK */}
+          {/* Telepon - EDITABLE */}
+          <div className="space-y-2">
+            <Label htmlFor="nik" className="flex items-center gap-1">
+              <CreditCard className="h-4 w-4" />
+              NIK
+            </Label>
+            <Input
+              id="nik"
+              name="nik"
+              defaultValue={nasabah.nik}
+              placeholder="62xxxxxxxxxx"
+              required
+            />
           </div>
 
           {/* Email - READ ONLY */}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" value={nasabah.email} disabled className="bg-gray-100 cursor-not-allowed" />
+            <Input
+              id="email"
+              value={nasabah.email}
+              disabled
+              className="bg-gray-100 cursor-not-allowed"
+            />
             <p className="text-xs text-gray-500">Email tidak dapat diubah</p>
           </div>
 
@@ -72,7 +107,13 @@ export default function EditProfileForm({ nasabah }: EditProfileFormProps) {
               <Phone className="h-4 w-4" />
               Nomor Telepon
             </Label>
-            <Input id="telepon" name="telepon" defaultValue={nasabah.telepon} placeholder="08xxxxxxxxxx" required />
+            <Input
+              id="telepon"
+              name="telepon"
+              defaultValue={nasabah.telepon}
+              placeholder="08xxxxxxxxxx"
+              required
+            />
           </div>
 
           {/* Alamat - EDITABLE */}
@@ -110,5 +151,5 @@ export default function EditProfileForm({ nasabah }: EditProfileFormProps) {
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
