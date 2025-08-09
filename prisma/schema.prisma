@@ -26,12 +26,14 @@ model BankSampah {
 model Nasabah {
   id           String      @id @default(cuid())
   nama         String
+  nik          String      @default("")
   alamat       String
   telepon      String
   email        String      @unique
   password     String
   saldo        Float       @default(0)
   bankSampahId String
+  isActive     Boolean     @default(true)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   bankSampah   BankSampah  @relation(fields: [bankSampahId], references: [id])

@@ -110,6 +110,19 @@ export default function TambahNasabahModal({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="modal-nik">NIK (Nomor Induk Kependudukan)</Label>
+            <Input
+              id="modal-nik"
+              name="nik"
+              placeholder="Masukkan 16 digit NIK"
+              // pattern="[0-9]{16}"
+              minLength={1}
+              maxLength={16}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="modal-email">Email</Label>
             <Input
               id="modal-email"

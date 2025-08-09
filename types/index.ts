@@ -13,9 +13,11 @@ export interface BankSampah {
 export interface Nasabah {
   id: string;
   nama: string;
+  nik: string;
   alamat: string;
   telepon: string;
   email: string;
+  isActive: boolean;
   password: string;
   saldo: number;
   bankSampahId: string;

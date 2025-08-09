@@ -12,8 +12,7 @@ export default async function NasabahPage() {
     redirect("/");
   }
 
-  const nasabahList = await getNasabahList(session.userId);
-
+  const nasabahList = await getNasabahList(session.userId, true);
   return (
     <LayoutWrapper userType="bank-sampah" userName={session.nama || "Unknown"}>
       <div className="max-w-6xl mx-auto py-6 px-4">
