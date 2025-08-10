@@ -15,7 +15,7 @@ interface TransaksiWithDetails {
   nasabahId: string | null;
   bankSampahId: string;
   createdAt: Date;
-  nasabah: { nama: string } | null;
+  nasabah: { person: { nama: string } } | null;
   detailTransaksi: {
     id: string;
     transaksiId: string;
@@ -226,7 +226,7 @@ export default function TransaksiTable({
                       {getTransactionBadge(t.jenis)}
                     </td>
                     <td className="py-3 px-4">
-                      {t.nasabah?.nama || "Bank Sampah"}
+                      {t.nasabah?.person?.nama || "Bank Sampah"}
                     </td>
                     <td className="py-3 px-4 text-sm">{t.keterangan || "-"}</td>
                     <td className="py-3 px-4 text-sm">

@@ -10,19 +10,34 @@ export interface BankSampah {
   updatedAt: Date;
 }
 
-export interface Nasabah {
+// 🆕 NEW: Interface untuk Person (individu)
+export interface Person {
   id: string;
   nama: string;
   nik: string;
   alamat: string;
   telepon: string;
   email: string;
-  isActive: boolean;
   password: string;
-  saldo: number;
-  bankSampahId: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// 🔄 MODIFIED: Interface untuk Nasabah (sekarang adalah hubungan)
+export interface Nasabah {
+  id: string;
+  saldo: number;
+  isActive: boolean;
+  bankSampahId: string;
+  personId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  // 🆕 NEW: Sertakan data Person terkait
+  person?: Person;
+}
+
+export interface AuthenticatedNasabah extends Nasabah {
+  person: Person; // Override untuk membuat 'person' wajib
 }
 
 export interface InventarisSampah {

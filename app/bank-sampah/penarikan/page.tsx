@@ -17,7 +17,12 @@ export default async function PenarikanPage() {
       saldo: { gt: 0 },
       isActive: true, // 🎯 ONLY ACTIVE NASABAH
     },
-    orderBy: { nama: "asc" },
+    include: {
+      person: true, // 🆕 Include Person data
+    },
+    orderBy: {
+      person: { nama: "asc" }, // 🔧 FIXED: Sort by person's name
+    },
   });
 
   return (

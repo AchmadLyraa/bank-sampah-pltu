@@ -1,9 +1,13 @@
-"use server"
+"use server";
 
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/prisma";
 
 // 🗓️ UPDATED: Tambah parameter filter tanggal
-export async function getLaporanPendapatan(bankSampahId: string, startDate?: Date, endDate?: Date) {
+export async function getLaporanPendapatan(
+  bankSampahId: string,
+  startDate?: Date,
+  endDate?: Date,
+) {
   // 📅 Setup date filter
   const dateFilter =
     startDate && endDate
@@ -13,14 +17,14 @@ export async function getLaporanPendapatan(bankSampahId: string, startDate?: Dat
             lte: endDate,
           },
         }
-      : {}
+      : {};
 
   console.log("📊 Laporan filter:", {
     bankSampahId,
     startDate: startDate?.toISOString(),
     endDate: endDate?.toISOString(),
     dateFilter,
-  })
+  });
 
   // Get all transactions for this bank sampah with date filter
   const [pemasukan, penjualanSampah, pengeluaran] = await Promise.all([
@@ -32,7 +36,7 @@ export async function getLaporanPendapatan(bankSampahId: string, startDate?: Dat
         ...dateFilter, // 🗓️ Apply date filter
       },
       include: {
-        nasabah: { select: { nama: true } },
+        nasabah: { select: { person: { select: { nama: true } } } }, // 🔄 Updated include
         detailTransaksi: {
           include: {
             inventarisSampah: { select: { jenisSampah: true } },
@@ -60,19 +64,25 @@ export async function getLaporanPendapatan(bankSampahId: string, startDate?: Dat
         ...dateFilter, // 🗓️ Apply date filter
       },
       include: {
-        nasabah: { select: { nama: true } },
+        nasabah: { select: { person: { select: { nama: true } } } }, // 🔄 Updated include
       },
       orderBy: { createdAt: "desc" },
     }),
-  ])
+  ]);
 
   // Calculate totals
-  const totalPemasukan = pemasukan.reduce((sum, t) => sum + t.totalNilai, 0)
-  const totalPenjualan = penjualanSampah.reduce((sum, t) => sum + t.totalNilai, 0)
-  const totalPengeluaran = pengeluaran.reduce((sum, t) => sum + t.totalNilai, 0)
+  const totalPemasukan = pemasukan.reduce((sum, t) => sum + t.totalNilai, 0);
+  const totalPenjualan = penjualanSampah.reduce(
+    (sum, t) => sum + t.totalNilai,
+    0,
+  );
+  const totalPengeluaran = pengeluaran.reduce(
+    (sum, t) => sum + t.totalNilai,
+    0,
+  );
 
   // Calculate profit (penjualan - pembelian dari nasabah)
-  const keuntungan = totalPenjualan - totalPemasukan
+  const keuntungan = totalPenjualan - totalPemasukan;
 
   // Get summary by waste type with date filter
   const summaryByType = await prisma.detailTransaksi.groupBy({
@@ -91,7 +101,7 @@ export async function getLaporanPendapatan(bankSampahId: string, startDate?: Dat
     _count: {
       id: true,
     },
-  })
+  });
 
   // Get waste type names
   const wasteTypes = await prisma.inventarisSampah.findMany({
@@ -104,17 +114,19 @@ export async function getLaporanPendapatan(bankSampahId: string, startDate?: Dat
       id: true,
       jenisSampah: true,
     },
-  })
+  });
 
   const summaryWithNames = summaryByType.map((summary) => {
-    const wasteType = wasteTypes.find((w) => w.id === summary.inventarisSampahId)
+    const wasteType = wasteTypes.find(
+      (w) => w.id === summary.inventarisSampahId,
+    );
     return {
       jenisSampah: wasteType?.jenisSampah || "Unknown",
       totalBerat: summary._sum.beratKg || 0,
       totalNilai: summary._sum.subtotal || 0,
       jumlahTransaksi: summary._count.id,
-    }
-  })
+    };
+  });
 
   return {
     totalPemasukan,
@@ -129,7 +141,8 @@ export async function getLaporanPendapatan(bankSampahId: string, startDate?: Dat
     filterInfo: {
       startDate,
       endDate,
-      totalTransaksi: pemasukan.length + penjualanSampah.length + pengeluaran.length,
+      totalTransaksi:
+        pemasukan.length + penjualanSampah.length + pengeluaran.length,
     },
-  }
+  };
 }

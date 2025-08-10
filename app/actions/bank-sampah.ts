@@ -8,16 +8,18 @@ import type { PenimbanganFormData, PenarikanFormData } from "@/types";
 export async function getDashboardData(bankSampahId: string) {
   const [nasabahCount, totalSaldo, inventaris, recentTransaksi] =
     await Promise.all([
+      // Count only active Nasabah relationships for this bank
       prisma.nasabah.count({
         where: {
           bankSampahId,
-          isActive: true, // 🎯 ONLY ACTIVE NASABAH
+          isActive: true,
         },
       }),
+      // Sum saldo only from active Nasabah relationships for this bank
       prisma.nasabah.aggregate({
         where: {
           bankSampahId,
-          isActive: true, // 🎯 ONLY ACTIVE NASABAH
+          isActive: true,
         },
         _sum: { saldo: true },
       }),
@@ -28,7 +30,14 @@ export async function getDashboardData(bankSampahId: string) {
       prisma.transaksi.findMany({
         where: { bankSampahId },
         include: {
-          nasabah: { select: { nama: true } },
+          nasabah: {
+            // 🆕 Include Nasabah relationship and its Person data
+            select: {
+              person: {
+                select: { nama: true },
+              },
+            },
+          },
           detailTransaksi: {
             include: {
               inventarisSampah: { select: { jenisSampah: true } },
@@ -87,16 +96,28 @@ export async function penimbanganAction(data: PenimbanganFormData) {
   }
 
   // Create transaction
-  const nasabah = await prisma.nasabah.findUnique({ where: { id: nasabahId } });
-  if (!nasabah) throw new Error("Nasabah tidak ditemukan");
+  const nasabahRelationship = await prisma.nasabah.findUnique({
+    where: { id: nasabahId },
+    include: { person: true }, // Include person data for checks/info
+  });
+
+  if (!nasabahRelationship) {
+    throw new Error("Hubungan nasabah tidak ditemukan");
+  }
+
+  if (!nasabahRelationship.isActive) {
+    throw new Error(
+      "Hubungan nasabah sudah non-aktif, tidak bisa melakukan transaksi",
+    );
+  }
 
   const transaksi = await prisma.transaksi.create({
     data: {
       jenis: "PEMASUKAN",
       totalNilai,
       keterangan: "Penjualan sampah",
-      nasabahId,
-      bankSampahId: nasabah.bankSampahId,
+      nasabahId, // Use the Nasabah relationship ID
+      bankSampahId: nasabahRelationship.bankSampahId,
       detailTransaksi: {
         create: detailItems,
       },
@@ -123,11 +144,27 @@ export async function penimbanganAction(data: PenimbanganFormData) {
 }
 
 export async function penarikanAction(data: PenarikanFormData) {
-  const { nasabahId, jumlah } = data;
+  const { nasabahId, jumlah } = data; // nasabahId is the ID of the Nasabah relationship
 
-  const nasabah = await prisma.nasabah.findUnique({ where: { id: nasabahId } });
-  if (!nasabah) throw new Error("Nasabah tidak ditemukan");
-  if (nasabah.saldo < jumlah) throw new Error("Saldo tidak mencukupi");
+  const nasabahRelationship = await prisma.nasabah.findUnique({
+    where: { id: nasabahId },
+    include: { person: true }, // Include person data for checks/info
+  });
+
+  if (!nasabahRelationship) {
+    throw new Error("Hubungan nasabah tidak ditemukan");
+  }
+
+  // Check if nasabah relationship is active
+  if (!nasabahRelationship.isActive) {
+    throw new Error(
+      "Hubungan nasabah sudah non-aktif, tidak bisa melakukan penarikan",
+    );
+  }
+
+  if (nasabahRelationship.saldo < jumlah) {
+    throw new Error("Saldo tidak mencukupi");
+  }
 
   // Create transaction
   await prisma.transaksi.create({
@@ -135,12 +172,12 @@ export async function penarikanAction(data: PenarikanFormData) {
       jenis: "PENGELUARAN",
       totalNilai: jumlah,
       keterangan: "Penarikan saldo",
-      nasabahId,
-      bankSampahId: nasabah.bankSampahId,
+      nasabahId, // Use the Nasabah relationship ID
+      bankSampahId: nasabahRelationship.bankSampahId,
     },
   });
 
-  // Update nasabah saldo
+  // Update nasabah saldo (on the relationship)
   await prisma.nasabah.update({
     where: { id: nasabahId },
     data: { saldo: { decrement: jumlah } },

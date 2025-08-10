@@ -1,23 +1,24 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Wallet, History, User, Lock } from "lucide-react"
-import EditProfileForm from "@/components/edit-profile-form"
-import ChangePasswordForm from "@/components/change-password-form"
-import type { Nasabah, Transaksi } from "@/types"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Wallet, History, User, Lock } from "lucide-react";
+import EditProfileForm from "@/components/edit-profile-form";
+import ChangePasswordForm from "@/components/change-password-form";
+import type { Nasabah, Transaksi } from "@/types";
 
 interface NasabahDashboardProps {
   data: {
-    nasabah: Nasabah | null
-    transaksi: Transaksi[]
-  }
+    nasabah: Nasabah | null;
+    transaksi: Transaksi[];
+  };
 }
 
 export default function NasabahDashboard({ data }: NasabahDashboardProps) {
-  const { nasabah, transaksi } = data
+  const { nasabah, transaksi } = data;
 
-  if (!nasabah) {
-    return <div>Data nasabah tidak ditemukan</div>
+  if (!nasabah || !nasabah.person) {
+    // Ensure person data is available
+    return <div>Data nasabah tidak ditemukan</div>;
   }
 
   const getTransactionBadge = (jenis: string) => {
@@ -27,19 +28,23 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
           <Badge variant="default" className="bg-green-100 text-green-800">
             Pemasukan
           </Badge>
-        )
+        );
       case "PENGELUARAN":
-        return <Badge variant="destructive">Penarikan</Badge>
+        return <Badge variant="destructive">Penarikan</Badge>;
       default:
-        return <Badge variant="outline">{jenis}</Badge>
+        return <Badge variant="outline">{jenis}</Badge>;
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Selamat Datang, {nasabah.nama}</h1>
-        <p className="text-gray-600">Kelola profil dan lihat riwayat transaksi Anda</p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Selamat Datang, {nasabah.person?.nama}
+        </h1>
+        <p className="text-gray-600">
+          Kelola profil dan lihat riwayat transaksi Anda
+        </p>
       </div>
 
       {/* Saldo Card */}
@@ -49,8 +54,12 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
           <Wallet className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-green-600">Rp {nasabah.saldo.toLocaleString()}</div>
-          <p className="text-xs text-muted-foreground">Saldo dapat ditarik kapan saja</p>
+          <div className="text-3xl font-bold text-green-600">
+            Rp {nasabah.saldo.toLocaleString()}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Saldo dapat ditarik kapan saja
+          </p>
         </CardContent>
       </Card>
 
@@ -93,10 +102,15 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
             <CardContent>
               <div className="space-y-4">
                 {transaksi.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">Belum ada transaksi</p>
+                  <p className="text-gray-500 text-center py-8">
+                    Belum ada transaksi
+                  </p>
                 ) : (
                   transaksi.map((t) => (
-                    <div key={t.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div
+                      key={t.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           {getTransactionBadge(t.jenis)}
@@ -106,7 +120,8 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
                           <div className="text-sm text-gray-600">
                             {t.detailTransaksi.map((detail, idx) => (
                               <span key={detail.id}>
-                                {detail.inventarisSampah?.jenisSampah} ({detail.beratKg}kg)
+                                {detail.inventarisSampah?.jenisSampah} (
+                                {detail.beratKg}kg)
                                 {idx < t.detailTransaksi!.length - 1 && ", "}
                               </span>
                             ))}
@@ -123,8 +138,11 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className={`font-bold ${t.jenis === "PEMASUKAN" ? "text-green-600" : "text-red-600"}`}>
-                          {t.jenis === "PENGELUARAN" ? "-" : "+"}Rp {t.totalNilai.toLocaleString()}
+                        <p
+                          className={`font-bold ${t.jenis === "PEMASUKAN" ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {t.jenis === "PENGELUARAN" ? "-" : "+"}Rp{" "}
+                          {t.totalNilai.toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -136,5 +154,5 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

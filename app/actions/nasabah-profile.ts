@@ -5,15 +5,15 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 
 export async function updateNasabahProfileAction(formData: FormData) {
-  const nasabahId = formData.get("nasabahId") as string;
+  const personId = formData.get("personId") as string; // Now operating on Person ID
   const alamat = formData.get("alamat") as string;
   const nik = formData.get("nik") as string;
   const telepon = formData.get("telepon") as string;
 
   try {
     // Update alamat dan telepon
-    await prisma.nasabah.update({
-      where: { id: nasabahId },
+    await prisma.person.update({
+      where: { id: personId },
       data: {
         alamat,
         telepon,
@@ -22,6 +22,7 @@ export async function updateNasabahProfileAction(formData: FormData) {
     });
 
     revalidatePath("/nasabah");
+    revalidatePath("/bank-sampah/nasabah");
     return { success: true, message: "Profil berhasil diperbarui!" };
   } catch (error) {
     console.error("Error updating profile:", error);
@@ -30,7 +31,7 @@ export async function updateNasabahProfileAction(formData: FormData) {
 }
 
 export async function changeNasabahPasswordAction(formData: FormData) {
-  const nasabahId = formData.get("nasabahId") as string;
+  const personId = formData.get("personId") as string; // Now operating on Person ID
   const currentPassword = formData.get("currentPassword") as string;
   const newPassword = formData.get("newPassword") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
@@ -45,18 +46,18 @@ export async function changeNasabahPasswordAction(formData: FormData) {
       return { error: "Password baru minimal 6 karakter" };
     }
 
-    // Cek password lama
-    const nasabah = await prisma.nasabah.findUnique({
-      where: { id: nasabahId },
+    // Cek password lama di model Person
+    const person = await prisma.person.findUnique({
+      where: { id: personId },
     });
 
-    if (!nasabah) {
-      return { error: "Nasabah tidak ditemukan" };
+    if (!person) {
+      return { error: "Individu tidak ditemukan" };
     }
 
     const isCurrentPasswordValid = await bcrypt.compare(
       currentPassword,
-      nasabah.password,
+      person.password,
     );
     if (!isCurrentPasswordValid) {
       return { error: "Password lama tidak benar" };
@@ -65,9 +66,9 @@ export async function changeNasabahPasswordAction(formData: FormData) {
     // Hash password baru
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update password
-    await prisma.nasabah.update({
-      where: { id: nasabahId },
+    // Update password di model Person
+    await prisma.person.update({
+      where: { id: personId },
       data: {
         password: hashedNewPassword,
       },

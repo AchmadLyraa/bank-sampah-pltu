@@ -1,21 +1,15 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { execSync } from "child_process"; // 🆕 Import execSync
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🔄 Resetting database before seeding...");
-  // 🆕 Reset database sebelum seeding untuk menghindari duplikasi data
-  execSync("npx prisma db push --force-reset", { stdio: "inherit" });
-  console.log("✅ Database reset complete.");
-
-  console.log("🌱 Seeding database with multi-bank support...");
+  console.log("🌱 Seeding database with multiple bank sampah...");
 
   // Hash password untuk demo
   const hashedPassword = await bcrypt.hash("password123", 10);
 
-  // 🏢 Buat atau update Bank Sampah
+  // 🏢 Buat Bank Sampah Pertama (yang sudah ada)
   const bankSampah1 = await prisma.bankSampah.upsert({
     where: { email: "admin@banksampah.com" },
     update: {},
@@ -28,6 +22,7 @@ async function main() {
     },
   });
 
+  // 🏢 Buat Bank Sampah Kedua
   const bankSampah2 = await prisma.bankSampah.upsert({
     where: { email: "admin@banksampahbersih.com" },
     update: {},
@@ -40,6 +35,7 @@ async function main() {
     },
   });
 
+  // 🏢 Buat Bank Sampah Ketiga
   const bankSampah3 = await prisma.bankSampah.upsert({
     where: { email: "admin@banksampahcerdas.com" },
     update: {},
@@ -52,12 +48,12 @@ async function main() {
     },
   });
 
-  const bankSampahs = [bankSampah1, bankSampah2, bankSampah3];
+  console.log("✅ Bank Sampah created:");
+  console.log(`   1. ${bankSampah1.nama}`);
+  console.log(`   2. ${bankSampah2.nama}`);
+  console.log(`   3. ${bankSampah3.nama}`);
 
-  console.log("✅ Bank Sampah created/updated:");
-  bankSampahs.forEach((b) => console.log(`   - ${b.nama} (${b.email})`));
-
-  // 📦 Buat atau update Inventaris untuk semua Bank Sampah
+  // 📦 Buat Inventaris untuk semua Bank Sampah
   const inventarisTemplate = [
     { jenisSampah: "Plastik Botol", hargaPerKg: 2000 },
     { jenisSampah: "Plastik Kemasan", hargaPerKg: 1500 },
@@ -68,6 +64,8 @@ async function main() {
     { jenisSampah: "Botol Kaca", hargaPerKg: 800 },
     { jenisSampah: "Plastik PP", hargaPerKg: 2200 },
   ];
+
+  const bankSampahs = [bankSampah1, bankSampah2, bankSampah3];
 
   for (const bankSampah of bankSampahs) {
     // Variasi harga sedikit untuk setiap bank sampah
@@ -86,9 +84,7 @@ async function main() {
             jenisSampah: template.jenisSampah,
           },
         },
-        update: {
-          hargaPerKg: Math.round(template.hargaPerKg * priceMultiplier),
-        },
+        update: {},
         create: {
           jenisSampah: template.jenisSampah,
           hargaPerKg: Math.round(template.hargaPerKg * priceMultiplier),
@@ -99,9 +95,10 @@ async function main() {
       });
     }
   }
-  console.log("✅ Inventaris created/updated for all bank sampah");
 
-  // 👥 Buat atau update Person (individu) dan Nasabah relationships
+  console.log("✅ Inventaris created for all bank sampah");
+
+  // 👥 Buat Person (individu) - beberapa akan terdaftar di multiple bank
   const personData = [
     {
       nama: "Budi Santoso",
@@ -109,7 +106,7 @@ async function main() {
       alamat: "Jl. Mawar No. 45, Bogor",
       telepon: "081234567890",
       email: "budi@email.com",
-      registerAt: [bankSampah1.id, bankSampah2.id], // Terdaftar di 2 bank
+      registerAt: [bankSampah1.id, bankSampah2.id], // 🎯 Terdaftar di 2 bank
     },
     {
       nama: "Siti Nurhaliza",
@@ -117,7 +114,7 @@ async function main() {
       alamat: "Jl. Melati No. 67, Jakarta",
       telepon: "081234567891",
       email: "siti@email.com",
-      registerAt: [bankSampah1.id, bankSampah3.id], // Terdaftar di 2 bank
+      registerAt: [bankSampah1.id, bankSampah3.id], // 🎯 Terdaftar di 2 bank
     },
     {
       nama: "Ahmad Wijaya",
@@ -125,7 +122,7 @@ async function main() {
       alamat: "Jl. Anggrek No. 89, Bandung",
       telepon: "081234567892",
       email: "ahmad@email.com",
-      registerAt: [bankSampah1.id, bankSampah2.id, bankSampah3.id], // Terdaftar di 3 bank
+      registerAt: [bankSampah1.id, bankSampah2.id, bankSampah3.id], // 🎯 Terdaftar di 3 bank
     },
     {
       nama: "Dewi Sartika",
@@ -149,7 +146,7 @@ async function main() {
       alamat: "Jl. Cempaka No. 56, Jakarta",
       telepon: "081234567895",
       email: "maya@email.com",
-      registerAt: [bankSampah2.id, bankSampah3.id], // Terdaftar di 2 bank
+      registerAt: [bankSampah2.id, bankSampah3.id], // 🎯 Terdaftar di 2 bank
     },
     {
       nama: "Andi Pratama",
@@ -161,9 +158,11 @@ async function main() {
     },
   ];
 
+  // 🔄 Buat Person dan Nasabah relationships
   const allNasabahRelationships = [];
 
   for (const data of personData) {
+    // 1. Buat atau update Person
     const person = await prisma.person.upsert({
       where: { email: data.email },
       update: {
@@ -181,6 +180,7 @@ async function main() {
       },
     });
 
+    // 2. Buat Nasabah relationship di setiap bank yang dipilih
     for (const bankSampahId of data.registerAt) {
       const nasabahRelationship = await prisma.nasabah.upsert({
         where: {
@@ -203,147 +203,154 @@ async function main() {
         person: person,
         bankSampahId: bankSampahId,
       });
+
+      const bankName = bankSampahs.find((b) => b.id === bankSampahId)?.nama;
+      console.log(`✅ ${person.nama} terdaftar di: ${bankName}`);
     }
   }
-  console.log(`✅ Total Person created/updated: ${personData.length}`);
+
   console.log(
-    `✅ Total Nasabah relationships created/updated: ${allNasabahRelationships.length}`,
+    `✅ Total nasabah relationships: ${allNasabahRelationships.length}`,
   );
 
   // 📊 Buat sample transaksi untuk demonstrasi
-  const inventarisListMap = new Map<string, any[]>();
-  for (const bank of bankSampahs) {
-    inventarisListMap.set(
-      bank.id,
-      await prisma.inventarisSampah.findMany({
-        where: { bankSampahId: bank.id },
-      }),
-    );
-  }
+  const inventarisList1 = await prisma.inventarisSampah.findMany({
+    where: { bankSampahId: bankSampah1.id },
+  });
+  const inventarisList2 = await prisma.inventarisSampah.findMany({
+    where: { bankSampahId: bankSampah2.id },
+  });
 
-  // Helper function to create a transaction
-  async function createSampleTransaction(
-    personEmail: string,
-    bankId: string,
-    jenisSampahName: string,
-    beratKg: number,
-    keterangan: string,
-    transactionType: "PEMASUKAN" | "PENGELUARAN",
-  ) {
-    const nasabahRel = allNasabahRelationships.find(
-      (r) => r.person.email === personEmail && r.bankSampahId === bankId,
-    );
-    if (!nasabahRel) {
-      console.warn(
-        `Skipping transaction for ${personEmail} at bank ${bankId}: relationship not found.`,
-      );
-      return;
-    }
+  // Budi jual plastik botol di Bank Sampah 1
+  const budiAtBank1 = allNasabahRelationships.find(
+    (r) =>
+      r.person.email === "budi@email.com" && r.bankSampahId === bankSampah1.id,
+  );
 
-    const inventarisList = inventarisListMap.get(bankId);
-    const inventarisItem = inventarisList?.find(
-      (inv) => inv.jenisSampah === jenisSampahName,
-    );
-
-    let totalNilai = 0;
-    const detailTransaksiData = [];
-
-    if (transactionType === "PEMASUKAN" && inventarisItem) {
-      totalNilai = beratKg * inventarisItem.hargaPerKg;
-      detailTransaksiData.push({
-        inventarisSampahId: inventarisItem.id,
-        beratKg: beratKg,
-        hargaPerKg: inventarisItem.hargaPerKg,
-        subtotal: totalNilai,
-      });
-    } else if (transactionType === "PENGELUARAN") {
-      totalNilai = beratKg; // For withdrawals, beratKg is actually the amount
-    }
-
-    const transaksi = await prisma.transaksi.create({
+  if (budiAtBank1) {
+    const transaksi1 = await prisma.transaksi.create({
       data: {
-        jenis: transactionType,
-        totalNilai: totalNilai,
-        keterangan: keterangan,
-        nasabahId: nasabahRel.relationship.id,
-        bankSampahId: bankId,
-        ...(detailTransaksiData.length > 0 && {
-          detailTransaksi: { create: detailTransaksiData },
-        }),
+        jenis: "PEMASUKAN",
+        totalNilai: 4000,
+        keterangan: "Penjualan sampah plastik botol",
+        nasabahId: budiAtBank1.relationship.id,
+        bankSampahId: bankSampah1.id,
       },
     });
 
-    // Update saldo nasabah
+    await prisma.detailTransaksi.create({
+      data: {
+        transaksiId: transaksi1.id,
+        inventarisSampahId: inventarisList1[0].id,
+        beratKg: 2,
+        hargaPerKg: 2000,
+        subtotal: 4000,
+      },
+    });
+
     await prisma.nasabah.update({
-      where: { id: nasabahRel.relationship.id },
+      where: { id: budiAtBank1.relationship.id },
+      data: { saldo: { increment: 4000 } },
+    });
+
+    await prisma.inventarisSampah.update({
+      where: { id: inventarisList1[0].id },
+      data: { stokKg: { increment: 2 } },
+    });
+
+    console.log("✅ Budi transaksi di Bank Sampah 1");
+  }
+
+  // Budi jual kertas kardus di Bank Sampah 2 (nasabah yang sama, bank berbeda)
+  const budiAtBank2 = allNasabahRelationships.find(
+    (r) =>
+      r.person.email === "budi@email.com" && r.bankSampahId === bankSampah2.id,
+  );
+
+  if (budiAtBank2) {
+    const transaksi2 = await prisma.transaksi.create({
       data: {
-        saldo: {
-          [transactionType === "PEMASUKAN" ? "increment" : "decrement"]:
-            totalNilai,
-        },
+        jenis: "PEMASUKAN",
+        totalNilai: 3600,
+        keterangan: "Penjualan sampah kertas kardus",
+        nasabahId: budiAtBank2.relationship.id,
+        bankSampahId: bankSampah2.id,
       },
     });
 
-    // Update inventaris stok (only for PEMASUKAN)
-    if (transactionType === "PEMASUKAN" && inventarisItem) {
-      await prisma.inventarisSampah.update({
-        where: { id: inventarisItem.id },
-        data: { stokKg: { increment: beratKg } },
-      });
-    }
-    console.log(
-      `✅ Transaksi ${transactionType} untuk ${personEmail} di ${bankSampahs.find((b) => b.id === bankId)?.nama}`,
-    );
+    await prisma.detailTransaksi.create({
+      data: {
+        transaksiId: transaksi2.id,
+        inventarisSampahId: inventarisList2[3].id, // Kertas Kardus
+        beratKg: 3,
+        hargaPerKg: 1200,
+        subtotal: 3600,
+      },
+    });
+
+    await prisma.nasabah.update({
+      where: { id: budiAtBank2.relationship.id },
+      data: { saldo: { increment: 3600 } },
+    });
+
+    await prisma.inventarisSampah.update({
+      where: { id: inventarisList2[3].id },
+      data: { stokKg: { increment: 3 } },
+    });
+
+    console.log("✅ Budi transaksi di Bank Sampah 2");
   }
 
-  // Sample transactions
-  await createSampleTransaction(
-    "budi@email.com",
-    bankSampah1.id,
-    "Plastik Botol",
-    2,
-    "Penjualan sampah plastik botol",
-    "PEMASUKAN",
+  // Ahmad transaksi di Bank Sampah 3
+  const ahmadAtBank3 = allNasabahRelationships.find(
+    (r) =>
+      r.person.email === "ahmad@email.com" && r.bankSampahId === bankSampah3.id,
   );
-  await createSampleTransaction(
-    "budi@email.com",
-    bankSampah2.id,
-    "Kertas Kardus",
-    3,
-    "Penjualan sampah kertas kardus",
-    "PEMASUKAN",
-  );
-  await createSampleTransaction(
-    "siti@email.com",
-    bankSampah1.id,
-    "Plastik Kemasan",
-    1.5,
-    "Penjualan sampah plastik kemasan",
-    "PEMASUKAN",
-  );
-  await createSampleTransaction(
-    "ahmad@email.com",
-    bankSampah3.id,
-    "Kaleng Aluminum",
-    2,
-    "Penjualan sampah kaleng aluminum",
-    "PEMASUKAN",
-  );
-  await createSampleTransaction(
-    "budi@email.com",
-    bankSampah1.id,
-    "",
-    2000,
-    "Penarikan saldo",
-    "PENGELUARAN",
-  );
+
+  if (ahmadAtBank3) {
+    const inventarisList3 = await prisma.inventarisSampah.findMany({
+      where: { bankSampahId: bankSampah3.id },
+    });
+
+    const transaksi3 = await prisma.transaksi.create({
+      data: {
+        jenis: "PEMASUKAN",
+        totalNilai: 30000,
+        keterangan: "Penjualan sampah kaleng aluminum",
+        nasabahId: ahmadAtBank3.relationship.id,
+        bankSampahId: bankSampah3.id,
+      },
+    });
+
+    await prisma.detailTransaksi.create({
+      data: {
+        transaksiId: transaksi3.id,
+        inventarisSampahId: inventarisList3[4].id, // Kaleng Aluminum
+        beratKg: 2,
+        hargaPerKg: 15000,
+        subtotal: 30000,
+      },
+    });
+
+    await prisma.nasabah.update({
+      where: { id: ahmadAtBank3.relationship.id },
+      data: { saldo: { increment: 30000 } },
+    });
+
+    await prisma.inventarisSampah.update({
+      where: { id: inventarisList3[4].id },
+      data: { stokKg: { increment: 2 } },
+    });
+
+    console.log("✅ Ahmad transaksi di Bank Sampah 3");
+  }
 
   console.log("✅ Sample transaksi created");
-  console.log("🎉 Seeding completed!");
+  console.log("🎉 Multi-bank seeding completed!");
   console.log("");
   console.log("📊 SUMMARY:");
   console.log("=" * 50);
-  console.log(`🏢 Total Bank Sampah: ${bankSampahs.length}`);
+  console.log(`🏢 Total Bank Sampah: 3`);
   console.log(`👥 Total Person: ${personData.length}`);
   console.log(
     `🤝 Total Nasabah Relationships: ${allNasabahRelationships.length}`,
@@ -352,11 +359,15 @@ async function main() {
   console.log("🔑 LOGIN CREDENTIALS:");
   console.log("=" * 50);
   console.log("👨‍💼 ADMIN ACCOUNTS:");
-  bankSampahs.forEach((bank) => {
-    console.log(`   • ${bank.nama}`);
-    console.log(`     Email: ${bank.email}`);
-    console.log(`     Password: password123`);
-  });
+  console.log(`   • ${bankSampah1.nama}`);
+  console.log(`     Email: ${bankSampah1.email}`);
+  console.log(`     Password: password123`);
+  console.log(`   • ${bankSampah2.nama}`);
+  console.log(`     Email: ${bankSampah2.email}`);
+  console.log(`     Password: password123`);
+  console.log(`   • ${bankSampah3.nama}`);
+  console.log(`     Email: ${bankSampah3.email}`);
+  console.log(`     Password: password123`);
   console.log("");
   console.log("👤 NASABAH ACCOUNTS:");
   for (const data of personData) {
@@ -384,9 +395,7 @@ async function main() {
   console.log(
     "• Maya terdaftar di 2 bank sampah (Bersih Sejahtera & Cerdas Mandiri)",
   );
-  console.log(
-    "• Login dengan email yang sama akan otomatis pilih bank aktif (yang pertama ditemukan)",
-  );
+  console.log("• Login dengan email yang sama akan otomatis pilih bank aktif");
 }
 
 main()

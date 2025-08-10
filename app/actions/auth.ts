@@ -28,8 +28,12 @@ export async function loginAction(formData: FormData) {
     JSON.stringify({
       userId: result.user.id,
       userType: result.type,
-      email: result.user.email,
-      nama: result.user.nama,
+      email:
+        result.type === "nasabah"
+          ? result.user.person.email
+          : result.user.email,
+      nama:
+        result.type === "nasabah" ? result.user.person.nama : result.user.nama,
     }),
     {
       httpOnly: true,

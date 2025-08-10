@@ -26,7 +26,7 @@ export default function EditProfileForm({ nasabah }: EditProfileFormProps) {
     setMessage(null);
 
     // Add nasabahId to formData
-    formData.append("nasabahId", nasabah.id);
+    formData.append("personId", nasabah.personId);
 
     try {
       const result = await updateNasabahProfileAction(formData);
@@ -66,7 +66,7 @@ export default function EditProfileForm({ nasabah }: EditProfileFormProps) {
             <Label htmlFor="nama">Nama Lengkap</Label>
             <Input
               id="nama"
-              value={nasabah.nama}
+              value={nasabah.person?.nama}
               disabled
               className="bg-gray-100 cursor-not-allowed"
             />
@@ -83,7 +83,7 @@ export default function EditProfileForm({ nasabah }: EditProfileFormProps) {
             <Input
               id="nik"
               name="nik"
-              defaultValue={nasabah.nik}
+              defaultValue={nasabah.person?.nik}
               placeholder="62xxxxxxxxxx"
               required
             />
@@ -94,7 +94,7 @@ export default function EditProfileForm({ nasabah }: EditProfileFormProps) {
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
-              value={nasabah.email}
+              value={nasabah.person?.email}
               disabled
               className="bg-gray-100 cursor-not-allowed"
             />
@@ -110,7 +110,7 @@ export default function EditProfileForm({ nasabah }: EditProfileFormProps) {
             <Input
               id="telepon"
               name="telepon"
-              defaultValue={nasabah.telepon}
+              defaultValue={nasabah.person?.telepon}
               placeholder="08xxxxxxxxxx"
               required
             />
@@ -125,7 +125,7 @@ export default function EditProfileForm({ nasabah }: EditProfileFormProps) {
             <Textarea
               id="alamat"
               name="alamat"
-              defaultValue={nasabah.alamat}
+              defaultValue={nasabah.person?.alamat}
               placeholder="Alamat lengkap Anda"
               rows={3}
               required

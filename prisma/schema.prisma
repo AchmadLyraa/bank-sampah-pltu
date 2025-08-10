@@ -23,22 +23,48 @@ model BankSampah {
   @@map("bank_sampah")
 }
 
-model Nasabah {
-  id           String      @id @default(cuid())
-  nama         String
-  nik          String      @default("")
-  alamat       String
-  telepon      String
-  email        String      @unique
-  password     String
-  saldo        Float       @default(0)
-  bankSampahId String
-  isActive     Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  bankSampah   BankSampah  @relation(fields: [bankSampahId], references: [id])
-  transaksi    Transaksi[]
+// 🆕 NEW: Model untuk Individu (Person)
+// Ini adalah identitas unik global untuk setiap orang
+model Person {
+  id        String   @id @default(cuid())
+  nama      String
+  nik       String   @default("") // NIK
+  alamat    String
+  telepon   String
+  email     String   @unique // Email unik secara global
+  password  String // Password untuk login individu
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  // Relasi ke hubungan Nasabah (satu Person bisa punya banyak hubungan Nasabah)
+  nasabahHubungan Nasabah[]
+
+  @@map("person")
+}
+
+// 🔄 MODIFIED: Model untuk Nasabah (sekarang menjadi tabel hubungan)
+// Ini merepresentasikan hubungan antara seorang Person dengan sebuah BankSampah
+
+model Nasabah {
+  id        String   @id @default(cuid())
+  saldo     Float    @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relasi ke Person (individu)
+  personId String
+  person   Person @relation(fields: [personId], references: [id])
+
+  // Relasi ke Bank Sampah
+  bankSampahId String
+  bankSampah   BankSampah @relation(fields: [bankSampahId], references: [id])
+
+  // Relasi ke Transaksi (transaksi terkait dengan hubungan Nasabah ini)
+  transaksi Transaksi[]
+
+  // Memastikan satu Person hanya bisa terdaftar sekali di satu Bank Sampah
+  @@unique([personId, bankSampahId])
   @@map("nasabah")
 }
 
@@ -54,6 +80,7 @@ model InventarisSampah {
   detailTransaksi DetailTransaksi[]
   bankSampah      BankSampah        @relation(fields: [bankSampahId], references: [id])
 
+  @@unique([bankSampahId, jenisSampah])
   @@map("inventaris_sampah")
 }
 
@@ -67,7 +94,7 @@ model Transaksi {
   createdAt       DateTime          @default(now())
   detailTransaksi DetailTransaksi[]
   bankSampah      BankSampah        @relation(fields: [bankSampahId], references: [id])
-  nasabah         Nasabah?           @relation(fields: [nasabahId], references: [id])
+  nasabah         Nasabah?          @relation(fields: [nasabahId], references: [id])
 
   @@map("transaksi")
 }

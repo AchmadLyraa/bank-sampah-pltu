@@ -1,51 +1,64 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { changeNasabahPasswordAction } from "@/app/actions/nasabah-profile"
-import { Lock, Loader2, Eye, EyeOff } from "lucide-react"
-import type { Nasabah } from "@/types"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { changeNasabahPasswordAction } from "@/app/actions/nasabah-profile";
+import { Lock, Loader2, Eye, EyeOff } from "lucide-react";
+import type { Nasabah } from "@/types";
 
 interface ChangePasswordFormProps {
-  nasabah: Nasabah
+  nasabah: Nasabah;
 }
 
-export default function ChangePasswordForm({ nasabah }: ChangePasswordFormProps) {
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+export default function ChangePasswordForm({
+  nasabah,
+}: ChangePasswordFormProps) {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false,
-  })
+  });
 
   async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setMessage(null)
+    setLoading(true);
+    setMessage(null);
 
     // Add nasabahId to formData
-    formData.append("nasabahId", nasabah.id)
+    formData.append("personId", nasabah.personId); // Use personId from the relationship
 
     try {
-      const result = await changeNasabahPasswordAction(formData)
+      const result = await changeNasabahPasswordAction(formData);
 
       if (result.error) {
-        setMessage({ type: "error", text: result.error })
+        setMessage({ type: "error", text: result.error });
       } else {
-        setMessage({ type: "success", text: result.message || "Password berhasil diubah!" })
+        setMessage({
+          type: "success",
+          text: result.message || "Password berhasil diubah!",
+        });
         // Reset form
-        const form = document.getElementById("change-password-form") as HTMLFormElement
-        form?.reset()
+        const form = document.getElementById(
+          "change-password-form",
+        ) as HTMLFormElement;
+        form?.reset();
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Terjadi kesalahan saat mengubah password" })
+      setMessage({
+        type: "error",
+        text: "Terjadi kesalahan saat mengubah password",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
       // Clear message after 5 seconds
-      setTimeout(() => setMessage(null), 5000)
+      setTimeout(() => setMessage(null), 5000);
     }
   }
 
@@ -53,8 +66,8 @@ export default function ChangePasswordForm({ nasabah }: ChangePasswordFormProps)
     setShowPasswords((prev) => ({
       ...prev,
       [field]: !prev[field],
-    }))
-  }
+    }));
+  };
 
   return (
     <Card>
@@ -65,7 +78,11 @@ export default function ChangePasswordForm({ nasabah }: ChangePasswordFormProps)
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form id="change-password-form" action={handleSubmit} className="space-y-4">
+        <form
+          id="change-password-form"
+          action={handleSubmit}
+          className="space-y-4"
+        >
           {/* Password Lama */}
           <div className="space-y-2">
             <Label htmlFor="currentPassword">Password Lama</Label>
@@ -84,7 +101,11 @@ export default function ChangePasswordForm({ nasabah }: ChangePasswordFormProps)
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => togglePasswordVisibility("current")}
               >
-                {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPasswords.current ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>
@@ -108,7 +129,11 @@ export default function ChangePasswordForm({ nasabah }: ChangePasswordFormProps)
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => togglePasswordVisibility("new")}
               >
-                {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPasswords.new ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>
@@ -132,7 +157,11 @@ export default function ChangePasswordForm({ nasabah }: ChangePasswordFormProps)
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => togglePasswordVisibility("confirm")}
               >
-                {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPasswords.confirm ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>
@@ -165,5 +194,5 @@ export default function ChangePasswordForm({ nasabah }: ChangePasswordFormProps)
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

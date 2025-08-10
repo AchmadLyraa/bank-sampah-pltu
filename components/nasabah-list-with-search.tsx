@@ -49,11 +49,11 @@ export default function NasabahListWithSearch({
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (nasabah) =>
-          nasabah.nama.toLowerCase().includes(term) ||
-          nasabah.nik.includes(term) ||
-          nasabah.email.toLowerCase().includes(term) ||
-          nasabah.telepon.includes(term) ||
-          nasabah.alamat.toLowerCase().includes(term),
+          nasabah.person?.nama.toLowerCase().includes(term) || // Search by person's name
+          nasabah.person?.nik.includes(term) || // Search by person's NIK
+          nasabah.person?.email.toLowerCase().includes(term) || // Search by person's email
+          nasabah.person?.telepon.includes(term) || // Search by person's phone
+          nasabah.person?.alamat.toLowerCase().includes(term), // Search by person's address
       );
     }
 
@@ -67,8 +67,8 @@ export default function NasabahListWithSearch({
   const handleToggleStatus = async (nasabah: Nasabah) => {
     const newStatus = !nasabah.isActive;
     const confirmMessage = newStatus
-      ? `Aktifkan kembali "${nasabah.nama}"?\n\nNasabah ini akan muncul kembali di daftar dan bisa melakukan transaksi.`
-      : `Non-aktifkan "${nasabah.nama}"?\n\nNasabah ini akan disembunyikan dari daftar dan tidak bisa melakukan transaksi baru.`;
+      ? `Aktifkan kembali "${nasabah.person?.nama}"?\n\nNasabah ini akan muncul kembali di daftar dan bisa melakukan transaksi.`
+      : `Non-aktifkan "${nasabah.person?.nama}"?\n\nNasabah ini akan disembunyikan dari daftar dan tidak bisa melakukan transaksi baru.`;
 
     if (!confirm(confirmMessage)) return;
 
@@ -84,7 +84,7 @@ export default function NasabahListWithSearch({
       } else {
         setMessage({
           type: "success",
-          text: `${nasabah.nama} berhasil ${newStatus ? "diaktifkan" : "dinonaktifkan"}!`,
+          text: `${nasabah.person?.nama} berhasil ${newStatus ? "diaktifkan" : "dinonaktifkan"}!`,
         });
         setTimeout(() => setMessage(null), 3000);
       }
@@ -202,7 +202,7 @@ export default function NasabahListWithSearch({
                   <div className="flex items-start justify-between mb-3 flex-wrap sm:flex-row flex-col">
                     <div>
                       <h3 className="font-semibold text-lg text-gray-900">
-                        {nasabah.nama}
+                        {nasabah.person?.nama}
                       </h3>
                       <div className="flex sm:items-center items-start sm:gap-4 gap-0 sm:flex-row flex-col text-sm text-gray-600 mt-1">
                         <Badge
@@ -219,15 +219,15 @@ export default function NasabahListWithSearch({
                         <div className="flex items-center gap-1 text-sm text-gray-600 mb-1">
                           <CreditCard className="h-3 w-3" />
                           <span className="font-medium">NIK:</span>{" "}
-                          {nasabah.nik}
+                          {nasabah.person?.nik}
                         </div>
                         <span className="flex items-center gap-1">
                           <Mail className="h-3 w-3" />
-                          {nasabah.email}
+                          {nasabah.person?.email}
                         </span>
                         <span className="flex items-center gap-1">
                           <Phone className="h-3 w-3" />
-                          {nasabah.telepon}
+                          {nasabah.person?.telepon}
                         </span>
                       </div>
                     </div>
@@ -247,7 +247,7 @@ export default function NasabahListWithSearch({
 
                   <div className="flex items-center gap-1 text-sm text-gray-600">
                     <MapPin className="h-3 w-3" />
-                    {nasabah.alamat}
+                    {nasabah.person?.alamat}
                   </div>
                   {/* 🆕 Toggle Status Button */}
                   <Button

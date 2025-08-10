@@ -33,7 +33,7 @@ export default async function TransaksiPage({
   const transaksi = await prisma.transaksi.findMany({
     where: { bankSampahId: session.userId },
     include: {
-      nasabah: { select: { nama: true } },
+      nasabah: { select: { person: { select: { nama: true } } } },
       detailTransaksi: {
         include: {
           inventarisSampah: { select: { jenisSampah: true } },

@@ -6,6 +6,21 @@ import type { Transaksi } from "@/types";
 import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 
+interface RecentTransactionItem
+  extends Omit<Transaksi, "nasabah" | "detailTransaksi"> {
+  nasabah?: { person: { nama: string } } | null;
+  detailTransaksi?: {
+    id: string;
+    createdAt: Date;
+    hargaPerKg: number;
+    transaksiId: string;
+    inventarisSampahId: string;
+    beratKg: number;
+    subtotal: number;
+    inventarisSampah: { jenisSampah: string } | null;
+  }[];
+}
+
 interface RecentTransactionsProps {
   transactions: Transaksi[];
 }
@@ -119,7 +134,7 @@ export default function RecentTransactions({
                   <div className="flex-1">
                     {getTransactionBadge(transaksi.jenis)}
                     <span className="font-medium ml-2">
-                      {transaksi.nasabah?.nama || "Bank Sampah"}
+                      {transaksi.nasabah?.person?.nama || "Bank Sampah"}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600">
