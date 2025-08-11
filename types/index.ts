@@ -6,6 +6,10 @@ export interface BankSampah {
   telepon: string;
   email: string;
   password: string;
+  longitude?: number | null; // Added longitude field
+  latitude?: number | null; // Added latitude field
+  isActive: boolean; // Added isActive field
+  role: Role; // Added role field
   createdAt: Date;
   updatedAt: Date;
 }
@@ -111,4 +115,19 @@ export interface PenimbanganFormData {
 export interface PenarikanFormData {
   nasabahId: string;
   jumlah: number;
+}
+
+export enum Role {
+  CONTROLLER = "CONTROLLER",
+  BANK_SAMPAH = "BANK_SAMPAH",
+}
+
+export interface Controller {
+  id: string;
+  nama: string;
+  email: string;
+  password: string;
+  role: Role;
+  createdAt: Date;
+  updatedAt: Date;
 }

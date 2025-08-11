@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/app/actions/auth";
 
 interface ClientNavigationProps {
-  userType: "bank-sampah" | "nasabah";
+  userType: "bank-sampah" | "nasabah" | "controller";
   userName: string;
 }
 
@@ -54,6 +54,19 @@ const nasabahNavItems = [
   },
 ];
 
+const controllerNavItems = [
+  {
+    href: "/controller",
+    label: "Dashboard",
+    icon: Home,
+  },
+  {
+    href: "/controller/bank-sampah",
+    label: "Bank Sampah",
+    icon: Package,
+  },
+];
+
 export function ClientNavigation({
   userType,
   userName,
@@ -71,8 +84,11 @@ export function ClientNavigation({
 function BottomNavigation({ userType, userName }: ClientNavigationProps) {
   const pathname = usePathname();
   const navItems =
-    userType === "bank-sampah" ? bankSampahNavItems : nasabahNavItems;
-
+    userType === "bank-sampah"
+      ? bankSampahNavItems
+      : userType === "controller"
+        ? controllerNavItems
+        : nasabahNavItems;
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
       <div className="flex items-center justify-center py-1">
@@ -122,9 +138,22 @@ function BottomNavigation({ userType, userName }: ClientNavigationProps) {
               <span className="text-xs font-medium text-red-600">Logout</span>
             </Button>
           </form>
-        ) : (
+        ) : userType === "bank-sampah" ? (
           <Link
             href="/bank-sampah/profile"
+            className={cn(
+              "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-0 flex-1",
+              pathname === "/bank-sampah/profile"
+                ? "text-blue-600"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+            )}
+          >
+            <CircleUserRound className="h-5 w-5 mb-1" />
+            <span className="text-xs font-medium truncate">Profil</span>
+          </Link>
+        ) : (
+          <Link
+            href="/controller/profile"
             className={cn(
               "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-0 flex-1",
               pathname === "/bank-sampah/profile"
@@ -144,7 +173,11 @@ function BottomNavigation({ userType, userName }: ClientNavigationProps) {
 function SidebarNavigation({ userType, userName }: ClientNavigationProps) {
   const pathname = usePathname();
   const navItems =
-    userType === "bank-sampah" ? bankSampahNavItems : nasabahNavItems;
+    userType === "bank-sampah"
+      ? bankSampahNavItems
+      : userType === "controller"
+        ? controllerNavItems
+        : nasabahNavItems;
 
   return (
     <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-50">
@@ -201,9 +234,22 @@ function SidebarNavigation({ userType, userName }: ClientNavigationProps) {
                 Logout
               </Button>
             </form>
-          ) : (
+          ) : userType === "bank-sampah" ? (
             <Link
               href="/bank-sampah/profile"
+              className={cn(
+                "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                pathname === "/bank-sampah/profile"
+                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900",
+              )}
+            >
+              <CircleUserRound className="mr-3 h-5 w-5" />
+              Profil
+            </Link>
+          ) : (
+            <Link
+              href="/controller/profile"
               className={cn(
                 "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                 pathname === "/bank-sampah/profile"

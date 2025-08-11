@@ -3,7 +3,7 @@ import { ClientNavigation } from "./client-navigation";
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
-  userType: "bank-sampah" | "nasabah";
+  userType: "bank-sampah" | "nasabah" | "controller";
   userName: string;
 }
 

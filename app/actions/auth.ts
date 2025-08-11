@@ -2,62 +2,88 @@
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { authenticateUser } from "@/lib/auth";
-import type { NasabahSession } from "@/types"; // 🆕 Import NasabahSession
+import { authenticateUser, authenticateController } from "@/lib/auth"; // Import authenticateController
+import type { NasabahSession } from "@/types";
 
 // Update loginAction to remove userType parameter
 export async function loginAction(formData: FormData) {
   const data = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
-  };
-
-  const result = await authenticateUser(data);
-
-  if (!result) {
-    return { error: "Email atau password salah" };
   }
 
-  if ("error" in result) {
-    return { error: result.error };
+  // First try to authenticate as user (bank-sampah or nasabah)
+  const userResult = await authenticateUser(data)
+
+  if (userResult && !("error" in userResult)) {
+    const cookieStore = await cookies()
+
+    if (userResult.type === "bank-sampah") {
+      cookieStore.set(
+        "session",
+        JSON.stringify({
+          userId: userResult.user.id,
+          userType: userResult.type,
+          email: userResult.user.email,
+          nama: userResult.user.nama,
+        }),
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        },
+      )
+      redirect("/bank-sampah")
+    } else {
+      // For nasabah, store personId, all relationships, and selected bank sampah
+      const sessionData: NasabahSession = {
+        personId: userResult.person.id,
+        userType: "nasabah",
+        email: userResult.person.email,
+        nama: userResult.person.nama,
+        bankSampahRelationships: userResult.nasabahRelationships,
+        selectedBankSampahId: userResult.nasabahRelationships[0].bankSampahId, // Default to the first one
+      }
+
+      cookieStore.set("session", JSON.stringify(sessionData), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      })
+      redirect("/nasabah")
+    }
   }
 
-  // Set session cookie
-  const cookieStore = await cookies();
-  if (result.type === "bank-sampah") {
+  // If user authentication failed, try controller authentication
+  const controllerResult = await authenticateController(data)
+
+  if (controllerResult) {
+    const cookieStore = await cookies()
+
     cookieStore.set(
       "session",
       JSON.stringify({
-        userId: result.user.id,
-        userType: result.type,
-        email: result.user.email,
-        nama: result.user.nama,
+        userId: controllerResult.id,
+        userType: "controller",
+        email: controllerResult.email,
+        nama: controllerResult.nama,
+        role: controllerResult.role,
       }),
       {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 60 * 24 * 7, // 7 days
       },
-    );
-    redirect("/bank-sampah");
-  } else {
-    // 🆕 For nasabah, store personId, all relationships, and selected bank sampah
-    const sessionData: NasabahSession = {
-      personId: result.person.id,
-      userType: "nasabah",
-      email: result.person.email,
-      nama: result.person.nama,
-      bankSampahRelationships: result.nasabahRelationships,
-      selectedBankSampahId: result.nasabahRelationships[0].bankSampahId, // Default to the first one
-    };
-
-    cookieStore.set("session", JSON.stringify(sessionData), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    });
-    redirect("/nasabah");
+    )
+    redirect("/controller")
   }
+
+  // If both authentications failed, check if there was a specific error from user auth
+  if (userResult && "error" in userResult) {
+    return { error: userResult.error }
+  }
+
+  return { error: "Email atau password salah" }
 }
 
 export async function logoutAction() {

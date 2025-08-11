@@ -1,0 +1,28 @@
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
+import LayoutWrapper from "@/components/layout-wrapper";
+import { BankSampahList } from "@/components/bank-sampah-list";
+
+export default async function ControllerBankSampahPage() {
+  const session = await getSession();
+
+  if (!session || session.userType !== "controller") {
+    redirect("/");
+  }
+
+  return (
+    <LayoutWrapper userType="controller" userName={session.nama}>
+      <div className="p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Kelola Bank Sampah
+          </h1>
+          <p className="text-gray-600">
+            Daftar semua bank sampah yang terdaftar
+          </p>
+        </div>
+        <BankSampahList />
+      </div>
+    </LayoutWrapper>
+  );
+}

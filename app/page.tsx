@@ -1,15 +1,17 @@
-import { redirect } from "next/navigation"
-import { getSession } from "@/lib/session"
-import LoginForm from "@/components/login-form"
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
+import LoginForm from "@/components/login-form";
 
 export default async function HomePage() {
-  const session = await getSession()
+  const session = await getSession();
 
   if (session) {
     if (session.userType === "bank-sampah") {
-      redirect("/bank-sampah")
+      redirect("/bank-sampah");
+    } else if (session.userType === "controller") {
+      redirect("/controller");
     } else {
-      redirect("/nasabah")
+      redirect("/nasabah");
     }
   }
 
@@ -23,5 +25,5 @@ export default async function HomePage() {
         <LoginForm />
       </div>
     </div>
-  )
+  );
 }

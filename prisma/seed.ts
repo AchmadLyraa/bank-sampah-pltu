@@ -15,6 +15,17 @@ async function main() {
   // Hash password untuk demo
   const hashedPassword = await bcrypt.hash("password123", 10);
 
+  const controller = await prisma.controller.upsert({
+    where: { email: "admin@controller.com" },
+    update: {},
+    create: {
+      nama: "Super Admin Controller",
+      email: "admin@controller.com",
+      password: hashedPassword,
+    },
+  });
+  console.log("✅ Controller account created/updated");
+
   // 🏢 Buat atau update Bank Sampah
   const bankSampah1 = await prisma.bankSampah.upsert({
     where: { email: "admin@banksampah.com" },
@@ -25,6 +36,10 @@ async function main() {
       telepon: "0251-1234567",
       email: "admin@banksampah.com",
       password: hashedPassword,
+      longitude: -6.5971,
+      latitude: 106.806,
+      isActive: true,
+      role: "BANK_SAMPAH",
     },
   });
 
@@ -37,6 +52,10 @@ async function main() {
       telepon: "021-9876543",
       email: "admin@banksampahbersih.com",
       password: hashedPassword,
+      longitude: -6.2088,
+      latitude: 106.8456,
+      isActive: true,
+      role: "BANK_SAMPAH",
     },
   });
 
@@ -49,6 +68,10 @@ async function main() {
       telepon: "022-5555666",
       email: "admin@banksampahcerdas.com",
       password: hashedPassword,
+      longitude: -6.9175,
+      latitude: 107.6191,
+      isActive: true,
+      role: "BANK_SAMPAH",
     },
   });
 
@@ -351,6 +374,11 @@ async function main() {
   console.log("");
   console.log("🔑 LOGIN CREDENTIALS:");
   console.log("=" * 50);
+  console.log("🎛️ CONTROLLER ACCOUNT:");
+  console.log(`   • ${controller.nama}`);
+  console.log(`     Email: ${controller.email}`);
+  console.log(`     Password: password123`);
+  console.log("");
   console.log("👨‍💼 ADMIN ACCOUNTS:");
   bankSampahs.forEach((bank) => {
     console.log(`   • ${bank.nama}`);

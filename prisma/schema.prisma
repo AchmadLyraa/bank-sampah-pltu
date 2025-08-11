@@ -7,6 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  CONTROLLER
+  BANK_SAMPAH
+}
+
+model Controller {
+  id        String   @id @default(cuid())
+  nama      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CONTROLLER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("controller")
+}
+
 model BankSampah {
   id         String             @id @default(cuid())
   nama       String
@@ -14,6 +31,10 @@ model BankSampah {
   telepon    String
   email      String             @unique
   password   String
+  longitude  Float? // Added longitude for location
+  latitude   Float? // Added latitude for location
+  isActive   Boolean            @default(true) // Added active status
+  role       Role               @default(BANK_SAMPAH) // Added role field
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
   inventaris InventarisSampah[]

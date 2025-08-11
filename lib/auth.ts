@@ -5,11 +5,14 @@ import type {
   BankSampah,
   Person,
   NasabahRelationshipForSession,
-} from "@/types"; // 🆕 Import Person and NasabahRelationshipForSession
+  Controller,
+  Role,
+} from "@/types"; // Import Controller and Role
 
 // Define the discriminated union type for the authentication result
 type AuthenticateResult =
   | { type: "bank-sampah"; user: BankSampah }
+  | { type: "controller"; user: Controller }
   | {
       type: "nasabah";
       person: Person; // 🆕 Return the Person object
@@ -27,7 +30,10 @@ export async function authenticateUser(data: {
   try {
     // First, try to find in bank sampah
     const bankSampah = await prisma.bankSampah.findUnique({
-      where: { email },
+      where: {
+        email,
+        isActive: true,
+      },
     });
 
     if (bankSampah) {
@@ -53,6 +59,9 @@ export async function authenticateUser(data: {
         where: {
           personId: person.id,
           isActive: true, // Must be an active relationship
+          bankSampah: {
+            isActive: true,
+          },
         },
         include: {
           bankSampah: {
@@ -92,6 +101,33 @@ export async function authenticateUser(data: {
     return null;
   } catch (error) {
     console.error("Authentication error:", error);
+    return null;
+  }
+}
+
+export async function authenticateController(data: {
+  email: string;
+  password: string;
+}): Promise<Controller | null> {
+  const { email, password } = data;
+
+  try {
+    const controller = await prisma.controller.findUnique({
+      where: { email },
+    });
+
+    if (!controller) {
+      return null;
+    }
+
+    const isValid = await bcrypt.compare(password, controller.password);
+    if (!isValid) {
+      return null;
+    }
+
+    return controller;
+  } catch (error) {
+    console.error("Controller authentication error:", error);
     return null;
   }
 }

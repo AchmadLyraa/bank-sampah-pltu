@@ -1,30 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { loginAction } from "@/app/actions/auth"
-import { Loader2, Mail, Lock, LogIn } from "lucide-react"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { loginAction } from "@/app/actions/auth";
+import { Loader2, Mail, Lock, LogIn } from "lucide-react";
 
 export default function LoginForm() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setError("")
+    setLoading(true);
+    setError("");
 
     try {
-      const result = await loginAction(formData)
+      const result = await loginAction(formData);
       if (result?.error) {
-        setError(result.error)
+        setError(result.error);
       }
     } catch (err) {
-      setError("Terjadi kesalahan saat login")
+      setError("Terjadi kesalahan saat login");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -44,7 +44,14 @@ export default function LoginForm() {
               <Mail className="h-4 w-4" />
               Email
             </Label>
-            <Input id="email" name="email" type="email" placeholder="email@example.com" required className="pl-4" />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="email@example.com"
+              required
+              className="pl-4"
+            />
           </div>
 
           <div className="space-y-2">
@@ -88,10 +95,17 @@ export default function LoginForm() {
               <p className="text-green-700">📧 budi@email.com</p>
               <p className="text-green-700">🔒 password123</p>
             </div>
+            <div className="bg-white p-2 rounded border">
+              <p className="font-medium text-purple-800">⚙️ Controller:</p>
+              <p className="text-purple-700">📧 admin@controller.com</p>
+              <p className="text-purple-700">🔒 password</p>
+            </div>
           </div>
-          <p className="text-xs text-blue-600 mt-2">💡 Sistem akan otomatis mendeteksi jenis akun Anda</p>
+          <p className="text-xs text-blue-600 mt-2">
+            💡 Sistem akan otomatis mendeteksi jenis akun Anda
+          </p>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
