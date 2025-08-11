@@ -1,24 +1,42 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wallet, History, User, Lock } from "lucide-react";
+import {
+  Wallet,
+  History,
+  User,
+  Lock,
+  Package,
+  BanknoteIcon as Bank,
+} from "lucide-react"; // 🆕 Import Package and Bank
 import EditProfileForm from "@/components/edit-profile-form";
 import ChangePasswordForm from "@/components/change-password-form";
-import type { Nasabah, Transaksi } from "@/types";
+import { BankSampahSelector } from "@/components/bank-sampah-selector"; // 🆕 Import BankSampahSelector
+import type {
+  Nasabah,
+  Transaksi,
+  InventarisSampah,
+  NasabahRelationshipForSession,
+} from "@/types"; // 🆕 Import InventarisSampah and NasabahRelationshipForSession
 
 interface NasabahDashboardProps {
-  data: {
-    nasabah: Nasabah | null;
-    transaksi: Transaksi[];
-  };
+  nasabah: Nasabah; // This is the specific Nasabah relationship, which includes Person and BankSampah
+  transaksi: Transaksi[];
+  inventarisList: InventarisSampah[]; // 🆕 New prop for inventaris
+  bankSampahRelationships: NasabahRelationshipForSession[]; // 🆕 New prop for all relationships
+  selectedBankSampahId: string; // 🆕 New prop for selected bank ID
 }
 
-export default function NasabahDashboard({ data }: NasabahDashboardProps) {
-  const { nasabah, transaksi } = data;
-
-  if (!nasabah || !nasabah.person) {
-    // Ensure person data is available
-    return <div>Data nasabah tidak ditemukan</div>;
+export default function NasabahDashboard({
+  nasabah,
+  transaksi,
+  inventarisList,
+  bankSampahRelationships,
+  selectedBankSampahId,
+}: NasabahDashboardProps) {
+  if (!nasabah || !nasabah.person || !nasabah.bankSampah) {
+    // Ensure person and bankSampah data are available
+    return <div>Data nasabah atau bank sampah tidak ditemukan</div>;
   }
 
   const getTransactionBadge = (jenis: string) => {
@@ -38,14 +56,36 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Selamat Datang, {nasabah.person?.nama}
-        </h1>
-        <p className="text-gray-600">
-          Kelola profil dan lihat riwayat transaksi Anda
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Selamat Datang, {nasabah.person.nama}
+          </h1>
+          <p className="text-gray-600">
+            Kelola profil dan lihat riwayat transaksi Anda
+          </p>
+        </div>
+        {/* 🆕 Bank Sampah Selector */}
+        <BankSampahSelector
+          relationships={bankSampahRelationships}
+          selectedBankSampahId={selectedBankSampahId}
+        />
       </div>
+
+      {/* 🆕 Currently Selected Bank Sampah Info */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="p-4 flex items-center gap-3">
+          <Bank className="h-6 w-6 text-blue-600" />
+          <div>
+            <h3 className="font-semibold text-blue-900">
+              {nasabah.bankSampah.nama}
+            </h3>
+            <p className="text-sm text-blue-700">
+              Alamat: {nasabah.bankSampah.alamat}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Saldo Card */}
       <Card>
@@ -65,7 +105,9 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
 
       {/* Tabs for different sections */}
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full h-auto grid-cols-2 md:grid-cols-4">
+          {" "}
+          {/* 🆕 Added Inventaris tab */}
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Profil
@@ -77,6 +119,12 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <History className="h-4 w-4" />
             Transaksi
+          </TabsTrigger>
+          <TabsTrigger value="inventaris" className="flex items-center gap-2">
+            {" "}
+            {/* 🆕 New Tab */}
+            <Package className="h-4 w-4" />
+            Inventaris
           </TabsTrigger>
         </TabsList>
 
@@ -149,6 +197,61 @@ export default function NasabahDashboard({ data }: NasabahDashboardProps) {
                   ))
                 )}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* 🆕 Inventaris Tab */}
+        <TabsContent value="inventaris" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Daftar Harga Sampah
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {inventarisList.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  Tidak ada jenis sampah yang terdaftar di bank sampah ini.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4">Jenis Sampah</th>
+                        <th className="text-left py-3 px-4">Harga Beli/kg</th>
+                        <th className="text-left py-3 px-4">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {inventarisList.map((item) => (
+                        <tr key={item.id} className="border-b hover:bg-gray-50">
+                          <td className="py-3 px-4 font-medium">
+                            {item.jenisSampah}
+                          </td>
+                          <td className="py-3 px-4">
+                            Rp {item.hargaPerKg.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4">
+                            <Badge
+                              variant={item.isActive ? "default" : "secondary"}
+                              className={
+                                item.isActive
+                                  ? "bg-green-100 text-green-800"
+                                  : ""
+                              }
+                            >
+                              {item.isActive ? "Aktif" : "Non-aktif"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

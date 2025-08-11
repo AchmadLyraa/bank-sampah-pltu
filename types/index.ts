@@ -34,6 +34,26 @@ export interface Nasabah {
   updatedAt: Date;
   // 🆕 NEW: Sertakan data Person terkait
   person?: Person;
+  // 🆕 NEW: Sertakan data BankSampah terkait (opsional di sini karena tidak selalu di-include)
+  bankSampah?: BankSampah;
+}
+
+// 🆕 NEW: Tipe untuk hubungan Nasabah yang disimpan di sesi
+export interface NasabahRelationshipForSession {
+  nasabahId: string; // ID dari hubungan Nasabah
+  bankSampahId: string; // ID dari Bank Sampah
+  bankSampahNama: string; // Nama Bank Sampah
+  saldo: number; // Saldo spesifik untuk hubungan ini
+}
+
+// 🆕 NEW: Tipe untuk sesi nasabah
+export interface NasabahSession {
+  personId: string;
+  userType: "nasabah";
+  email: string;
+  nama: string;
+  bankSampahRelationships: NasabahRelationshipForSession[];
+  selectedBankSampahId: string;
 }
 
 export interface AuthenticatedNasabah extends Nasabah {

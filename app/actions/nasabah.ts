@@ -2,22 +2,37 @@
 
 import { prisma } from "@/lib/prisma";
 
-// 🔄 MODIFIED: getNasabahData to fetch Person data via Nasabah relationship
-export async function getNasabahData(nasabahId: string) {
-  // nasabahId here is the ID of the Nasabah relationship
-  const nasabah = await prisma.nasabah.findUnique({
-    where: { id: nasabahId },
+// 🆕 NEW: Function to get all dashboard data for a specific nasabah relationship
+export async function getNasabahDashboardData(
+  personId: string,
+  bankSampahId: string,
+) {
+  // 1. Find the specific Nasabah relationship for this person and bank sampah
+  const nasabahRelationship = await prisma.nasabah.findUnique({
+    where: {
+      personId_bankSampahId: {
+        personId: personId,
+        bankSampahId: bankSampahId,
+      },
+    },
     include: {
-      person: true, // 🆕 Include Person data
+      person: true, // Include person data
+      bankSampah: true, // Include bank sampah data
     },
   });
 
-  if (!nasabah) {
-    return { nasabah: null, transaksi: [] }; // Handle case where relationship not found
+  if (!nasabahRelationship) {
+    return {
+      nasabah: null,
+      transaksi: [],
+      inventarisList: [],
+      error: "Hubungan nasabah tidak ditemukan untuk bank sampah ini.",
+    };
   }
 
+  // 2. Get transactions for this specific nasabah relationship
   const transaksi = await prisma.transaksi.findMany({
-    where: { nasabahId },
+    where: { nasabahId: nasabahRelationship.id }, // Filter by the Nasabah relationship ID
     include: {
       detailTransaksi: {
         include: {
@@ -28,5 +43,19 @@ export async function getNasabahData(nasabahId: string) {
     orderBy: { createdAt: "desc" },
   });
 
-  return { nasabah, transaksi };
+  // 3. Get active inventaris for this bank sampah
+  const inventarisList = await prisma.inventarisSampah.findMany({
+    where: {
+      bankSampahId: bankSampahId,
+      isActive: true, // Only active items
+    },
+    orderBy: { jenisSampah: "asc" },
+  });
+
+  return {
+    nasabah: nasabahRelationship, // This is the specific Nasabah relationship
+    transaksi,
+    inventarisList,
+    error: null,
+  };
 }
