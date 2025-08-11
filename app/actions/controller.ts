@@ -172,3 +172,86 @@ export async function updateControllerProfile(formData: FormData) {
     return { success: false, error: "Terjadi kesalahan sistem" };
   }
 }
+
+export async function getBankSampahDetail(bankSampahId: string) {
+  try {
+    const session = await getSession();
+
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // Get bank sampah info
+    const bankSampah = await prisma.bankSampah.findUnique({
+      where: { id: bankSampahId },
+    });
+
+    if (!bankSampah) {
+      return { success: false, error: "Bank sampah tidak ditemukan" };
+    }
+
+    // Get nasabah details with saldo
+    const nasabahDetails = await prisma.nasabah.findMany({
+      where: { bankSampahId },
+      include: {
+        person: {
+          select: {
+            nama: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { saldo: "desc" },
+    });
+
+    // Get inventaris sampah
+    const inventaris = await prisma.inventarisSampah.findMany({
+      where: { bankSampahId },
+      orderBy: { jenisSampah: "asc" },
+    });
+
+    // Get transaction count
+    const totalTransaksi = await prisma.transaksi.count({
+      where: { bankSampahId },
+    });
+
+    // Calculate statistics
+    const totalNasabah = nasabahDetails.length;
+    const nasabahAktif = nasabahDetails.filter((n) => n.isActive).length;
+    const nasabahNonaktif = totalNasabah - nasabahAktif;
+    const totalSaldo = nasabahDetails.reduce((sum, n) => sum + n.saldo, 0);
+    const totalInventaris = inventaris.length;
+
+    // Format nasabah details for display
+    const formattedNasabahDetails = nasabahDetails.map((nasabah) => ({
+      id: nasabah.id,
+      nama: nasabah.person.nama,
+      email: nasabah.person.email,
+      saldo: nasabah.saldo,
+      isActive: nasabah.isActive,
+    }));
+
+    const data = {
+      bankSampah,
+      statistics: {
+        totalNasabah,
+        nasabahAktif,
+        nasabahNonaktif,
+        totalSaldo,
+        totalInventaris,
+        totalTransaksi,
+      },
+      nasabahDetails: formattedNasabahDetails,
+      inventaris,
+    };
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error fetching bank sampah detail:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}

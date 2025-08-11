@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, MapPin, Building2, Users } from "lucide-react";
+import { Plus, MapPin, Building2, Users, Eye } from "lucide-react";
 import { AddBankSampahDialog } from "./add-bank-sampah-dialog";
+import { BankSampahDetailDialog } from "./bank-sampah-detail-dialog";
 import {
   getBankSampahList,
   toggleBankSampahStatus,
@@ -18,6 +19,11 @@ export function BankSampahList() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [selectedBankSampah, setSelectedBankSampah] = useState<{
+    id: string;
+    nama: string;
+  } | null>(null);
 
   const fetchData = async () => {
     try {
@@ -44,6 +50,11 @@ export function BankSampahList() {
   const handleAddSuccess = () => {
     setShowAddDialog(false);
     fetchData(); // refresh data after add
+  };
+
+  const handleShowDetail = (bankSampah: BankSampah) => {
+    setSelectedBankSampah({ id: bankSampah.id, nama: bankSampah.nama });
+    setShowDetailDialog(true);
   };
 
   if (loading) {
@@ -107,14 +118,25 @@ export function BankSampahList() {
                   </div>
                 </div>
 
-                <Button
-                  variant={bankSampah.isActive ? "destructive" : "default"}
-                  size="sm"
-                  className="w-full"
-                  onClick={() => handleToggleStatus(bankSampah.id)}
-                >
-                  {bankSampah.isActive ? "Nonaktifkan" : "Aktifkan"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 bg-transparent"
+                    onClick={() => handleShowDetail(bankSampah)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Detail
+                  </Button>
+                  <Button
+                    variant={bankSampah.isActive ? "destructive" : "default"}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleToggleStatus(bankSampah.id)}
+                  >
+                    {bankSampah.isActive ? "Nonaktifkan" : "Aktifkan"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -126,6 +148,14 @@ export function BankSampahList() {
         onOpenChange={setShowAddDialog}
         onSuccess={handleAddSuccess}
       />
+      {selectedBankSampah && (
+        <BankSampahDetailDialog
+          open={showDetailDialog}
+          onOpenChange={setShowDetailDialog}
+          bankSampahId={selectedBankSampah.id}
+          bankSampahName={selectedBankSampah.nama}
+        />
+      )}
     </div>
   );
 }
