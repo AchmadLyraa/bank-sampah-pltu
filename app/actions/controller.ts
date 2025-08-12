@@ -255,3 +255,247 @@ export async function getBankSampahDetail(bankSampahId: string) {
     return { success: false, error: "Terjadi kesalahan sistem" };
   }
 }
+
+export async function getBankSampahProfitData(
+  startDate?: Date,
+  endDate?: Date,
+) {
+  try {
+    const session = await getSession();
+
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // Setup date filter
+    const dateFilter =
+      startDate && endDate
+        ? {
+            createdAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          }
+        : {};
+
+    // Get all active bank sampah
+    const bankSampahList = await prisma.bankSampah.findMany({
+      where: { isActive: true },
+      select: { id: true, nama: true },
+      orderBy: { nama: "asc" },
+    });
+
+    // Get profit data for each bank sampah
+    const profitData = await Promise.all(
+      bankSampahList.map(async (bankSampah) => {
+        // Get pemasukan (sampah masuk dari nasabah)
+        const pemasukan = await prisma.transaksi.aggregate({
+          where: {
+            bankSampahId: bankSampah.id,
+            jenis: "PEMASUKAN",
+            ...dateFilter,
+          },
+          _sum: { totalNilai: true },
+        });
+
+        // Get penjualan (sampah keluar ke pihak ketiga)
+        const penjualan = await prisma.transaksi.aggregate({
+          where: {
+            bankSampahId: bankSampah.id,
+            jenis: "PENJUALAN_SAMPAH",
+            ...dateFilter,
+          },
+          _sum: { totalNilai: true },
+        });
+
+        const totalPemasukan = pemasukan._sum.totalNilai || 0;
+        const totalPenjualan = penjualan._sum.totalNilai || 0;
+        const keuntungan = totalPenjualan - totalPemasukan;
+
+        return {
+          bankSampahId: bankSampah.id,
+          nama: bankSampah.nama,
+          totalPemasukan,
+          totalPenjualan,
+          keuntungan,
+        };
+      }),
+    );
+
+    return { success: true, data: profitData };
+  } catch (error) {
+    console.error("Error fetching profit data:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}
+
+export async function getBankSampahListPaginated(
+  page = 1,
+  search = "",
+  limit = 10,
+) {
+  try {
+    const session = await getSession();
+
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const skip = (page - 1) * limit;
+
+    // Build search filter
+    const searchFilter = search
+      ? {
+          OR: [
+            { nama: { contains: search, mode: "insensitive" as const } },
+            { email: { contains: search, mode: "insensitive" as const } },
+            { alamat: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {};
+
+    // Get total count for pagination
+    const totalItems = await prisma.bankSampah.count({
+      where: searchFilter,
+    });
+
+    // Get paginated data
+    const bankSampahList = await prisma.bankSampah.findMany({
+      where: searchFilter,
+      include: {
+        _count: {
+          select: {
+            nasabah: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    });
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      success: true,
+      data: bankSampahList,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching paginated bank sampah list:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}
+
+export async function getBankSampahIndividualProfit(
+  bankSampahId: string,
+  dateFilter = "30",
+) {
+  try {
+    const session = await getSession();
+
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // Calculate date range based on filter
+    let startDate: Date;
+    const endDate = new Date();
+
+    switch (dateFilter) {
+      case "1":
+        startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case "7":
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case "14":
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 14);
+        break;
+      case "30":
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        break;
+      case "all":
+        startDate = new Date("2020-01-01"); // Far back date
+        break;
+      default:
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+    }
+
+    // Get daily profit data
+    const transactions = await prisma.transaksi.findMany({
+      where: {
+        bankSampahId,
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      select: {
+        jenis: true,
+        totalNilai: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    // Group transactions by date and calculate daily profit
+    const dailyProfitMap = new Map<string, number>();
+
+    transactions.forEach((transaction) => {
+      const dateKey = transaction.createdAt.toISOString().split("T")[0];
+      const currentProfit = dailyProfitMap.get(dateKey) || 0;
+
+      if (transaction.jenis === "PENJUALAN_SAMPAH") {
+        // Penjualan increases profit
+        dailyProfitMap.set(dateKey, currentProfit + transaction.totalNilai);
+      } else if (transaction.jenis === "PEMASUKAN") {
+        // Pemasukan decreases profit (cost)
+        dailyProfitMap.set(dateKey, currentProfit - transaction.totalNilai);
+      }
+    });
+
+    // Convert to array and fill missing dates with 0
+    const profitData = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const dateKey = currentDate.toISOString().split("T")[0];
+      const profit = dailyProfitMap.get(dateKey) || 0;
+
+      profitData.push({
+        date: dateKey,
+        profit,
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return { success: true, data: profitData };
+  } catch (error) {
+    console.error("Error fetching individual bank sampah profit:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}
