@@ -94,6 +94,7 @@ export default function EditControllerProfileForm({
               defaultValue={controller.email}
               placeholder="email@example.com"
               required
+              disabled
             />
           </div>
 

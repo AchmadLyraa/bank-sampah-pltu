@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
+import { isEmailUnique } from "@/lib/email-validator";
 
 export async function getNasabahList(
   bankSampahId: string,
@@ -33,6 +34,11 @@ export async function createNasabahAction(formData: FormData) {
   const bankSampahId = formData.get("bankSampahId") as string;
 
   try {
+    const emailIsUnique = await isEmailUnique(email);
+    if (!emailIsUnique) {
+      return { error: "Email sudah terdaftar di sistem" };
+    }
+
     // 1. Check if Person with this email or NIK already exists
     let person = await prisma.person.findFirst({
       where: {

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { Role } from "@/types";
 import bcrypt from "bcryptjs";
+import { isEmailUnique } from "@/lib/email-validator";
 
 export async function getBankSampahList() {
   try {
@@ -60,12 +61,9 @@ export async function createBankSampah(formData: FormData) {
     }
 
     // Check if email already exists
-    const existingBankSampah = await prisma.bankSampah.findUnique({
-      where: { email },
-    });
-
-    if (existingBankSampah) {
-      return { success: false, error: "Email sudah terdaftar" };
+    const emailIsUnique = await isEmailUnique(email);
+    if (!emailIsUnique) {
+      return { success: false, error: "Email sudah terdaftar di sistem" };
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -136,30 +134,25 @@ export async function updateControllerProfile(formData: FormData) {
     }
 
     const nama = formData.get("nama") as string;
-    const email = formData.get("email") as string;
+    // const email = formData.get("email") as string;
 
-    if (!nama || !email) {
-      return { success: false, error: "Nama dan email wajib diisi" };
+    if (!nama) {
+      return { success: false, error: "Nama wajib diisi" };
     }
 
     // Check if email already exists for other controllers
-    const existingController = await prisma.controller.findFirst({
-      where: {
-        email,
-        id: { not: session.userId },
-      },
-    });
-
-    if (existingController) {
-      return {
-        success: false,
-        error: "Email sudah digunakan oleh controller lain",
-      };
-    }
+    // const emailIsUnique = await isEmailUnique(
+    //   email,
+    //   session.userId,
+    //   "controller",
+    // );
+    // if (!emailIsUnique) {
+    //   return { success: false, error: "Email sudah digunakan di sistem" };
+    // }
 
     const updatedController = await prisma.controller.update({
       where: { id: session.userId },
-      data: { nama, email },
+      data: { nama },
     });
 
     return {
@@ -496,6 +489,82 @@ export async function getBankSampahIndividualProfit(
     return { success: true, data: profitData };
   } catch (error) {
     console.error("Error fetching individual bank sampah profit:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}
+
+export async function resetUserPassword(formData: FormData) {
+  try {
+    const session = await getSession();
+
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const email = formData.get("email") as string;
+
+    if (!email) {
+      return { success: false, error: "Email wajib diisi" };
+    }
+
+    // Generate new password (8 characters, alphanumeric)
+    const newPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Check if email exists in Person table (nasabah)
+    const person = await prisma.person.findUnique({
+      where: { email },
+    });
+
+    if (person) {
+      // Update person password
+      await prisma.person.update({
+        where: { id: person.id },
+        data: { password: hashedPassword },
+      });
+
+      return {
+        success: true,
+        message: `Password berhasil direset untuk nasabah: ${person.nama}`,
+        newPassword,
+        userName: person.nama,
+        userType: "Nasabah",
+      };
+    }
+
+    // Check if email exists in BankSampah table
+    const bankSampah = await prisma.bankSampah.findUnique({
+      where: { email },
+    });
+
+    if (bankSampah) {
+      // Update bank sampah password
+      await prisma.bankSampah.update({
+        where: { id: bankSampah.id },
+        data: { password: hashedPassword },
+      });
+
+      return {
+        success: true,
+        message: `Password berhasil direset untuk bank sampah: ${bankSampah.nama}`,
+        newPassword,
+        userName: bankSampah.nama,
+        userType: "Bank Sampah",
+      };
+    }
+
+    // Email not found in any table
+    return {
+      success: false,
+      error:
+        "Email tidak ditemukan di sistem. Pastikan email sudah terdaftar sebagai nasabah atau bank sampah.",
+    };
+  } catch (error) {
+    console.error("Error resetting user password:", error);
     return { success: false, error: "Terjadi kesalahan sistem" };
   }
 }

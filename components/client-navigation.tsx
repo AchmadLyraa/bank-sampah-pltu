@@ -65,6 +65,11 @@ const controllerNavItems = [
     label: "Bank Sampah",
     icon: Package,
   },
+  {
+    href: "/controller/reset-password",
+    label: "Reset Password",
+    icon: CreditCard,
+  },
 ];
 
 export function ClientNavigation({
