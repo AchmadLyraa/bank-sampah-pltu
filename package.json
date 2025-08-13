@@ -24,7 +24,6 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-tabs": "^1.0.2",
-    "bcrypt": "latest",
     "bcryptjs": "latest",
     "chart.js": "^4.5.0",
     "class-variance-authority": "^0.7.0",

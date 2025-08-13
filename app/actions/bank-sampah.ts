@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import type { PenimbanganFormData, PenarikanFormData } from "@/types";
 
 export async function getDashboardData(bankSampahId: string) {
