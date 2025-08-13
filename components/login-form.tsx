@@ -1,20 +1,25 @@
 "use client";
 
+import type React from "react";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginAction } from "@/app/actions/auth";
-import { Loader2, Mail, Lock, LogIn } from "lucide-react";
+import { Loader2, Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setLoading(true);
     setError("");
+
+    const formData = new FormData(e.currentTarget);
 
     try {
       const result = await loginAction(formData);
@@ -38,7 +43,7 @@ export default function LoginForm() {
         <p className="text-gray-600">Masuk ke akun Anda</p>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
@@ -59,14 +64,29 @@ export default function LoginForm() {
               <Lock className="h-4 w-4" />
               Password
             </Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Masukkan password"
-              required
-              className="pl-4"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Masukkan password"
+                required
+                className="pl-4 pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
+              </Button>
+            </div>
           </div>
 
           {error && (

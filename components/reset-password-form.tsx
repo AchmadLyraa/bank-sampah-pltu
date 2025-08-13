@@ -12,25 +12,57 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { resetUserPassword } from "@/app/actions/controller";
-import { Search, Copy, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Search,
+  Copy,
+  CheckCircle,
+  AlertCircle,
+  AlertTriangle,
+} from "lucide-react";
 
 export function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [emailToReset, setEmailToReset] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
 
   async function handleSubmit(formData: FormData) {
+    const email = formData.get("email") as string;
+    setEmailToReset(email);
+    setShowConfirmDialog(true);
+  }
+
+  async function handleConfirmedReset() {
+    if (confirmEmail !== emailToReset) {
+      return; // Email doesn't match, don't proceed
+    }
+
     setIsLoading(true);
     setResult(null);
+    setShowConfirmDialog(false);
 
     try {
+      const formData = new FormData();
+      formData.append("email", emailToReset);
       const response = await resetUserPassword(formData);
       setResult(response);
     } catch (error) {
       setResult({ success: false, error: "Terjadi kesalahan sistem" });
     } finally {
       setIsLoading(false);
+      setConfirmEmail("");
+      setEmailToReset("");
     }
   }
 
@@ -70,7 +102,7 @@ export function ResetPasswordForm() {
             </div>
 
             <Button type="submit" disabled={isLoading} className="w-full">
-              {isLoading ? "Mencari..." : "Cari & Reset Password"}
+              {isLoading ? "Mereset Password..." : "Reset Password"}
             </Button>
           </form>
 
@@ -141,6 +173,67 @@ export function ResetPasswordForm() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Konfirmasi Reset Password
+            </DialogTitle>
+            <DialogDescription>
+              Anda akan mereset password untuk email:{" "}
+              <strong>{emailToReset}</strong>
+              <br />
+              Tindakan ini tidak dapat dibatalkan. Ketik ulang email untuk
+              konfirmasi.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="confirmEmail">
+                Ketik ulang email untuk konfirmasi
+              </Label>
+              <Input
+                id="confirmEmail"
+                type="email"
+                placeholder="Ketik ulang email"
+                value={confirmEmail}
+                onChange={(e) => setConfirmEmail(e.target.value)}
+                className={
+                  confirmEmail && confirmEmail !== emailToReset
+                    ? "border-red-300"
+                    : ""
+                }
+              />
+              {confirmEmail && confirmEmail !== emailToReset && (
+                <p className="text-sm text-red-600">Email tidak cocok</p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowConfirmDialog(false);
+                setConfirmEmail("");
+                setEmailToReset("");
+              }}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmedReset}
+              disabled={confirmEmail !== emailToReset || isLoading}
+            >
+              {isLoading ? "Mereset..." : "Ya, Reset Password"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

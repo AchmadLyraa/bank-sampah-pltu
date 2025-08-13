@@ -49,3 +49,16 @@ export async function getSession(): Promise<SessionData | null> {
     return null;
   }
 }
+
+export async function updateSession(
+  newSessionData: SessionData,
+): Promise<void> {
+  const cookieStore = await cookies();
+
+  cookieStore.set("session", JSON.stringify(newSessionData), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  });
+}

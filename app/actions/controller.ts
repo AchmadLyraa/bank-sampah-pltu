@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/session";
+import { getSession, updateSession } from "@/lib/session";
 import { Role } from "@/types";
 import bcrypt from "bcryptjs";
 import { isEmailUnique } from "@/lib/email-validator";
@@ -155,6 +155,13 @@ export async function updateControllerProfile(formData: FormData) {
       data: { nama },
     });
 
+    const updatedSession = {
+      ...session,
+      nama: updatedController.nama,
+    };
+
+    await updateSession(updatedSession);
+
     return {
       success: true,
       message: "Profil berhasil diperbarui",
@@ -208,9 +215,51 @@ export async function getBankSampahDetail(bankSampahId: string) {
     });
 
     // Get transaction count
-    const totalTransaksi = await prisma.transaksi.count({
+    const transaksi = await prisma.transaksi.findMany({
       where: { bankSampahId },
+      include: {
+        nasabah: {
+          include: {
+            person: {
+              select: {
+                nama: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50, // Limit to latest 50 transactions
     });
+
+    const totalPemasukan = await prisma.transaksi.aggregate({
+      where: {
+        bankSampahId,
+        jenis: "PEMASUKAN",
+      },
+      _sum: { totalNilai: true },
+    });
+
+    const totalPenjualan = await prisma.transaksi.aggregate({
+      where: {
+        bankSampahId,
+        jenis: "PENJUALAN_SAMPAH",
+      },
+      _sum: { totalNilai: true },
+    });
+
+    const totalPenarikan = await prisma.transaksi.aggregate({
+      where: {
+        bankSampahId,
+        jenis: "PENGELUARAN",
+      },
+      _sum: { totalNilai: true },
+    });
+
+    const totalStokTerkumpul = inventaris.reduce(
+      (sum, item) => sum + item.stokKg,
+      0,
+    );
 
     // Calculate statistics
     const totalNasabah = nasabahDetails.length;
@@ -218,6 +267,7 @@ export async function getBankSampahDetail(bankSampahId: string) {
     const nasabahNonaktif = totalNasabah - nasabahAktif;
     const totalSaldo = nasabahDetails.reduce((sum, n) => sum + n.saldo, 0);
     const totalInventaris = inventaris.length;
+    const totalTransaksi = transaksi.length;
 
     // Format nasabah details for display
     const formattedNasabahDetails = nasabahDetails.map((nasabah) => ({
@@ -226,6 +276,15 @@ export async function getBankSampahDetail(bankSampahId: string) {
       email: nasabah.person.email,
       saldo: nasabah.saldo,
       isActive: nasabah.isActive,
+    }));
+
+    const formattedTransaksi = transaksi.map((t) => ({
+      id: t.id,
+      jenis: t.jenis,
+      totalNilai: t.totalNilai,
+      keterangan: t.keterangan,
+      createdAt: t.createdAt,
+      nasabahNama: t.nasabah?.person?.nama || "Sistem",
     }));
 
     const data = {
@@ -237,9 +296,17 @@ export async function getBankSampahDetail(bankSampahId: string) {
         totalSaldo,
         totalInventaris,
         totalTransaksi,
+        totalPemasukan: totalPemasukan._sum.totalNilai || 0,
+        totalPenjualan: totalPenjualan._sum.totalNilai || 0,
+        totalPenarikan: totalPenarikan._sum.totalNilai || 0,
+        totalStokTerkumpul,
+        keuntungan:
+          (totalPenjualan._sum.totalNilai || 0) -
+          (totalPemasukan._sum.totalNilai || 0),
       },
       nasabahDetails: formattedNasabahDetails,
       inventaris,
+      transaksi: formattedTransaksi,
     };
 
     return { success: true, data };
