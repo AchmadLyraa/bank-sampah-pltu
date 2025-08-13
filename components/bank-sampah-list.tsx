@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, MapPin, Building2, Users, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, MapPin, Building2, Users, Eye, Search } from "lucide-react";
 import { AddBankSampahDialog } from "./add-bank-sampah-dialog";
 import { BankSampahDetailDialog } from "./bank-sampah-detail-dialog";
 import {
@@ -24,6 +25,7 @@ export function BankSampahList() {
     id: string;
     nama: string;
   } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchData = async () => {
     try {
@@ -41,6 +43,17 @@ export function BankSampahList() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Filter bank sampah berdasarkan search query
+  const filteredBankSampahList = useMemo(() => {
+    if (!searchQuery.trim()) return bankSampahList;
+
+    return bankSampahList.filter((bankSampah) =>
+      bankSampah.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      bankSampah.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      bankSampah.alamat?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [bankSampahList, searchQuery]);
 
   const handleToggleStatus = async (id: string) => {
     await toggleBankSampahStatus(id);
@@ -68,6 +81,7 @@ export function BankSampahList() {
           <h2 className="text-lg font-semibold">Daftar Bank Sampah</h2>
           <p className="text-sm text-gray-600">
             Total: {bankSampahList.length} bank sampah
+            {searchQuery && ` (${filteredBankSampahList.length} hasil pencarian)`}
           </p>
         </div>
         <Button onClick={() => setShowAddDialog(true)}>
@@ -76,13 +90,28 @@ export function BankSampahList() {
         </Button>
       </div>
 
-      {bankSampahList.length === 0 ? (
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Input
+          type="text"
+          placeholder="Cari bank sampah berdasarkan nama, email, atau alamat..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {filteredBankSampahList.length === 0 ? (
         <p className="text-center text-gray-500">
-          Belum ada bank sampah terdaftar
+          {searchQuery
+            ? `Tidak ada bank sampah yang cocok dengan pencarian "${searchQuery}"`
+            : "Belum ada bank sampah terdaftar"
+          }
         </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {bankSampahList.map((bankSampah) => (
+          {filteredBankSampahList.map((bankSampah) => (
             <Card key={bankSampah.id}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">

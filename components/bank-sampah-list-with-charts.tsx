@@ -75,13 +75,30 @@ export function BankSampahListWithCharts() {
     }
   };
 
+  // Initial load
   useEffect(() => {
-    fetchBankSampahList(1, search);
+    fetchBankSampahList(1, "");
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    const delayedSearch = setTimeout(() => {
+      if (search !== "") {
+        fetchBankSampahList(1, search);
+        setPagination((prev) => ({ ...prev, currentPage: 1 }));
+      }
+    }, 500);
+
+    return () => clearTimeout(delayedSearch);
   }, [search]);
 
   const handleSearch = (value: string) => {
     setSearch(value);
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+    // Jika search kosong, langsung fetch tanpa delay
+    if (value === "") {
+      fetchBankSampahList(1, "");
+      setPagination((prev) => ({ ...prev, currentPage: 1 }));
+    }
   };
 
   const handlePageChange = (page: number) => {

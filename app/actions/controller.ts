@@ -36,6 +36,43 @@ export async function getBankSampahList() {
   }
 }
 
+export async function getBankSampahLocations() {
+  try {
+    const session = await getSession()
+
+    if (!session || session.userType !== "controller" || session.role !== Role.CONTROLLER) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    const bankSampahList = await prisma.bankSampah.findMany({
+      where: {
+        latitude: { not: null },
+        longitude: { not: null },
+      },
+      select: {
+        id: true,
+        nama: true,
+        email: true,
+        alamat: true,
+        latitude: true,
+        longitude: true,
+        isActive: true,
+        _count: {
+          select: {
+            nasabah: true,
+          },
+        },
+      },
+      orderBy: { nama: "asc" },
+    })
+
+    return { success: true, data: bankSampahList }
+  } catch (error) {
+    console.error("Error fetching bank sampah locations:", error)
+    return { success: false, error: "Terjadi kesalahan sistem" }
+  }
+}
+
 export async function createBankSampah(formData: FormData) {
   try {
     const session = await getSession();

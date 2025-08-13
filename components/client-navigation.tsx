@@ -11,7 +11,7 @@ import {
   History,
   Users,
   LogOut,
-  BarChart3,
+  MapPinned,
   CircleUserRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,11 @@ const controllerNavItems = [
     href: "/controller/bank-sampah",
     label: "Bank Sampah",
     icon: Package,
+  },
+  {
+    href: "/controller/bank-sampah-map",
+    label: "Peta",
+    icon: MapPinned,
   },
   {
     href: "/controller/reset-password",
