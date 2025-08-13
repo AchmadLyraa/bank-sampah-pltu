@@ -75,7 +75,7 @@ export function AddNasabahDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[82vh] h-full overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
@@ -103,6 +103,18 @@ export function AddNasabahDialog({
               type="email"
               required
               placeholder="Masukkan email"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nik">NIK</Label>
+            <Input
+              id="nik"
+              name="nik"
+              type="text"
+              required
+              placeholder="Masukkan NIK"
+              maxLength={16}
             />
           </div>
 

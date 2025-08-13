@@ -38,6 +38,27 @@ export function AddBankSampahDialog({
       return;
     }
 
+    const latitude = formData.get("latitude") as string;
+    const longitude = formData.get("longitude") as string;
+
+    if (latitude && longitude) {
+      const lat = Number.parseFloat(latitude);
+      const lng = Number.parseFloat(longitude);
+
+      if (lat < -11 || lat > 6) {
+        setError(
+          "Latitude harus berada dalam batas Indonesia (-11° hingga 6°)",
+        );
+        return;
+      }
+      if (lng < 95 || lng > 141) {
+        setError(
+          "Longitude harus berada dalam batas Indonesia (95° hingga 141°)",
+        );
+        return;
+      }
+    }
+
     setLoading(true);
     setError("");
 
@@ -179,6 +200,9 @@ export function AddBankSampahDialog({
                 step="any"
                 placeholder="-6.2088"
               />
+              <p className="text-xs text-gray-500">
+                Batas Indonesia: -11° hingga 6°
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="longitude">Longitude (Opsional)</Label>
@@ -189,6 +213,9 @@ export function AddBankSampahDialog({
                 step="any"
                 placeholder="106.8456"
               />
+              <p className="text-xs text-gray-500">
+                Batas Indonesia: 95° hingga 141°
+              </p>
             </div>
           </div>
 

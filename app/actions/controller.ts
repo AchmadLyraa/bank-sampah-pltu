@@ -635,3 +635,302 @@ export async function resetUserPassword(formData: FormData) {
     return { success: false, error: "Terjadi kesalahan sistem" };
   }
 }
+
+export async function toggleNasabahStatus(nasabahId: string) {
+  try {
+    const session = await getSession();
+
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const nasabah = await prisma.nasabah.findUnique({
+      where: { id: nasabahId },
+    });
+
+    if (!nasabah) {
+      return { success: false, error: "Nasabah tidak ditemukan" };
+    }
+
+    const updatedNasabah = await prisma.nasabah.update({
+      where: { id: nasabahId },
+      data: { isActive: !nasabah.isActive },
+    });
+
+    return { success: true, data: updatedNasabah };
+  } catch (error) {
+    console.error("Error toggling nasabah status:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}
+
+export async function addNasabahToBank(formData: FormData) {
+  try {
+    const session = await getSession();
+
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const bankSampahId = formData.get("bankSampahId") as string;
+    const nama = formData.get("nama") as string;
+    const email = formData.get("email") as string;
+    const nik = formData.get("nik") as string;
+    const telepon = formData.get("telepon") as string;
+    const alamat = formData.get("alamat") as string;
+    const password = formData.get("password") as string;
+
+    if (
+      !bankSampahId ||
+      !nama ||
+      !email ||
+      !nik ||
+      !telepon ||
+      !alamat ||
+      !password
+    ) {
+      return { success: false, error: "Semua field wajib diisi" };
+    }
+
+    // Check if email is unique across all roles
+    const emailIsUnique = await isEmailUnique(email);
+    if (!emailIsUnique) {
+      return { success: false, error: "Email sudah terdaftar di sistem" };
+    }
+
+    // Check if bank sampah exists
+    const bankSampah = await prisma.bankSampah.findUnique({
+      where: { id: bankSampahId },
+    });
+
+    if (!bankSampah) {
+      return { success: false, error: "Bank sampah tidak ditemukan" };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create person first
+    const person = await prisma.person.create({
+      data: {
+        nama,
+        email,
+        nik,
+        telepon,
+        alamat,
+        password: hashedPassword,
+        isActive: true,
+      },
+    });
+
+    // Create nasabah relationship
+    const nasabah = await prisma.nasabah.create({
+      data: {
+        personId: person.id,
+        bankSampahId,
+        saldo: 0,
+        isActive: true,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Nasabah berhasil ditambahkan",
+      data: { person, nasabah },
+    };
+  } catch (error) {
+    console.error("Error adding nasabah to bank:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}
+
+export async function updateInventarisSampah(formData: FormData) {
+  try {
+    const session = await getSession();
+
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const inventarisId = formData.get("inventarisId") as string;
+    const jenisSampah = formData.get("jenisSampah") as string;
+    const hargaPerKg = formData.get("hargaPerKg") as string;
+    const stokKg = formData.get("stokKg") as string;
+    const isActive = formData.get("isActive") === "true";
+
+    if (!inventarisId || !jenisSampah || !hargaPerKg || !stokKg) {
+      return { success: false, error: "Semua field wajib diisi" };
+    }
+
+    const harga = Number.parseFloat(hargaPerKg);
+    const stok = Number.parseFloat(stokKg);
+
+    if (isNaN(harga) || isNaN(stok) || harga < 0 || stok < 0) {
+      return {
+        success: false,
+        error: "Harga dan stok harus berupa angka positif",
+      };
+    }
+
+    // Check if inventaris exists
+    const inventaris = await prisma.inventarisSampah.findUnique({
+      where: { id: inventarisId },
+    });
+
+    if (!inventaris) {
+      return { success: false, error: "Inventaris tidak ditemukan" };
+    }
+
+    const updatedInventaris = await prisma.inventarisSampah.update({
+      where: { id: inventarisId },
+      data: {
+        jenisSampah,
+        hargaPerKg: harga,
+        stokKg: stok,
+        isActive,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Inventaris berhasil diperbarui",
+      data: updatedInventaris,
+    };
+  } catch (error) {
+    console.error("Error updating inventaris sampah:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}
+
+export async function addInventarisSampah(formData: FormData) {
+  try {
+    const session = await getSession();
+
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const bankSampahId = formData.get("bankSampahId") as string;
+    const jenisSampah = formData.get("jenisSampah") as string;
+    const hargaPerKg = formData.get("hargaPerKg") as string;
+    const stokKg = formData.get("stokKg") as string;
+
+    if (!bankSampahId || !jenisSampah || !hargaPerKg || !stokKg) {
+      return { success: false, error: "Semua field wajib diisi" };
+    }
+
+    const harga = Number.parseFloat(hargaPerKg);
+    const stok = Number.parseFloat(stokKg);
+
+    if (isNaN(harga) || isNaN(stok) || harga < 0 || stok < 0) {
+      return {
+        success: false,
+        error: "Harga dan stok harus berupa angka positif",
+      };
+    }
+
+    // Check if bank sampah exists
+    const bankSampah = await prisma.bankSampah.findUnique({
+      where: { id: bankSampahId },
+    });
+
+    if (!bankSampah) {
+      return { success: false, error: "Bank sampah tidak ditemukan" };
+    }
+
+    // Check if jenis sampah already exists for this bank sampah
+    const existingInventaris = await prisma.inventarisSampah.findFirst({
+      where: {
+        bankSampahId,
+        jenisSampah: {
+          equals: jenisSampah,
+          mode: "insensitive",
+        },
+      },
+    });
+
+    if (existingInventaris) {
+      return {
+        success: false,
+        error: "Jenis sampah sudah ada di bank sampah ini",
+      };
+    }
+
+    const newInventaris = await prisma.inventarisSampah.create({
+      data: {
+        bankSampahId,
+        jenisSampah,
+        hargaPerKg: harga,
+        stokKg: stok,
+        isActive: true,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Jenis sampah berhasil ditambahkan",
+      data: newInventaris,
+    };
+  } catch (error) {
+    console.error("Error adding inventaris sampah:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}
+
+export async function updateBankSampahCoordinate(
+  bankSampahId: string,
+  latitude: number,
+  longitude: number,
+) {
+  try {
+    const session = await getSession();
+
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const bankSampah = await prisma.bankSampah.findUnique({
+      where: { id: bankSampahId },
+    });
+
+    if (!bankSampah) {
+      return { success: false, error: "Bank sampah tidak ditemukan" };
+    }
+
+    const updatedBankSampah = await prisma.bankSampah.update({
+      where: { id: bankSampahId },
+      data: {
+        latitude,
+        longitude,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Koordinat berhasil diperbarui",
+      data: updatedBankSampah,
+    };
+  } catch (error) {
+    console.error("Error updating bank sampah coordinate:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}
