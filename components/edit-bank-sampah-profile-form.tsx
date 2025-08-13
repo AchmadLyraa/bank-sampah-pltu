@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updateBankSampahProfileAction } from "@/app/actions/bank-sampah";
 import { logoutAction } from "@/app/actions/auth";
-import { User, Loader2, MapPin, Phone, LogOut } from "lucide-react";
+import { User, Loader2, MapPin, Phone, LogOut, Navigation } from "lucide-react";
 
 interface EditBankSampahProfileFormProps {
   bankSampah: {
@@ -17,6 +17,8 @@ interface EditBankSampahProfileFormProps {
     email: string;
     telepon: string;
     alamat: string;
+    latitude: number | null;
+    longitude: number | null;
   };
 }
 
@@ -130,6 +132,42 @@ export default function EditBankSampahProfileForm({
               rows={3}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="latitude" className="flex items-center gap-1">
+              <Navigation className="h-4 w-4" />
+              Latitude
+            </Label>
+            <Input
+              id="latitude"
+              name="latitude"
+              type="number"
+              step="any"
+              defaultValue={bankSampah.latitude || ""}
+              placeholder="Contoh: -6.200000"
+            />
+            <p className="text-xs text-gray-500">
+              Koordinat lintang lokasi bank sampah
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="longitude" className="flex items-center gap-1">
+              <Navigation className="h-4 w-4" />
+              Longitude
+            </Label>
+            <Input
+              id="longitude"
+              name="longitude"
+              type="number"
+              step="any"
+              defaultValue={bankSampah.longitude || ""}
+              placeholder="Contoh: 106.816666"
+            />
+            <p className="text-xs text-gray-500">
+              Koordinat bujur lokasi bank sampah
+            </p>
           </div>
 
           {message && (

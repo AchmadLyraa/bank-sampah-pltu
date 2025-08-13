@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
+import bcrypt from "bcrypt";
 import type { PenimbanganFormData, PenarikanFormData } from "@/types";
 
 export async function getDashboardData(bankSampahId: string) {
@@ -289,6 +290,8 @@ export async function updateBankSampahProfileAction(formData: FormData) {
   const bankSampahId = formData.get("bankSampahId")?.toString();
   const telepon = formData.get("telepon")?.toString();
   const alamat = formData.get("alamat")?.toString();
+  const latitude = formData.get("latitude")?.toString();
+  const longitude = formData.get("longitude")?.toString();
 
   if (!bankSampahId || !telepon || !alamat) {
     return { error: "Data tidak lengkap" };
@@ -299,18 +302,95 @@ export async function updateBankSampahProfileAction(formData: FormData) {
   }
 
   try {
+    const updateData: any = {
+      telepon,
+      alamat,
+      updatedAt: new Date(),
+    };
+
+    // Add latitude and longitude if provided
+    if (latitude && latitude.trim() !== "") {
+      updateData.latitude = Number.parseFloat(latitude);
+    }
+    if (longitude && longitude.trim() !== "") {
+      updateData.longitude = Number.parseFloat(longitude);
+    }
+
     await prisma.bankSampah.update({
       where: { id: bankSampahId },
-      data: {
-        telepon,
-        alamat,
-        updatedAt: new Date(),
-      },
+      data: updateData,
     });
 
     revalidatePath("/bank-sampah/profile");
     return { message: "Profil berhasil diperbarui" };
   } catch (error) {
     return { error: "Terjadi kesalahan saat memperbarui profil" };
+  }
+}
+
+export async function changeBankSampahPasswordAction(formData: FormData) {
+  const session = await getSession();
+
+  if (!session || session.userType !== "bank-sampah") {
+    return { error: "Unauthorized" };
+  }
+
+  const bankSampahId = formData.get("bankSampahId")?.toString();
+  const currentPassword = formData.get("currentPassword")?.toString();
+  const newPassword = formData.get("newPassword")?.toString();
+  const confirmPassword = formData.get("confirmPassword")?.toString();
+
+  if (!bankSampahId || !currentPassword || !newPassword || !confirmPassword) {
+    return { error: "Data tidak lengkap" };
+  }
+
+  if (bankSampahId !== session.userId) {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    // Validasi password baru
+    if (newPassword !== confirmPassword) {
+      return { error: "Password baru dan konfirmasi password tidak sama" };
+    }
+
+    if (newPassword.length < 6) {
+      return { error: "Password baru minimal 6 karakter" };
+    }
+
+    // Cek password lama
+    const bankSampah = await prisma.bankSampah.findUnique({
+      where: { id: bankSampahId },
+    });
+
+    if (!bankSampah) {
+      return { error: "Bank sampah tidak ditemukan" };
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      bankSampah.password,
+    );
+    if (!isCurrentPasswordValid) {
+      return { error: "Password lama tidak benar" };
+    }
+
+    // Hash password baru
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await prisma.bankSampah.update({
+      where: { id: bankSampahId },
+      data: {
+        password: hashedNewPassword,
+        updatedAt: new Date(),
+      },
+    });
+
+    revalidatePath("/bank-sampah/profile");
+    return { message: "Password berhasil diubah!" };
+  } catch (error) {
+    console.error("Error changing password:", error);
+    return { error: "Terjadi kesalahan saat mengubah password" };
   }
 }
