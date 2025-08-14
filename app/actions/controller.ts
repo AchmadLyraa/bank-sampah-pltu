@@ -38,10 +38,14 @@ export async function getBankSampahList() {
 
 export async function getBankSampahLocations() {
   try {
-    const session = await getSession()
+    const session = await getSession();
 
-    if (!session || session.userType !== "controller" || session.role !== Role.CONTROLLER) {
-      return { success: false, error: "Unauthorized" }
+    if (
+      !session ||
+      session.userType !== "controller" ||
+      session.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
     }
 
     const bankSampahList = await prisma.bankSampah.findMany({
@@ -64,12 +68,12 @@ export async function getBankSampahLocations() {
         },
       },
       orderBy: { nama: "asc" },
-    })
+    });
 
-    return { success: true, data: bankSampahList }
+    return { success: true, data: bankSampahList };
   } catch (error) {
-    console.error("Error fetching bank sampah locations:", error)
-    return { success: false, error: "Terjadi kesalahan sistem" }
+    console.error("Error fetching bank sampah locations:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
   }
 }
 
@@ -455,6 +459,7 @@ export async function getBankSampahListPaginated(
             { nama: { contains: search, mode: "insensitive" as const } },
             { email: { contains: search, mode: "insensitive" as const } },
             { alamat: { contains: search, mode: "insensitive" as const } },
+            { telepon: { contains: search, mode: "insensitive" as const } },
           ],
         }
       : {};

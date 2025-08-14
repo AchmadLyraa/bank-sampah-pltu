@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getBankSampahLocations } from "@/app/actions/controller";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Users, Building } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { MapPin, Users, Building, Search, X } from "lucide-react";
 
 interface BankSampahLocation {
   id: string;
@@ -23,10 +25,14 @@ export function BankSampahMap() {
   const [locations, setLocations] = useState<BankSampahLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredLocations, setFilteredLocations] = useState<
+    BankSampahLocation[]
+  >([]);
   const [MapComponent, setMapComponent] = useState<any>(null);
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
-    // Import leaflet components dynamically after component mounts
     const loadMap = async () => {
       try {
         const L = await import("leaflet");
@@ -34,7 +40,6 @@ export function BankSampahMap() {
           "react-leaflet"
         );
 
-        // Fix leaflet default marker icons
         delete (L.Icon.Default.prototype as any)._getIconUrl;
         L.Icon.Default.mergeOptions({
           iconRetinaUrl:
@@ -45,7 +50,6 @@ export function BankSampahMap() {
             "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
         });
 
-        // Create map component
         const Map = ({ locations }: { locations: BankSampahLocation[] }) => (
           <MapContainer
             center={[-2.5, 118]}
@@ -53,11 +57,12 @@ export function BankSampahMap() {
             minZoom={4}
             maxZoom={12}
             maxBounds={[
-              [-11.5, 95], // Southwest corner (batas selatan dan barat Indonesia)
-              [6.5, 141], // Northeast corner (batas utara dan timur Indonesia)
+              [-11.5, 95],
+              [12, 141],
             ]}
             maxBoundsViscosity={1.0}
             style={{ height: "100%", width: "100%" }}
+            ref={mapRef}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -115,6 +120,7 @@ export function BankSampahMap() {
         const result = await getBankSampahLocations();
         if (result.success && result.data) {
           setLocations(result.data);
+          setFilteredLocations(result.data);
         } else {
           setError(result.error || "Gagal memuat data");
         }
@@ -127,6 +133,46 @@ export function BankSampahMap() {
 
     fetchLocations();
   }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredLocations(locations);
+    } else {
+      const filtered = locations.filter(
+        (location) =>
+          location.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          location.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          location.alamat.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+      setFilteredLocations(filtered);
+    }
+  }, [searchQuery, locations]);
+
+  const focusOnLocation = (location: BankSampahLocation) => {
+    console.log(
+      "Focusing on location:",
+      location.nama,
+      location.latitude,
+      location.longitude,
+    );
+
+    if (mapRef.current) {
+      try {
+        const map = mapRef.current;
+        if (map && map.setView) {
+          map.setView([location.latitude, location.longitude], 10);
+          console.log("Map focused successfully");
+          setSearchQuery("");
+        } else {
+          console.error("Map instance not available or setView method missing");
+        }
+      } catch (error) {
+        console.error("Error focusing on location:", error);
+      }
+    } else {
+      console.error("Map ref is not available");
+    }
+  };
 
   if (loading) {
     return (
@@ -156,7 +202,6 @@ export function BankSampahMap() {
 
   return (
     <div className="space-y-6">
-      {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -204,7 +249,66 @@ export function BankSampahMap() {
         </Card>
       </div>
 
-      {/* Map */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Cari Bank Sampah
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Cari berdasarkan nama, email, atau alamat..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {searchQuery && filteredLocations.length > 0 && (
+            <div className="mt-4 max-h-48 overflow-y-auto border rounded-lg">
+              {filteredLocations.map((location) => (
+                <div
+                  key={location.id}
+                  onClick={() => focusOnLocation(location)}
+                  className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-sm">{location.nama}</h4>
+                      <p className="text-xs text-gray-600">{location.alamat}</p>
+                    </div>
+                    <Badge
+                      variant={location.isActive ? "default" : "secondary"}
+                    >
+                      {location.isActive ? "Aktif" : "Nonaktif"}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {searchQuery && filteredLocations.length === 0 && (
+            <div className="mt-4 text-center py-4 text-gray-500">
+              Tidak ada bank sampah yang ditemukan
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

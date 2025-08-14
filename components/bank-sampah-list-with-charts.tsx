@@ -48,13 +48,11 @@ export function BankSampahListWithCharts() {
     itemsPerPage: 10,
   });
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
   const [selectedBankSampah, setSelectedBankSampah] =
     useState<BankSampah | null>(null);
   const [chartDialogOpen, setChartDialogOpen] = useState(false);
 
   const fetchBankSampahList = async (page = 1, searchQuery = "") => {
-    setLoading(true);
     try {
       const result = await getBankSampahListPaginated(page, searchQuery, 10);
       if (result.success) {
@@ -70,35 +68,16 @@ export function BankSampahListWithCharts() {
       }
     } catch (error) {
       console.error("Error fetching bank sampah list:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  // Initial load
   useEffect(() => {
-    fetchBankSampahList(1, "");
-  }, []);
-
-  // Debounced search
-  useEffect(() => {
-    const delayedSearch = setTimeout(() => {
-      if (search !== "") {
-        fetchBankSampahList(1, search);
-        setPagination((prev) => ({ ...prev, currentPage: 1 }));
-      }
-    }, 500);
-
-    return () => clearTimeout(delayedSearch);
+    fetchBankSampahList(1, search);
   }, [search]);
 
   const handleSearch = (value: string) => {
     setSearch(value);
-    // Jika search kosong, langsung fetch tanpa delay
-    if (value === "") {
-      fetchBankSampahList(1, "");
-      setPagination((prev) => ({ ...prev, currentPage: 1 }));
-    }
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
 
   const handlePageChange = (page: number) => {
@@ -122,10 +101,6 @@ export function BankSampahListWithCharts() {
     setChartDialogOpen(true);
   };
 
-  if (loading) {
-    return <div className="flex justify-center py-8">Loading...</div>;
-  }
-
   return (
     <div className="space-y-6">
       {/* Search Bar */}
@@ -143,70 +118,80 @@ export function BankSampahListWithCharts() {
 
       {/* Bank Sampah List */}
       <div className="grid gap-4">
-        {bankSampahList.map((bankSampah) => (
-          <Card
-            key={bankSampah.id}
-            className="hover:shadow-md transition-shadow"
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start md:items-center justify-between flex-col md:flex-row">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold">{bankSampah.nama}</h3>
-                    <Badge
-                      variant={bankSampah.isActive ? "default" : "secondary"}
+        {bankSampahList.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            {search
+              ? "Tidak ada bank sampah yang ditemukan"
+              : "Belum ada bank sampah terdaftar"}
+          </div>
+        ) : (
+          bankSampahList.map((bankSampah) => (
+            <Card
+              key={bankSampah.id}
+              className="hover:shadow-md transition-shadow"
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="text-lg font-semibold">
+                        {bankSampah.nama}
+                      </h3>
+                      <Badge
+                        variant={bankSampah.isActive ? "default" : "secondary"}
+                      >
+                        {bankSampah.isActive ? "Aktif" : "Nonaktif"}
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                      <div className="flex items-center space-x-2">
+                        <Mail className="h-4 w-4" />
+                        <span>{bankSampah.email}</span>
+                      </div>
+                      {bankSampah.telepon && (
+                        <div className="flex items-center space-x-2">
+                          <Phone className="h-4 w-4" />
+                          <span>{bankSampah.telepon}</span>
+                        </div>
+                      )}
+                      {bankSampah.alamat && (
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4" />
+                          <span>{bankSampah.alamat}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center space-x-2">
+                        <Users className="h-4 w-4" />
+                        <span>{bankSampah._count.nasabah} nasabah</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleShowChart(bankSampah)}
+                      className="flex items-center space-x-2"
                     >
-                      {bankSampah.isActive ? "Aktif" : "Nonaktif"}
-                    </Badge>
-                  </div>
+                      <TrendingUp className="h-4 w-4" />
+                      <span>Grafik</span>
+                    </Button>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4" />
-                      <span>{bankSampah.email}</span>
-                    </div>
-                    {bankSampah.telepon && (
-                      <div className="flex items-center space-x-2">
-                        <Phone className="h-4 w-4" />
-                        <span>{bankSampah.telepon}</span>
-                      </div>
-                    )}
-                    {bankSampah.alamat && (
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4" />
-                        <span>{bankSampah.alamat}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4" />
-                      <span>{bankSampah._count.nasabah} nasabah</span>
-                    </div>
+                    <Button
+                      variant={bankSampah.isActive ? "destructive" : "default"}
+                      size="sm"
+                      onClick={() => handleToggleStatus(bankSampah.id)}
+                    >
+                      {bankSampah.isActive ? "Nonaktifkan" : "Aktifkan"}
+                    </Button>
                   </div>
                 </div>
-
-                <div className="flex justify-center items-center self-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleShowChart(bankSampah)}
-                    className="flex items-center space-x-2"
-                  >
-                    <TrendingUp className="h-4 w-4" />
-                    <span>Grafik</span>
-                  </Button>
-
-                  <Button
-                    variant={bankSampah.isActive ? "destructive" : "default"}
-                    size="sm"
-                    onClick={() => handleToggleStatus(bankSampah.id)}
-                  >
-                    {bankSampah.isActive ? "Nonaktifkan" : "Aktifkan"}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Pagination */}
