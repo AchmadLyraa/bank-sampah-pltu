@@ -41,6 +41,7 @@ interface PaginationInfo {
 
 export function BankSampahListWithCharts() {
   const [bankSampahList, setBankSampahList] = useState<BankSampah[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationInfo>({
     currentPage: 1,
     totalPages: 1,
@@ -68,6 +69,8 @@ export function BankSampahListWithCharts() {
       }
     } catch (error) {
       console.error("Error fetching bank sampah list:", error);
+    } finally {
+      setIsInitialLoading(false);
     }
   };
 
@@ -118,7 +121,14 @@ export function BankSampahListWithCharts() {
 
       {/* Bank Sampah List */}
       <div className="grid gap-4">
-        {bankSampahList.length === 0 ? (
+        {isInitialLoading ? (
+          <div className="text-center py-8">
+            <div className="inline-flex items-center space-x-2 text-gray-500">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
+              <span>Memuat data bank sampah...</span>
+            </div>
+          </div>
+        ) : bankSampahList.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             {search
               ? "Tidak ada bank sampah yang ditemukan"
