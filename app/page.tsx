@@ -1,17 +1,24 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import LoginForm from "@/components/login-form";
 
 export default async function HomePage() {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (session) {
-    if (session.userType === "bank-sampah") {
-      redirect("/bank-sampah");
-    } else if (session.userType === "controller") {
-      redirect("/controller");
-    } else {
-      redirect("/nasabah");
+  if (session?.user) {
+    switch (session.user.userType) {
+      case "bank-sampah":
+        redirect("/bank-sampah");
+        break;
+      case "controller":
+        redirect("/controller");
+        break;
+      case "nasabah":
+        redirect("/nasabah");
+        break;
+      default:
+        break;
     }
   }
 

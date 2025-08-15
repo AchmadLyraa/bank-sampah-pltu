@@ -1,17 +1,22 @@
-import { getSession } from "@/lib/session";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { redirect } from "next/navigation";
 import LayoutWrapper from "@/components/layout-wrapper";
 import { BankSampahList } from "@/components/bank-sampah-list";
 
 export default async function ControllerBankSampahPage() {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.userType !== "controller") {
+  if (!session?.user || session.user.userType !== "controller") {
     redirect("/");
   }
 
   return (
-    <LayoutWrapper userType="controller" userName={session.nama}>
+    <LayoutWrapper
+      userType="controller"
+      userName={session.user.name || "Unknown"}
+    >
+      {" "}
       <div className="p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">

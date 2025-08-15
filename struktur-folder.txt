@@ -4,12 +4,16 @@
 │   │   ├── auth.ts
 │   │   ├── backup.ts
 │   │   ├── bank-sampah.ts
+│   │   ├── controller.ts
 │   │   ├── inventaris-management.ts
 │   │   ├── laporan.ts
 │   │   ├── nasabah-management.ts
 │   │   ├── nasabah-profile.ts
 │   │   └── nasabah.ts
 │   ├── api
+│   │   ├── auth
+│   │   │   └── [...nextauth]
+│   │   │       └── route.ts
 │   │   └── backup-pdf
 │   │       └── route.ts
 │   ├── bank-sampah
@@ -23,7 +27,19 @@
 │   │   │   └── page.tsx
 │   │   ├── penimbangan
 │   │   │   └── page.tsx
+│   │   ├── profile
+│   │   │   └── page.tsx
 │   │   ├── transaksi
+│   │   │   └── page.tsx
+│   │   └── page.tsx
+│   ├── controller
+│   │   ├── bank-sampah
+│   │   │   └── page.tsx
+│   │   ├── bank-sampah-map
+│   │   │   └── page.tsx
+│   │   ├── profile
+│   │   │   └── page.tsx
+│   │   ├── reset-password
 │   │   │   └── page.tsx
 │   │   └── page.tsx
 │   ├── nasabah
@@ -84,11 +100,25 @@
 │   │   ├── tooltip.tsx
 │   │   ├── use-mobile.tsx
 │   │   └── use-toast.ts
+│   ├── add-bank-sampah-dialog.tsx
+│   ├── add-inventaris-dialog.tsx
+│   ├── add-nasabah-dialog.tsx
 │   ├── backup-download-button.tsx
+│   ├── bank-sampah-detail-dialog.tsx
+│   ├── bank-sampah-list.tsx
+│   ├── bank-sampah-list-with-charts.tsx
+│   ├── bank-sampah-map.tsx
+│   ├── bank-sampah-profit-chart.tsx
+│   ├── bank-sampah-selector.tsx
+│   ├── change-bank-sampah-password-form.tsx
 │   ├── change-password-form.tsx
 │   ├── client-navigation.tsx
+│   ├── controller-dashboard.tsx
 │   ├── dashboard-stats.tsx
 │   ├── date-filter.tsx
+│   ├── edit-bank-sampah-profile-form.tsx
+│   ├── edit-controller-profile-form.tsx
+│   ├── edit-inventaris-dialog.tsx
 │   ├── edit-profile-form.tsx
 │   ├── header.tsx
 │   ├── inventaris-table.tsx
@@ -96,6 +126,7 @@
 │   ├── laporan-pendapatan.tsx
 │   ├── layout-wrapper.tsx
 │   ├── login-form.tsx
+│   ├── MapComponent.tsx
 │   ├── nasabah-combobox.tsx
 │   ├── nasabah-dashboard.tsx
 │   ├── nasabah-list.tsx
@@ -103,8 +134,11 @@
 │   ├── pagination.tsx
 │   ├── penarikan-form.tsx
 │   ├── penimbangan-form.tsx
+│   ├── profit-chart.tsx
 │   ├── quick-actions.tsx
 │   ├── recent-transactions.tsx
+│   ├── reset-password-form.tsx
+│   ├── session-provider.tsx
 │   ├── tambah-inventaris-modal.tsx
 │   ├── tambah-nasabah-modal.tsx
 │   ├── theme-provider.tsx
@@ -113,14 +147,18 @@
 │   ├── use-mobile.tsx
 │   └── use-toast.ts
 ├── lib
+│   ├── auth-config.ts
 │   ├── auth.ts
+│   ├── email-validator.ts
 │   ├── pdf-generator.ts
 │   ├── prisma.ts
+│   ├── session-helper.ts
 │   ├── session.ts
 │   ├── supabase.ts
 │   └── utils.ts
 ├── prisma
 │   ├── schema.prisma
+│   ├── seed-multiple-bank.ts
 │   └── seed.ts
 ├── public
 │   ├── favicon
@@ -142,12 +180,19 @@
 │   ├── placeholder-logo.svg
 │   ├── placeholder.svg
 │   └── placeholder-user.jpg
+├── scripts
+│   ├── migrate-database.sh
+│   ├── old-seed.sh
+│   └── seed-controller.sh
 ├── styles
 │   └── globals.css
 ├── types
-│   └── index.ts
+│   ├── index.ts
+│   └── next-auth.d.ts
 ├── archive.txt
+├── AUTHENTICATION_TEST.md
 ├── components.json
+├── middleware.ts
 ├── next.config.mjs
 ├── next-env.d.ts
 ├── package.json
@@ -158,4 +203,4 @@
 ├── tailwind.config.ts
 └── tsconfig.json
 
-23 directories, 136 files
+32 directories, 172 files

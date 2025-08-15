@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import LayoutWrapper from "@/components/layout-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,14 +9,14 @@ import EditBankSampahProfileForm from "@/components/edit-bank-sampah-profile-for
 import ChangeBankSampahPasswordForm from "@/components/change-bank-sampah-password-form";
 
 export default async function BankSampahProfilePage() {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.userType !== "bank-sampah") {
+  if (!session?.user || session.user.userType !== "bank-sampah") {
     redirect("/");
   }
 
   const bankSampah = await prisma.bankSampah.findUnique({
-    where: { id: session.userId },
+    where: { id: session.user.id },
     select: {
       id: true,
       nama: true,
@@ -32,7 +33,10 @@ export default async function BankSampahProfilePage() {
   }
 
   return (
-    <LayoutWrapper userType="bank-sampah" userName={session.nama}>
+    <LayoutWrapper
+      userType="bank-sampah"
+      userName={session.user.name || "Unknown"}
+    >
       <div className="max-w-4xl mx-auto py-6 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -68,15 +72,15 @@ export default async function BankSampahProfilePage() {
   );
 }
 
-export async function updateSession(
-  newSessionData: SessionData,
-): Promise<void> {
-  const cookieStore = await cookies();
+// export async function updateSession(
+//   newSessionData: SessionData,
+// ): Promise<void> {
+//   const cookieStore = await cookies();
 
-  cookieStore.set("session", JSON.stringify(newSessionData), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  });
-}
+//   cookieStore.set("session", JSON.stringify(newSessionData), {
+//     httpOnly: true,
+//     secure: process.env.NODE_ENV === "production",
+//     sameSite: "lax",
+//     maxAge: 60 * 60 * 24 * 7, // 7 days
+//   });
+// }

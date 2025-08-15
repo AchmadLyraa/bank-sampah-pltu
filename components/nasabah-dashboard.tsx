@@ -1,76 +1,76 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Wallet,
-  History,
-  User,
-  Lock,
-  Package,
-  BanknoteIcon as Bank,
-} from "lucide-react"; // 🆕 Import Package and Bank
-import EditProfileForm from "@/components/edit-profile-form";
-import ChangePasswordForm from "@/components/change-password-form";
-import { BankSampahSelector } from "@/components/bank-sampah-selector"; // 🆕 Import BankSampahSelector
-import type {
-  Nasabah,
-  Transaksi,
-  InventarisSampah,
-  NasabahRelationshipForSession,
-} from "@/types"; // 🆕 Import InventarisSampah and NasabahRelationshipForSession
+  import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  import { Badge } from "@/components/ui/badge";
+  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  import {
+    Wallet,
+    History,
+    User,
+    Lock,
+    Package,
+    BanknoteIcon as Bank,
+  } from "lucide-react"; // 🆕 Import Package and Bank
+  import EditProfileForm from "@/components/edit-profile-form";
+  import ChangePasswordForm from "@/components/change-password-form";
+  import { BankSampahSelector } from "@/components/bank-sampah-selector"; // 🆕 Import BankSampahSelector
+  import type {
+    Nasabah,
+    Transaksi,
+    InventarisSampah,
+    NasabahRelationshipForSession,
+  } from "@/types"; // 🆕 Import InventarisSampah and NasabahRelationshipForSession
 
-interface NasabahDashboardProps {
-  nasabah: Nasabah; // This is the specific Nasabah relationship, which includes Person and BankSampah
-  transaksi: Transaksi[];
-  inventarisList: InventarisSampah[]; // 🆕 New prop for inventaris
-  bankSampahRelationships: NasabahRelationshipForSession[]; // 🆕 New prop for all relationships
-  selectedBankSampahId: string; // 🆕 New prop for selected bank ID
-}
-
-export default function NasabahDashboard({
-  nasabah,
-  transaksi,
-  inventarisList,
-  bankSampahRelationships,
-  selectedBankSampahId,
-}: NasabahDashboardProps) {
-  if (!nasabah || !nasabah.person || !nasabah.bankSampah) {
-    // Ensure person and bankSampah data are available
-    return <div>Data nasabah atau bank sampah tidak ditemukan</div>;
+  interface NasabahDashboardProps {
+    nasabah: Nasabah; // This is the specific Nasabah relationship, which includes Person and BankSampah
+    transaksi: Transaksi[];
+    inventarisList: InventarisSampah[]; // 🆕 New prop for inventaris
+    bankSampahRelationships: NasabahRelationshipForSession[]; // 🆕 New prop for all relationships
+    selectedBankSampahId: string; // 🆕 New prop for selected bank ID
   }
 
-  const getTransactionBadge = (jenis: string) => {
-    switch (jenis) {
-      case "PEMASUKAN":
-        return (
-          <Badge variant="default" className="bg-green-100 text-green-800">
-            Pemasukan
-          </Badge>
-        );
-      case "PENGELUARAN":
-        return <Badge variant="destructive">Penarikan</Badge>;
-      default:
-        return <Badge variant="outline">{jenis}</Badge>;
+  export default function NasabahDashboard({
+    nasabah,
+    transaksi,
+    inventarisList,
+    bankSampahRelationships,
+    selectedBankSampahId,
+  }: NasabahDashboardProps) {
+    if (!nasabah || !nasabah.person || !nasabah.bankSampah) {
+      // Ensure person and bankSampah data are available
+      return <div>Data nasabah atau bank sampah tidak ditemukan</div>;
     }
-  };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Selamat Datang, {nasabah.person.nama}
-          </h1>
-          <p className="text-gray-600">
-            Kelola profil dan lihat riwayat transaksi Anda
-          </p>
+    const getTransactionBadge = (jenis: string) => {
+      switch (jenis) {
+        case "PEMASUKAN":
+          return (
+            <Badge variant="default" className="bg-green-100 text-green-800">
+              Pemasukan
+            </Badge>
+          );
+        case "PENGELUARAN":
+          return <Badge variant="destructive">Penarikan</Badge>;
+        default:
+          return <Badge variant="outline">{jenis}</Badge>;
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Selamat Datang, {nasabah.person.nama}
+            </h1>
+            <p className="text-gray-600">
+              Kelola profil dan lihat riwayat transaksi Anda
+            </p>
+          </div>
+          {/* 🆕 Bank Sampah Selector */}
+          <BankSampahSelector
+            relationships={bankSampahRelationships}
+            selectedBankSampahId={selectedBankSampahId}
+          />
         </div>
-        {/* 🆕 Bank Sampah Selector */}
-        <BankSampahSelector
-          relationships={bankSampahRelationships}
-          selectedBankSampahId={selectedBankSampahId}
-        />
-      </div>
 
       {/* 🆕 Currently Selected Bank Sampah Info */}
       <Card className="bg-blue-50 border-blue-200">

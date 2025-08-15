@@ -1,20 +1,21 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import PenimbanganForm from "@/components/penimbangan-form";
 import LayoutWrapper from "@/components/layout-wrapper";
 
 export default async function PenimbanganPage() {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.userType !== "bank-sampah") {
+  if (!session?.user || session.user.userType !== "bank-sampah") {
     redirect("/");
   }
 
   const [nasabahList, inventarisList] = await Promise.all([
     prisma.nasabah.findMany({
       where: {
-        bankSampahId: session.userId,
+        bankSampahId: session.user.id,
         isActive: true, // 🎯 ONLY ACTIVE NASABAH
       },
       include: {
@@ -27,7 +28,7 @@ export default async function PenimbanganPage() {
     // 🆕 FILTER: Only show active inventaris
     prisma.inventarisSampah.findMany({
       where: {
-        bankSampahId: session.userId,
+        bankSampahId: session.user.id,
         isActive: true, // 🎯 ONLY ACTIVE ITEMS
       },
       orderBy: { jenisSampah: "asc" },
@@ -35,7 +36,10 @@ export default async function PenimbanganPage() {
   ]);
 
   return (
-    <LayoutWrapper userType="bank-sampah" userName={session.nama || "Unknown"}>
+    <LayoutWrapper
+      userType="bank-sampah"
+      userName={session.user.name || "Unknown"}
+    >
       <div className="max-w-4xl mx-auto py-6 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">

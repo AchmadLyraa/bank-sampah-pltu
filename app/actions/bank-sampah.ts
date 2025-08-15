@@ -2,7 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { getSession } from "@/lib/session";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import bcrypt from "bcryptjs";
 import type { PenimbanganFormData, PenarikanFormData } from "@/types";
 
@@ -195,12 +196,6 @@ export async function penjualanSampahAction(formData: FormData) {
     const beratKg = Number.parseFloat(formData.get("beratKg") as string);
     const hargaPerKg = Number.parseFloat(formData.get("hargaPerKg") as string); // CHANGED: dari hargaJual ke hargaPerKg
 
-    console.log("🔍 Penjualan sampah data:", {
-      inventarisSampahId,
-      beratKg,
-      hargaPerKg,
-    });
-
     // Validasi input
     if (
       !inventarisSampahId ||
@@ -229,13 +224,6 @@ export async function penjualanSampahAction(formData: FormData) {
     // 🔧 FIXED: Hitung total dengan benar
     const totalNilai = beratKg * hargaPerKg;
 
-    console.log("💰 Perhitungan:", {
-      beratKg,
-      hargaPerKg,
-      totalNilai,
-      formula: `${beratKg} kg × Rp${hargaPerKg}/kg = Rp${totalNilai}`,
-    });
-
     // Create transaction
     const transaksi = await prisma.transaksi.create({
       data: {
@@ -247,19 +235,11 @@ export async function penjualanSampahAction(formData: FormData) {
       },
     });
 
-    console.log("✅ Transaction created:", {
-      id: transaksi.id,
-      totalNilai: transaksi.totalNilai,
-      keterangan: transaksi.keterangan,
-    });
-
     // Update stok
     await prisma.inventarisSampah.update({
       where: { id: inventarisSampahId },
       data: { stokKg: { decrement: beratKg } },
     });
-
-    console.log("📦 Stock updated successfully");
 
     revalidatePath("/bank-sampah");
     revalidatePath("/bank-sampah/inventaris");
@@ -281,9 +261,9 @@ export async function penjualanSampahAction(formData: FormData) {
 }
 
 export async function updateBankSampahProfileAction(formData: FormData) {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.userType !== "bank-sampah") {
+  if (!session || session.user.userType !== "bank-sampah") {
     return { error: "Unauthorized" };
   }
 
@@ -297,7 +277,7 @@ export async function updateBankSampahProfileAction(formData: FormData) {
     return { error: "Data tidak lengkap" };
   }
 
-  if (bankSampahId !== session.userId) {
+  if (bankSampahId !== session.user.id) {
     return { error: "Unauthorized" };
   }
 
@@ -329,9 +309,9 @@ export async function updateBankSampahProfileAction(formData: FormData) {
 }
 
 export async function changeBankSampahPasswordAction(formData: FormData) {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.userType !== "bank-sampah") {
+  if (!session || session.user.userType !== "bank-sampah") {
     return { error: "Unauthorized" };
   }
 
@@ -344,7 +324,7 @@ export async function changeBankSampahPasswordAction(formData: FormData) {
     return { error: "Data tidak lengkap" };
   }
 
-  if (bankSampahId !== session.userId) {
+  if (bankSampahId !== session.user.id) {
     return { error: "Unauthorized" };
   }
 

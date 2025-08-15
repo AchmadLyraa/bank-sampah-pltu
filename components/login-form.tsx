@@ -2,17 +2,28 @@
 
 import type React from "react";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { loginAction } from "@/app/actions/auth";
-import { Loader2, Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
+import {
+  Loader2,
+  Mail,
+  Lock,
+  LogIn,
+  Eye,
+  EyeOff,
+  CheckCircle,
+} from "lucide-react";
 
 export default function LoginForm() {
   const [loading, setLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -20,16 +31,26 @@ export default function LoginForm() {
     setError("");
 
     const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
     try {
-      const result = await loginAction(formData);
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
       if (result?.error) {
-        setError(result.error);
+        setError("Email atau password salah");
+        setLoading(false); // Only set loading false on error
+      } else if (result?.ok) {
+        setIsRedirecting(true);
+        router.refresh();
       }
     } catch (err) {
       setError("Terjadi kesalahan saat login");
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only set loading false on error
     }
   }
 
@@ -95,13 +116,31 @@ export default function LoginForm() {
             </div>
           )}
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading ? "Memproses..." : "Masuk"}
+          {isRedirecting && (
+            <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+              <p className="text-green-800 text-sm flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Berhasil login, mengalihkan ke dashboard...
+              </p>
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading || isRedirecting}
+          >
+            {loading && !isRedirecting && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            {isRedirecting
+              ? "Mengalihkan..."
+              : loading
+                ? "Memproses..."
+                : "Masuk"}
           </Button>
         </form>
 
-        {/* Demo Accounts Info */}
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="font-semibold text-blue-900 mb-2">🔑 Akun Demo:</p>
           <div className="space-y-2 text-sm">
@@ -118,7 +157,7 @@ export default function LoginForm() {
             <div className="bg-white p-2 rounded border">
               <p className="font-medium text-purple-800">⚙️ Controller:</p>
               <p className="text-purple-700">📧 admin@controller.com</p>
-              <p className="text-purple-700">🔒 password</p>
+              <p className="text-purple-700">🔒 password123</p>
             </div>
           </div>
           <p className="text-xs text-blue-600 mt-2">

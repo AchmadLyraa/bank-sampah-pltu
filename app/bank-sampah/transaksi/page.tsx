@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import TransaksiTable from "@/components/transaksi-table";
 import LayoutWrapper from "@/components/layout-wrapper";
@@ -11,9 +12,9 @@ interface TransaksiPageProps {
 export default async function TransaksiPage({
   searchParams,
 }: TransaksiPageProps) {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.userType !== "bank-sampah") {
+  if (!session?.user || session.user.userType !== "bank-sampah") {
     redirect("/");
   }
 
@@ -24,14 +25,14 @@ export default async function TransaksiPage({
 
   // 📊 Get total count for pagination
   const totalTransaksi = await prisma.transaksi.count({
-    where: { bankSampahId: session.userId },
+    where: { bankSampahId: session.user.id },
   });
 
   const totalPages = Math.ceil(totalTransaksi / itemsPerPage);
 
   // 📋 Get paginated transaksi
   const transaksi = await prisma.transaksi.findMany({
-    where: { bankSampahId: session.userId },
+    where: { bankSampahId: session.user.id },
     include: {
       nasabah: { select: { person: { select: { nama: true } } } },
       detailTransaksi: {
@@ -46,7 +47,10 @@ export default async function TransaksiPage({
   });
 
   return (
-    <LayoutWrapper userType="bank-sampah" userName={session.nama || "Unknown"}>
+    <LayoutWrapper
+      userType="bank-sampah"
+      userName={session.user.name || "Unknown"}
+    >
       <div className="max-w-7xl mx-auto py-6 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">

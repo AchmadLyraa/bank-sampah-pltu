@@ -1,18 +1,19 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import LayoutWrapper from "@/components/layout-wrapper";
 import EditControllerProfileForm from "@/components/edit-controller-profile-form";
 
 export default async function ControllerProfilePage() {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.userType !== "controller") {
+  if (!session?.user || session.user.userType !== "controller") {
     redirect("/");
   }
 
   const controller = await prisma.controller.findUnique({
-    where: { id: session.userId },
+    where: { id: session.user.id },
     select: { id: true, nama: true, email: true },
   });
 
@@ -21,7 +22,10 @@ export default async function ControllerProfilePage() {
   }
 
   return (
-    <LayoutWrapper userType="controller" userName={session.nama}>
+    <LayoutWrapper
+      userType="controller"
+      userName={session.user.name || "Unknown"}
+    >
       <div className="max-w-4xl mx-auto py-6 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">

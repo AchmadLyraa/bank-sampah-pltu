@@ -1,19 +1,20 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import PenarikanForm from "@/components/penarikan-form";
 import LayoutWrapper from "@/components/layout-wrapper";
 
 export default async function PenarikanPage() {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.userType !== "bank-sampah") {
+  if (!session?.user || session.user.userType !== "bank-sampah") {
     redirect("/");
   }
 
   const nasabahList = await prisma.nasabah.findMany({
     where: {
-      bankSampahId: session.userId,
+      bankSampahId: session.user.id,
       saldo: { gt: 0 },
       isActive: true, // 🎯 ONLY ACTIVE NASABAH
     },
@@ -26,7 +27,10 @@ export default async function PenarikanPage() {
   });
 
   return (
-    <LayoutWrapper userType="bank-sampah" userName={session.nama || "Unknown"}>
+    <LayoutWrapper
+      userType="bank-sampah"
+      userName={session.user.name || "Unknown"}
+    >
       <div className="max-w-4xl mx-auto py-6 px-4">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Penarikan Saldo</h1>

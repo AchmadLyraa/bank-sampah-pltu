@@ -35,10 +35,6 @@ export default function RecentTransactions({
   useEffect(() => {
     setIsClient(true);
     setUserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
-    console.log(
-      "🌍 User timezone:",
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
-    );
   }, []);
 
   const getTransactionBadge = (jenis: string) => {
@@ -65,12 +61,8 @@ export default function RecentTransactions({
     }
 
     try {
-      console.log("📅 Raw date:", dateString);
-      console.log("🌍 Using timezone:", userTimezone);
-
       // Method 1: Pure JavaScript approach (most reliable)
       const date = new Date(dateString);
-      console.log("📅 Parsed date (UTC):", date.toISOString());
 
       const formatted = date.toLocaleString("id-ID", {
         day: "2-digit",
@@ -82,7 +74,6 @@ export default function RecentTransactions({
         hour12: false,
       });
 
-      console.log("📅 Formatted result:", formatted);
       return formatted;
     } catch (error) {
       console.error("❌ Date formatting error:", error);

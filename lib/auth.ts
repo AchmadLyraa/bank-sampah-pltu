@@ -11,15 +11,23 @@ import type {
 
 // Define the discriminated union type for the authentication result
 type AuthenticateResult =
-  | { type: "bank-sampah"; user: BankSampah }
-  | { type: "controller"; user: Controller }
   | {
-      type: "nasabah";
-      person: Person; // 🆕 Return the Person object
-      nasabahRelationships: NasabahRelationshipForSession[]; // 🆕 Return all active relationships
+      success: true;
+      user: {
+        userId: string;
+        email: string;
+        nama: string;
+        userType: "bank-sampah" | "controller" | "nasabah";
+        role: string;
+        personId?: string;
+        bankSampahRelations?: NasabahRelationshipForSession[];
+        activeBankSampahId?: string;
+      };
     }
-  | { error: string }
-  | null;
+  | {
+      success: false;
+      error: string;
+    };
 
 export async function authenticateUser(data: {
   email: string;
@@ -28,7 +36,28 @@ export async function authenticateUser(data: {
   const { email, password } = data;
 
   try {
-    // First, try to find in bank sampah
+    // First, try to find in controller
+    const controller = await prisma.controller.findUnique({
+      where: { email },
+    });
+
+    if (controller) {
+      const isValid = await bcrypt.compare(password, controller.password);
+      if (isValid) {
+        return {
+          success: true,
+          user: {
+            userId: controller.id,
+            email: controller.email,
+            nama: controller.nama,
+            userType: "controller",
+            role: controller.role,
+          },
+        };
+      }
+    }
+
+    // Second, try to find in bank sampah (admin)
     const bankSampah = await prisma.bankSampah.findUnique({
       where: {
         email,
@@ -39,7 +68,16 @@ export async function authenticateUser(data: {
     if (bankSampah) {
       const isValid = await bcrypt.compare(password, bankSampah.password);
       if (isValid) {
-        return { type: "bank-sampah", user: bankSampah };
+        return {
+          success: true,
+          user: {
+            userId: bankSampah.id,
+            email: bankSampah.email,
+            nama: bankSampah.nama,
+            userType: "bank-sampah",
+            role: bankSampah.role,
+          },
+        };
       }
     }
 
@@ -51,7 +89,7 @@ export async function authenticateUser(data: {
     if (person) {
       const isValid = await bcrypt.compare(password, person.password);
       if (!isValid) {
-        return null; // Password invalid for person
+        return { success: false, error: "Password salah" };
       }
 
       // 🔄 NEW: Find ALL active Nasabah relationships for this person
@@ -75,6 +113,7 @@ export async function authenticateUser(data: {
 
       if (nasabahRelationships.length === 0) {
         return {
+          success: false,
           error:
             "Akun nasabah Anda tidak ditemukan atau tidak aktif di bank sampah manapun.",
         };
@@ -91,17 +130,25 @@ export async function authenticateUser(data: {
 
       // Return the Person object and all active relationships
       return {
-        type: "nasabah",
-        person: person,
-        nasabahRelationships: mappedRelationships,
+        success: true,
+        user: {
+          userId: person.id,
+          email: person.email,
+          nama: person.nama,
+          userType: "nasabah",
+          role: "NASABAH",
+          personId: person.id,
+          bankSampahRelations: mappedRelationships,
+          activeBankSampahId: mappedRelationships[0]?.bankSampahId, // Default ke yang pertama
+        },
       };
     }
 
     // If neither found or password invalid
-    return null;
+    return { success: false, error: "Email atau password salah" };
   } catch (error) {
     console.error("Authentication error:", error);
-    return null;
+    return { success: false, error: "Terjadi kesalahan sistem" };
   }
 }
 

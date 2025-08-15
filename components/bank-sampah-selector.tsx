@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSession } from "next-auth/react"; // TAMBAH INI!
 import {
   Select,
   SelectContent,
@@ -23,20 +24,37 @@ export function BankSampahSelector({
   selectedBankSampahId,
 }: BankSampahSelectorProps) {
   const router = useRouter();
+  const { update } = useSession(); // TAMBAH INI!
   const [loading, setLoading] = React.useState(false);
 
   const handleValueChange = async (newBankSampahId: string) => {
-    if (newBankSampahId === selectedBankSampahId) return;
+    if (newBankSampahId === selectedBankSampahId) {
+      return;
+    }
 
     setLoading(true);
-    const result = await updateSelectedBankSampahAction(newBankSampahId);
-    if (result.success) {
-      // Revalidate the current path to fetch new data based on updated session
-      router.refresh();
-    } else {
-      alert(result.error || "Gagal mengganti bank sampah.");
+
+    try {
+      const result = await updateSelectedBankSampahAction(newBankSampahId);
+
+      if (result.success) {
+        await update({
+          user: {
+            activeBankSampahId: newBankSampahId,
+          },
+        });
+
+        router.refresh();
+
+        setLoading(false);
+      } else {
+        alert(result.error || "Gagal mengganti bank sampah.");
+        setLoading(false);
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan saat mengganti bank sampah.");
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const currentSelectedBank = relationships.find(
@@ -55,7 +73,6 @@ export function BankSampahSelector({
           {loading ? (
             <span className="flex items-center gap-2 text-gray-500">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Memuat...
             </span>
           ) : (
             <SelectValue placeholder="Pilih Bank Sampah">

@@ -1,24 +1,28 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import InventarisTable from "@/components/inventaris-table";
 import TambahInventarisModal from "@/components/tambah-inventaris-modal";
 import LayoutWrapper from "@/components/layout-wrapper";
 
 export default async function InventarisPage() {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
 
-  if (!session || session.userType !== "bank-sampah") {
+  if (!session?.user || session.user.userType !== "bank-sampah") {
     redirect("/");
   }
 
   const inventaris = await prisma.inventarisSampah.findMany({
-    where: { bankSampahId: session.userId },
+    where: { bankSampahId: session.user.id },
     orderBy: { jenisSampah: "asc" },
   });
 
   return (
-    <LayoutWrapper userType="bank-sampah" userName={session.nama || "Unknown"}>
+    <LayoutWrapper
+      userType="bank-sampah"
+      userName={session.user.name || "Unknown"}
+    >
       <div className="max-w-6xl mx-auto py-6 px-4">
         <div className="mb-8 flex sm:items-center items-start justify-between sm:flex-row flex-col">
           <div className="mb-4 sm:mb-0">
@@ -31,7 +35,7 @@ export default async function InventarisPage() {
           </div>
 
           {/* Modal Trigger Button */}
-          <TambahInventarisModal bankSampahId={session.userId} />
+          <TambahInventarisModal bankSampahId={session.user.id} />
         </div>
 
         <InventarisTable inventaris={inventaris} />

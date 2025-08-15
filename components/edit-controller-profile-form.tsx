@@ -1,6 +1,6 @@
 "use client";
-
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ interface EditControllerProfileFormProps {
 export default function EditControllerProfileForm({
   controller,
 }: EditControllerProfileFormProps) {
+  const { update } = useSession();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
@@ -36,10 +37,23 @@ export default function EditControllerProfileForm({
       if (result.error) {
         setMessage({ type: "error", text: result.error });
       } else {
+        // Update session dengan nama baru
+        const newName = formData.get("nama") as string;
+        await update({
+          user: {
+            name: newName,
+          },
+        });
+
         setMessage({
           type: "success",
           text: result.message || "Profil berhasil diperbarui!",
         });
+
+        // Optional: Refresh halaman setelah 1 detik untuk memastikan update
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
     } catch (error) {
       setMessage({
@@ -72,7 +86,6 @@ export default function EditControllerProfileForm({
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">
-          {/* Nama - EDITABLE */}
           <div className="space-y-2">
             <Label htmlFor="nama">Nama Controller</Label>
             <Input
@@ -83,8 +96,6 @@ export default function EditControllerProfileForm({
               required
             />
           </div>
-
-          {/* Email - EDITABLE */}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -97,7 +108,6 @@ export default function EditControllerProfileForm({
               disabled
             />
           </div>
-
           {message && (
             <div
               className={`p-3 rounded-lg text-sm ${
@@ -109,7 +119,6 @@ export default function EditControllerProfileForm({
               {message.text}
             </div>
           )}
-
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Simpan Perubahan
