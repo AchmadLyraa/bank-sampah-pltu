@@ -120,7 +120,7 @@ export function BankSampahListWithCharts() {
       </div>
 
       {/* Bank Sampah List */}
-      <div className="grid gap-4">
+      <div className="grid gap-4 w-full">
         {isInitialLoading ? (
           <div className="text-center py-8">
             <div className="inline-flex items-center space-x-2 text-gray-500">
@@ -141,8 +141,8 @@ export function BankSampahListWithCharts() {
               className="hover:shadow-md transition-shadow"
             >
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
+                <div className="flex items-center justify-between sm:flex-row flex-col">
+                  <div className="flex-1 md:self-center self-start">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-semibold">
                         {bankSampah.nama}

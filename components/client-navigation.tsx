@@ -166,7 +166,7 @@ function BottomNavigation({ userType, userName }: ClientNavigationProps) {
             href="/controller/profile"
             className={cn(
               "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors min-w-0 flex-1",
-              pathname === "/bank-sampah/profile"
+              pathname === "/controller/profile"
                 ? "text-blue-600"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
             )}
@@ -262,7 +262,7 @@ function SidebarNavigation({ userType, userName }: ClientNavigationProps) {
               href="/controller/profile"
               className={cn(
                 "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                pathname === "/bank-sampah/profile"
+                pathname === "/controller/profile"
                   ? "bg-blue-50 text-blue-700 border border-blue-200"
                   : "text-gray-700 hover:bg-gray-50 hover:text-gray-900",
               )}
