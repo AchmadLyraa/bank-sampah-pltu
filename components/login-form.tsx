@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,16 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const callbackUrl = urlParams.get("callbackUrl");
+    if (callbackUrl) {
+      sessionStorage.setItem("intendedUrl", decodeURIComponent(callbackUrl));
+      // Clean URL by removing callbackUrl parameter
+      window.history.replaceState({}, "", "/");
+    }
+  }, []);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
@@ -43,14 +53,20 @@ export default function LoginForm() {
 
       if (result?.error) {
         setError("Email atau password salah");
-        setLoading(false); // Only set loading false on error
+        setLoading(false);
       } else if (result?.ok) {
         setIsRedirecting(true);
-        router.refresh();
+        const intendedUrl = sessionStorage.getItem("intendedUrl");
+        if (intendedUrl) {
+          sessionStorage.removeItem("intendedUrl");
+          router.push(intendedUrl);
+        } else {
+          router.push("/");
+        }
       }
     } catch (err) {
       setError("Terjadi kesalahan saat login");
-      setLoading(false); // Only set loading false on error
+      setLoading(false);
     }
   }
 

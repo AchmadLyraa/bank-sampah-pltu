@@ -21,19 +21,25 @@ export default withAuth(
 
     if (pathname.startsWith("/bank-sampah")) {
       if (!token || token.userType !== "bank-sampah") {
-        return NextResponse.redirect(new URL("/", req.url));
+        const response = NextResponse.redirect(new URL("/", req.url));
+        response.headers.set("x-intended-url", req.url);
+        return response;
       }
     }
 
     if (pathname.startsWith("/nasabah")) {
       if (!token || token.userType !== "nasabah") {
-        return NextResponse.redirect(new URL("/", req.url));
+        const response = NextResponse.redirect(new URL("/", req.url));
+        response.headers.set("x-intended-url", req.url);
+        return response;
       }
     }
 
     if (pathname.startsWith("/controller")) {
       if (!token || token.userType !== "controller") {
-        return NextResponse.redirect(new URL("/", req.url));
+        const response = NextResponse.redirect(new URL("/", req.url));
+        response.headers.set("x-intended-url", req.url);
+        return response;
       }
     }
 

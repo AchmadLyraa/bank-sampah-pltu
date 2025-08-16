@@ -50,6 +50,27 @@ export function BankSampahMap() {
             "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
         });
 
+        const activeIcon = new L.Icon({
+          iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+          iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+          shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        })
+
+        const inactiveIcon = new L.Icon({
+          iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+          iconRetinaUrl:
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+          shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        })
+
         const Map = ({ locations }: { locations: BankSampahLocation[] }) => (
           <MapContainer
             center={[-2.5, 118]}
@@ -72,6 +93,7 @@ export function BankSampahMap() {
               <Marker
                 key={location.id}
                 position={[location.latitude, location.longitude]}
+                icon={location.isActive ? activeIcon : inactiveIcon}
               >
                 <Popup>
                   <div className="p-2 min-w-48">
@@ -161,7 +183,6 @@ export function BankSampahMap() {
         const map = mapRef.current;
         if (map && map.setView) {
           map.setView([location.latitude, location.longitude], 10);
-          console.log("Map focused successfully");
           setSearchQuery("");
         } else {
           console.error("Map instance not available or setView method missing");

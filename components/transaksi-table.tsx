@@ -48,10 +48,6 @@ export default function TransaksiTable({
   useEffect(() => {
     setIsClient(true);
     setUserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
-    console.log(
-      "🌍 TransaksiTable timezone:",
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
-    );
   }, []);
 
   // 🕐 Format datetime with proper timezone handling
@@ -62,8 +58,6 @@ export default function TransaksiTable({
     }
 
     try {
-      console.log("📅 Raw date (TransaksiTable):", dateString);
-
       const date = new Date(dateString);
 
       // Using native toLocaleString for consistent local timezone with time
@@ -77,7 +71,6 @@ export default function TransaksiTable({
         hour12: false,
       });
 
-      console.log("📅 Formatted result (TransaksiTable):", formatted);
       return formatted;
     } catch (error) {
       console.error("❌ Date formatting error (TransaksiTable):", error);
