@@ -100,6 +100,22 @@ export default function PenarikanForm({ nasabahList }: PenarikanFormProps) {
               min="1"
               max={selectedNasabahData?.saldo || 0}
             />
+
+            {/* Preset Buttons */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 w-full mt-4">
+              {" "}
+              {[5000, 10000, 20000, 40000].map((nominal) => (
+                <Button
+                  key={nominal}
+                  type="button"
+                  variant="outline"
+                  onClick={() => setJumlah(nominal)}
+                >
+                  Rp {nominal.toLocaleString("id-ID")}
+                </Button>
+              ))}
+            </div>
+
             {selectedNasabahData && jumlah > 0 && (
               <p className="text-sm text-gray-600">
                 Sisa saldo setelah penarikan: Rp{" "}
