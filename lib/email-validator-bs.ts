@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export async function isEmailUnique(
+export async function isEmailBankSampahUnique(
   email: string,
   excludeId?: string,
   excludeTable?: "controller" | "bankSampah" | "person",
@@ -33,17 +33,17 @@ export async function isEmailUnique(
     }
 
     // Check in Person table (nasabah)
-    // if (excludeTable !== "person") {
-    //   const personExists = await prisma.person.findFirst({
-    //     where: {
-    //       email,
-    //       ...(excludeId && excludeTable === "person"
-    //         ? { id: { not: excludeId } }
-    //         : {}),
-    //     },
-    //   });
-    //   if (personExists) return false;
-    // }
+    if (excludeTable !== "person") {
+      const personExists = await prisma.person.findFirst({
+        where: {
+          email,
+          ...(excludeId && excludeTable === "person"
+            ? { id: { not: excludeId } }
+            : {}),
+        },
+      });
+      if (personExists) return false;
+    }
 
     return true;
   } catch (error) {

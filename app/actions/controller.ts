@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { Role } from "@/types";
 import bcrypt from "bcryptjs";
+import { isEmailBankSampahUnique } from "@/lib/email-validator-bs";
 import { isEmailUnique } from "@/lib/email-validator";
 
 export async function getBankSampahList() {
@@ -270,7 +271,7 @@ export async function createBankSampah(formData: FormData) {
       return { success: false, error: "Semua field wajib diisi" };
     }
 
-    const emailIsUnique = await isEmailUnique(email);
+    const emailIsUnique = await isEmailBankSampahUnique(email);
     if (!emailIsUnique) {
       return { success: false, error: "Email sudah terdaftar di sistem" };
     }
@@ -742,18 +743,27 @@ export async function addNasabahToBank(formData: FormData) {
       return { success: false, error: "Bank sampah tidak ditemukan" };
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const person = await prisma.person.create({
-      data: {
-        nama,
-        email,
-        nik,
-        telepon,
-        alamat,
-        password: hashedPassword,
+    // Check if Person with this email already exists
+    let person = await prisma.person.findFirst({
+      where: {
+        OR: [{ email }],
       },
     });
+
+    // If Person doesn't exist, create a new one
+    if (!person) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      person = await prisma.person.create({
+        data: {
+          nama,
+          nik,
+          alamat,
+          telepon,
+          email,
+          password: hashedPassword,
+        },
+      });
+    }
 
     const nasabah = await prisma.nasabah.create({
       data: {

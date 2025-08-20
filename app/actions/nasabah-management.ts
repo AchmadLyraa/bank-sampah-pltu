@@ -39,10 +39,10 @@ export async function createNasabahAction(formData: FormData) {
       return { error: "Email sudah terdaftar di sistem" };
     }
 
-    // 1. Check if Person with this email or NIK already exists
+    // 1. Check if Person with this email already exists
     let person = await prisma.person.findFirst({
       where: {
-        OR: [{ email }, { nik }],
+        OR: [{ email }],
       },
     });
 
@@ -60,14 +60,10 @@ export async function createNasabahAction(formData: FormData) {
         },
       });
     } else {
-      // If Person exists, but email/NIK is taken by another person, return error
+      // If Person exists, but email is taken by another person, return error
       if (person.email === email && person.id !== person.id) {
         // This check is redundant if email is unique on Person
         return { error: "Email sudah digunakan oleh individu lain." };
-      }
-      if (person.nik === nik && person.id !== person.id) {
-        // This check is redundant if NIK is unique on Person
-        return { error: "NIK sudah terdaftar untuk individu lain." };
       }
       // If person exists, but the provided name/address/phone is different,
       // you might want to update the person's details or prompt the user.
