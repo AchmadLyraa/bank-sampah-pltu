@@ -9,15 +9,19 @@ declare module "jspdf" {
 }
 
 export async function generateBackupPDF(data: any): Promise<Buffer> {
-  const { bankSampah, nasabahList, inventarisList, summary, generatedAt } =
-    data;
+  const {
+    bankSampah,
+    nasabahList,
+    inventarisList,
+    summary,
+    generatedAt,
+    // 🆕 Ambil ringkasan penjualan & pembelian dari server action
+    penjualanSummary = [],
+    pembelianSummary = [],
+  } = data;
 
   // 📄 Create PDF document
-  const doc = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4",
-  });
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
   // 🎨 Colors
   const primaryColor = [37, 99, 235]; // Blue
@@ -47,9 +51,9 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
 
   doc.setFontSize(10);
   doc.setTextColor(...grayColor);
-  doc.text(`Alamat: ${bankSampah?.alamat}`, 25, yPosition + 6);
-  doc.text(`Telepon: ${bankSampah?.telepon}`, 25, yPosition + 11);
-  doc.text(`Email: ${bankSampah?.email}`, 25, yPosition + 16);
+  doc.text(`Alamat: ${bankSampah?.alamat ?? "-"}`, 25, yPosition + 6);
+  doc.text(`Telepon: ${bankSampah?.telepon ?? "-"}`, 25, yPosition + 11);
+  doc.text(`Email: ${bankSampah?.email ?? "-"}`, 25, yPosition + 16);
 
   doc.text(`Tanggal Generate:`, 130, yPosition + 6);
   doc.text(
@@ -71,7 +75,6 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
   doc.text("RINGKASAN DATA", 20, yPosition);
   yPosition += 8;
 
-  // Draw summary boxes in 2x4 grid
   const summaryItems = [
     {
       label: "Total Nasabah",
@@ -80,7 +83,7 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     },
     {
       label: "Total Saldo",
-      value: `Rp ${summary.totalSaldo.toLocaleString()}`,
+      value: `Rp ${summary.totalSaldo.toLocaleString("id-ID")}`,
       color: greenColor,
     },
     {
@@ -90,39 +93,37 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     },
     {
       label: "Nilai Inventaris",
-      value: `Rp ${summary.totalNilaiInventaris.toLocaleString()}`,
+      value: `Rp ${summary.totalNilaiInventaris.toLocaleString("id-ID")}`,
       color: greenColor,
     },
     {
       label: "Total Pembelian",
-      value: `Rp ${summary.totalPemasukan.toLocaleString()}`,
+      value: `Rp ${summary.totalPemasukan.toLocaleString("id-ID")}`,
       color: redColor,
     },
     {
       label: "Total Penjualan",
-      value: `Rp ${summary.totalPenjualan.toLocaleString()}`,
+      value: `Rp ${summary.totalPenjualan.toLocaleString("id-ID")}`,
       color: greenColor,
     },
     {
       label: "Total Penarikan",
-      value: `Rp ${summary.totalPengeluaran.toLocaleString()}`,
+      value: `Rp ${summary.totalPengeluaran.toLocaleString("id-ID")}`,
       color: redColor,
     },
     {
       label: "Keuntungan Bersih",
-      value: `Rp ${summary.keuntungan.toLocaleString()}`,
+      value: `Rp ${summary.keuntungan.toLocaleString("id-ID")}`,
       color: summary.keuntungan >= 0 ? greenColor : redColor,
     },
   ];
 
-  // Draw 2x4 grid
   for (let i = 0; i < summaryItems.length; i++) {
     const col = i % 2;
     const row = Math.floor(i / 2);
     const x = 20 + col * 85;
     const y = yPosition + row * 18;
 
-    // Box background
     doc.setFillColor(250, 250, 250);
     doc.rect(x, y, 80, 15, "F");
     doc.setDrawColor(200, 200, 200);
@@ -141,7 +142,7 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
 
   yPosition += 80;
 
-  // 👥 Nasabah Table - Better Formatting
+  // 👥 Nasabah Table
   doc.setFontSize(16);
   doc.setTextColor(...primaryColor);
   doc.text(`DATA NASABAH (${nasabahList.length} orang)`, 20, yPosition);
@@ -152,10 +153,10 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     .slice(0, 20)
     .map((nasabah: any, index: number) => [
       (index + 1).toString(),
-      nasabah.person?.nama, // 🔄 FIXED
-      nasabah.person?.email, // 🔄 FIXED
-      nasabah.person?.telepon, // 🔄 FIXED
-      `Rp ${nasabah.saldo.toLocaleString()}`,
+      nasabah.person?.nama ?? "-",
+      nasabah.person?.email ?? "-",
+      nasabah.person?.telepon ?? "-",
+      `Rp ${nasabah.saldo.toLocaleString("id-ID")}`,
       new Date(nasabah.createdAt).toLocaleDateString("id-ID"),
     ]);
 
@@ -165,7 +166,7 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     `TOTAL (${nasabahList.length} nasabah)`,
     "",
     "",
-    `Rp ${summary.totalSaldo.toLocaleString()}`,
+    `Rp ${summary.totalSaldo.toLocaleString("id-ID")}`,
     "",
   ]);
 
@@ -181,17 +182,14 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
       fontStyle: "bold",
       halign: "center",
     },
-    bodyStyles: {
-      fontSize: 8,
-      textColor: [0, 0, 0],
-    },
+    bodyStyles: { fontSize: 8, textColor: [0, 0, 0] },
     columnStyles: {
-      0: { cellWidth: 12, halign: "center" }, // No
-      1: { cellWidth: 40 }, // Nama Lengkap
-      2: { cellWidth: 45 }, // Email
-      3: { cellWidth: 25 }, // Telepon
-      4: { cellWidth: 28, halign: "right" }, // Saldo
-      5: { cellWidth: 20, halign: "center" }, // Tgl Daftar
+      0: { cellWidth: 12, halign: "center" },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 45 },
+      3: { cellWidth: 25 },
+      4: { cellWidth: 28, halign: "right" },
+      5: { cellWidth: 20, halign: "center" },
     },
     didParseCell: (data: any) => {
       // Style total row
@@ -204,7 +202,7 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     margin: { left: 20, right: 20 },
   });
 
-  // 📦 New page for Inventaris
+  // 📦 Page 2: Inventaris
   doc.addPage();
   yPosition = 25;
 
@@ -223,9 +221,9 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     (index + 1).toString(),
     item.jenisSampah,
     item.isActive ? "Aktif" : "Non-aktif",
-    `Rp ${item.hargaPerKg.toLocaleString()}`,
+    `Rp ${item.hargaPerKg.toLocaleString("id-ID")}`,
     `${item.stokKg.toFixed(1)} kg`,
-    `Rp ${(item.stokKg * item.hargaPerKg).toLocaleString()}`,
+    `Rp ${(item.stokKg * item.hargaPerKg).toLocaleString("id-ID")}`,
     new Date(item.createdAt).toLocaleDateString("id-ID"),
   ]);
 
@@ -236,7 +234,7 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     "",
     "",
     `${summary.totalStok.toFixed(1)} kg`,
-    `Rp ${summary.totalNilaiInventaris.toLocaleString()}`,
+    `Rp ${summary.totalNilaiInventaris.toLocaleString("id-ID")}`,
     "",
   ]);
 
@@ -262,18 +260,15 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
       fontStyle: "bold",
       halign: "center",
     },
-    bodyStyles: {
-      fontSize: 8,
-      textColor: [0, 0, 0],
-    },
+    bodyStyles: { fontSize: 8, textColor: [0, 0, 0] },
     columnStyles: {
-      0: { cellWidth: 12, halign: "center" }, // No
-      1: { cellWidth: 45 }, // Jenis Sampah
-      2: { cellWidth: 20, halign: "center" }, // Status
-      3: { cellWidth: 25, halign: "right" }, // Harga/kg
-      4: { cellWidth: 20, halign: "right" }, // Stok
-      5: { cellWidth: 30, halign: "right" }, // Total Nilai
-      6: { cellWidth: 22, halign: "center" }, // Tgl Buat
+      0: { cellWidth: 12, halign: "center" },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 20, halign: "center" },
+      3: { cellWidth: 25, halign: "right" },
+      4: { cellWidth: 20, halign: "right" },
+      5: { cellWidth: 30, halign: "right" },
+      6: { cellWidth: 22, halign: "center" },
     },
     didParseCell: (data: any) => {
       // Color status column
@@ -297,7 +292,163 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     margin: { left: 20, right: 20 },
   });
 
-  // 📄 Professional Footer
+  // 🧾 Page 3: PENJUALAN SAMPAH (DESAIN SAMA, FIX DATA)
+  doc.addPage();
+  yPosition = 25;
+
+  doc.setFontSize(16);
+  doc.setTextColor(...primaryColor);
+  doc.text(
+    `PENJUALAN SAMPAH (${penjualanSummary.length} jenis)`,
+    20,
+    yPosition,
+  );
+  yPosition += 8;
+
+  // 🆕 Build tabel dari penjualanSummary
+  const penjualanRows = penjualanSummary.map((r: any, idx: number) => [
+    (idx + 1).toString(),
+    r.jenisSampah,
+    `${(r.totalBerat ?? 0).toFixed(1)} kg`,
+    `Rp ${(r.totalNilai ?? 0).toLocaleString("id-ID")}`,
+    (r.jumlahTransaksi ?? 0).toString(),
+    r.totalBerat > 0 ? `Rp ${(r.rataHarga ?? 0).toLocaleString("id-ID")}` : "-",
+  ]);
+
+  // 🆕 Total bawah tabel (pakai reduce dari summary agar benar)
+  const totalNilaiPenjualan =
+    penjualanSummary.reduce(
+      (s: number, x: any) => s + (x.totalNilai || 0),
+      0,
+    ) || 0;
+
+  penjualanRows.push([
+    "",
+    "TOTAL",
+    "",
+    `Rp ${totalNilaiPenjualan.toLocaleString("id-ID")}`,
+    "",
+    "",
+  ]);
+
+  doc.autoTable({
+    startY: yPosition,
+    head: [
+      [
+        "No",
+        "Jenis Sampah",
+        "Total Berat",
+        "Total Nilai",
+        "Jumlah Transaksi",
+        "Rata-rata Harga/kg",
+      ],
+    ],
+    body: penjualanRows,
+    theme: "grid",
+    headStyles: {
+      fillColor: primaryColor,
+      textColor: [255, 255, 255],
+      fontSize: 9,
+      fontStyle: "bold",
+      halign: "center",
+    },
+    bodyStyles: { fontSize: 8, textColor: [0, 0, 0] },
+    columnStyles: {
+      0: { cellWidth: 12, halign: "center" },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 25, halign: "right" },
+      3: { cellWidth: 30, halign: "right" },
+      4: { cellWidth: 22, halign: "center" },
+      5: { cellWidth: 28, halign: "right" },
+    },
+    didParseCell: (data: any) => {
+      if (data.row.index === penjualanRows.length - 1) {
+        data.cell.styles.fillColor = lightGray;
+        data.cell.styles.fontStyle = "bold";
+        data.cell.styles.textColor = primaryColor;
+      }
+    },
+    margin: { left: 20, right: 20 },
+  });
+
+  // 💸 Page 4: PEMBELIAN SAMPAH (DESAIN SAMA, FIX DATA)
+  doc.addPage();
+  yPosition = 25;
+
+  doc.setFontSize(16);
+  doc.setTextColor(...primaryColor);
+  doc.text(
+    `PEMBELIAN SAMPAH (${pembelianSummary.length} jenis)`,
+    20,
+    yPosition,
+  );
+  yPosition += 8;
+
+  const pembelianRows = pembelianSummary.map((r: any, idx: number) => [
+    (idx + 1).toString(),
+    r.jenisSampah,
+    `${(r.totalBerat ?? 0).toFixed(1)} kg`,
+    `Rp ${(r.totalNilai ?? 0).toLocaleString("id-ID")}`,
+    (r.jumlahTransaksi ?? 0).toString(),
+    r.totalBerat > 0 ? `Rp ${(r.rataHarga ?? 0).toLocaleString("id-ID")}` : "-",
+  ]);
+
+  const totalNilaiPembelian =
+    pembelianSummary.reduce(
+      (s: number, x: any) => s + (x.totalNilai || 0),
+      0,
+    ) || 0;
+
+  pembelianRows.push([
+    "",
+    "TOTAL",
+    "",
+    `Rp ${totalNilaiPembelian.toLocaleString("id-ID")}`,
+    "",
+    "",
+  ]);
+
+  doc.autoTable({
+    startY: yPosition,
+    head: [
+      [
+        "No",
+        "Jenis Sampah",
+        "Total Berat",
+        "Total Nilai",
+        "Jumlah Transaksi",
+        "Rata-rata Harga/kg",
+      ],
+    ],
+    body: pembelianRows,
+    theme: "grid",
+    headStyles: {
+      fillColor: primaryColor,
+      textColor: [255, 255, 255],
+      fontSize: 9,
+      fontStyle: "bold",
+      halign: "center",
+    },
+    bodyStyles: { fontSize: 8, textColor: [0, 0, 0] },
+    columnStyles: {
+      0: { cellWidth: 12, halign: "center" },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 25, halign: "right" },
+      3: { cellWidth: 30, halign: "right" },
+      4: { cellWidth: 22, halign: "center" },
+      5: { cellWidth: 28, halign: "right" },
+    },
+    didParseCell: (data: any) => {
+      if (data.row.index === pembelianRows.length - 1) {
+        data.cell.styles.fillColor = lightGray;
+        data.cell.styles.fontStyle = "bold";
+        data.cell.styles.textColor = primaryColor;
+      }
+    },
+    margin: { left: 20, right: 20 },
+  });
+
+  // 📄 Footer (TIDAK DIUBAH)
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);

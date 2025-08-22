@@ -235,6 +235,17 @@ export async function penjualanSampahAction(formData: FormData) {
       },
     });
 
+    // 🆕 TAMBAHKAN INI - buat detail transaksi
+    await prisma.detailTransaksi.create({
+      data: {
+        transaksiId: transaksi.id, // 👈 ID dari transaksi yang baru dibuat
+        inventarisSampahId: inventarisSampahId,
+        beratKg: beratKg,
+        hargaPerKg: hargaPerKg,
+        subtotal: totalNilai,
+      },
+    });
+
     // Update stok
     await prisma.inventarisSampah.update({
       where: { id: inventarisSampahId },
