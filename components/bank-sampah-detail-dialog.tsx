@@ -36,6 +36,7 @@ import {
 import { AddNasabahDialog } from "@/components/add-nasabah-dialog";
 import { EditInventarisDialog } from "@/components/edit-inventaris-dialog";
 import { AddInventarisDialog } from "@/components/add-inventaris-dialog";
+import BackupDownloadButtonController from "@/components/backup-download-button-controller";
 
 interface BankSampahDetailDialogProps {
   open: boolean;
@@ -196,6 +197,11 @@ export function BankSampahDetailDialog({
                       <Edit className="h-3 w-3" />
                       Edit Lokasi
                     </Button>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <BackupDownloadButtonController
+                      bankSampahId={data.bankSampah.id}
+                    />
                   </div>
                 </CardContent>
               </Card>
