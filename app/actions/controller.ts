@@ -165,6 +165,12 @@ export async function getBankSampahIndividualProfit(
     // Calculate date range based on filter
     let startDate: Date;
     const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    const bankSampah = await prisma.bankSampah.findUnique({
+      where: { id: bankSampahId },
+      select: { createdAt: true },
+    });
 
     switch (dateFilter) {
       case "1":
@@ -184,7 +190,7 @@ export async function getBankSampahIndividualProfit(
         startDate.setDate(startDate.getDate() - 30);
         break;
       case "all":
-        startDate = new Date("2020-01-01"); // Far back date
+        startDate = bankSampah?.createdAt || new Date("2020-01-01");
         break;
       default:
         startDate = new Date();
@@ -243,6 +249,111 @@ export async function getBankSampahIndividualProfit(
     return { success: true, data: profitData };
   } catch (error) {
     console.error("Error fetching individual bank sampah profit:", error);
+    return { success: false, error: "Terjadi kesalahan sistem" };
+  }
+}
+
+export async function getBankSampahPembelianKg(
+  bankSampahId: string,
+  dateFilter = "30",
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (
+      !session ||
+      session.user.userType !== "controller" ||
+      session.user.role !== Role.CONTROLLER
+    ) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // Tentukan range tanggal
+    let startDate: Date;
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    switch (dateFilter) {
+      case "1":
+        startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case "7":
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case "14":
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 14);
+        break;
+      case "30":
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        break;
+      case "all":
+        const bank = await prisma.bankSampah.findUnique({
+          where: { id: bankSampahId },
+          select: { createdAt: true },
+        });
+        startDate = bank?.createdAt || new Date("2020-01-01");
+        break;
+      default:
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+    }
+
+    // Ambil detail transaksi per jenis sampah
+    const details = await prisma.detailTransaksi.findMany({
+      where: {
+        transaksi: {
+          bankSampahId,
+          jenis: "PEMASUKAN",
+          createdAt: { gte: startDate, lte: endDate },
+        },
+      },
+      select: {
+        beratKg: true,
+        createdAt: true,
+        inventarisSampah: { select: { jenisSampah: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    // Group per jenis + tanggal
+    const dataMap = new Map<string, Map<string, number>>();
+
+    details.forEach((d) => {
+      const dateKey = d.createdAt.toISOString().split("T")[0];
+      const jenis = d.inventarisSampah.jenisSampah;
+
+      if (!dataMap.has(jenis)) {
+        dataMap.set(jenis, new Map());
+      }
+      const jenisMap = dataMap.get(jenis)!;
+      const current = jenisMap.get(dateKey) || 0;
+      jenisMap.set(dateKey, current + d.beratKg);
+    });
+
+    // Susun result biar gampang dipakai di chart
+    const result: { jenis: string; date: string; beratKg: number }[] = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const dateKey = currentDate.toISOString().split("T")[0];
+
+      for (const [jenis, jenisMap] of dataMap.entries()) {
+        result.push({
+          jenis,
+          date: dateKey,
+          beratKg: jenisMap.get(dateKey) || 0,
+        });
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Error fetching pembelian kg per jenis:", error);
     return { success: false, error: "Terjadi kesalahan sistem" };
   }
 }

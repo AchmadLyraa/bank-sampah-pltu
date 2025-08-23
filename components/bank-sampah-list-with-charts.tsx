@@ -17,6 +17,7 @@ import {
   toggleBankSampahStatus,
 } from "@/app/actions/controller";
 import { BankSampahProfitChart } from "@/components/bank-sampah-profit-chart";
+import { BankSampahPembelianChart } from "@/components/bank-sampah-pembelian-sampah-chart";
 
 interface BankSampah {
   id: string;
@@ -245,14 +246,23 @@ export function BankSampahListWithCharts() {
       {/* Chart Dialog */}
       <Dialog open={chartDialogOpen} onOpenChange={setChartDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <h1 className="text-2xl font-bold mb-4">
+            {selectedBankSampah?.nama}
+          </h1>
           <DialogHeader>
-            <DialogTitle>
-              Grafik Keuntungan - {selectedBankSampah?.nama}
+            <DialogTitle
+              className="text-left
+              "
+            >
+              Grafik Keuntungan
             </DialogTitle>
           </DialogHeader>
 
           {selectedBankSampah && (
-            <BankSampahProfitChart bankSampahId={selectedBankSampah.id} />
+            <>
+              <BankSampahProfitChart bankSampahId={selectedBankSampah.id} />
+              <BankSampahPembelianChart bankSampahId={selectedBankSampah.id} />
+            </>
           )}
         </DialogContent>
       </Dialog>
