@@ -9,7 +9,12 @@ import { useEffect, useState } from "react";
 // 🔧 FIXED: Create specific type for TransaksiTable that matches Prisma result
 interface TransaksiWithDetails {
   id: string;
-  jenis: "PEMASUKAN" | "PENGELUARAN" | "PENJUALAN_SAMPAH";
+  jenis:
+    | "PEMASUKAN"
+    | "PENGELUARAN"
+    | "PENJUALAN_SAMPAH"
+    | "PEMASUKAN_UMUM"
+    | "PENGELUARAN_UMUM";
   totalNilai: number;
   keterangan: string | null;
   nasabahId: string | null;
@@ -44,51 +49,40 @@ export default function TransaksiTable({
   const [isClient, setIsClient] = useState(false);
   const [userTimezone, setUserTimezone] = useState<string>("UTC");
 
-  // 🔧 FORCE CLIENT-SIDE ONLY RENDERING
   useEffect(() => {
     setIsClient(true);
     setUserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
   }, []);
 
-  // 🕐 Format datetime with proper timezone handling
   const formatDateTime = (dateString: string | Date) => {
-    // 🚨 FORCE CLIENT-SIDE ONLY
-    if (!isClient) {
-      return "Loading...";
-    }
-
+    if (!isClient) return "Loading...";
     try {
       const date = new Date(dateString);
-
-      // Using native toLocaleString for consistent local timezone with time
-      const formatted = date.toLocaleString("id-ID", {
+      return date.toLocaleString("id-ID", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-        timeZone: userTimezone, // Use detected timezone
+        timeZone: userTimezone,
         hour12: false,
       });
-
-      return formatted;
     } catch (error) {
       console.error("❌ Date formatting error (TransaksiTable):", error);
-      // Fallback
       return new Date(dateString).toLocaleString("id-ID");
     }
   };
 
-  const getTransactionBadge = (jenis: string) => {
+  const getTransactionBadge = (jenis: TransaksiWithDetails["jenis"]) => {
     switch (jenis) {
       case "PEMASUKAN":
-        return (
-          <Badge variant="default" className="bg-green-100 text-green-800">
-            Pemasukan
-          </Badge>
-        );
+        return <Badge className="bg-green-100 text-green-800">Pemasukan</Badge>;
+      case "PEMASUKAN_UMUM":
+        return <Badge className="bg-green-50 text-green-700">Pemasukan Umum</Badge>;
       case "PENGELUARAN":
         return <Badge variant="destructive">Pengeluaran</Badge>;
+      case "PENGELUARAN_UMUM":
+        return <Badge className="bg-red-50 text-red-700">Pengeluaran Umum</Badge>;
       case "PENJUALAN_SAMPAH":
         return <Badge variant="secondary">Penjualan</Badge>;
       default:
@@ -96,34 +90,31 @@ export default function TransaksiTable({
     }
   };
 
+  // ✅ Hitung total per kategori (halaman ini)
   const totalPemasukan = transaksi
-    .filter((t) => t.jenis === "PEMASUKAN" || t.jenis === "PENJUALAN_SAMPAH")
+    .filter((t) =>
+      ["PEMASUKAN", "PENJUALAN_SAMPAH", "PEMASUKAN_UMUM"].includes(t.jenis)
+    )
     .reduce((sum, t) => sum + t.totalNilai, 0);
 
   const totalPengeluaran = transaksi
-    .filter((t) => t.jenis === "PENGELUARAN")
+    .filter((t) => ["PENGELUARAN", "PENGELUARAN_UMUM"].includes(t.jenis))
     .reduce((sum, t) => sum + t.totalNilai, 0);
 
-  // 🔧 Show loading state during hydration
   if (!isClient) {
     return (
       <div className="space-y-6">
-        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="text-2xl font-bold text-gray-400">Loading...</div>
-              <p className="text-sm text-gray-600">
-                Total Pemasukan (Halaman Ini)
-              </p>
+              <p className="text-sm text-gray-600">Total Pemasukan (Halaman Ini)</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
               <div className="text-2xl font-bold text-gray-400">Loading...</div>
-              <p className="text-sm text-gray-600">
-                Total Pengeluaran (Halaman Ini)
-              </p>
+              <p className="text-sm text-gray-600">Total Pengeluaran (Halaman Ini)</p>
             </CardContent>
           </Card>
           <Card>
@@ -133,8 +124,6 @@ export default function TransaksiTable({
             </CardContent>
           </Card>
         </div>
-
-        {/* Loading Table */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -161,9 +150,7 @@ export default function TransaksiTable({
             <div className="text-2xl font-bold text-green-600">
               Rp {totalPemasukan.toLocaleString()}
             </div>
-            <p className="text-sm text-gray-600">
-              Total Pemasukan (Halaman Ini)
-            </p>
+            <p className="text-sm text-gray-600">Total Pemasukan (Halaman Ini)</p>
           </CardContent>
         </Card>
         <Card>
@@ -171,9 +158,7 @@ export default function TransaksiTable({
             <div className="text-2xl font-bold text-red-600">
               Rp {totalPengeluaran.toLocaleString()}
             </div>
-            <p className="text-sm text-gray-600">
-              Total Pengeluaran (Halaman Ini)
-            </p>
+            <p className="text-sm text-gray-600">Total Pengeluaran (Halaman Ini)</p>
           </CardContent>
         </Card>
         <Card>
@@ -193,7 +178,6 @@ export default function TransaksiTable({
             <History className="h-5 w-5" />
             Transaksi (Halaman {currentPage} dari {totalPages})
           </CardTitle>
-          {/* 🔍 DEBUG INFO - Remove this in production */}
           <p className="text-xs text-gray-400">Timezone: {userTimezone}</p>
         </CardHeader>
         <CardContent>
@@ -203,7 +187,7 @@ export default function TransaksiTable({
                 <tr className="border-b">
                   <th className="text-left py-3 px-4">Tanggal</th>
                   <th className="text-left py-3 px-4">Jenis</th>
-                  <th className="text-left py-3 px-4">Nasabah</th>
+                  <th className="text-left py-3 px-4">User</th>
                   <th className="text-left py-3 px-4">Keterangan</th>
                   <th className="text-left py-3 px-4">Detail</th>
                   <th className="text-right py-3 px-4">Nilai</th>
@@ -212,26 +196,16 @@ export default function TransaksiTable({
               <tbody>
                 {transaksi.map((t) => (
                   <tr key={t.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm">
-                      {formatDateTime(t.createdAt)}
-                    </td>
-                    <td className="py-3 px-4">
-                      {getTransactionBadge(t.jenis)}
-                    </td>
-                    <td className="py-3 px-4">
-                      {t.nasabah?.person?.nama || "Bank Sampah"}
-                    </td>
+                    <td className="py-3 px-4 text-sm">{formatDateTime(t.createdAt)}</td>
+                    <td className="py-3 px-4">{getTransactionBadge(t.jenis)}</td>
+                    <td className="py-3 px-4">{t.nasabah?.person?.nama || "Bank Sampah"}</td>
                     <td className="py-3 px-4 text-sm">{t.keterangan || "-"}</td>
                     <td className="py-3 px-4 text-sm">
                       {t.detailTransaksi && t.detailTransaksi.length > 0 && (
                         <div className="space-y-1">
                           {t.detailTransaksi.map((detail) => (
-                            <div
-                              key={detail.id}
-                              className="text-xs text-gray-600"
-                            >
-                              {detail.inventarisSampah?.jenisSampah}:{" "}
-                              {detail.beratKg}kg
+                            <div key={detail.id} className="text-xs text-gray-600">
+                              {detail.inventarisSampah?.jenisSampah}: {detail.beratKg}kg
                             </div>
                           ))}
                         </div>
@@ -240,13 +214,12 @@ export default function TransaksiTable({
                     <td className="py-3 px-4 text-right">
                       <span
                         className={`font-bold ${
-                          t.jenis === "PEMASUKAN" ||
-                          t.jenis === "PENJUALAN_SAMPAH"
+                          ["PEMASUKAN", "PENJUALAN_SAMPAH", "PEMASUKAN_UMUM"].includes(t.jenis)
                             ? "text-green-600"
                             : "text-red-600"
                         }`}
                       >
-                        {t.jenis === "PENGELUARAN" ? "-" : "+"}Rp{" "}
+                        {["PENGELUARAN", "PENGELUARAN_UMUM"].includes(t.jenis) ? "-" : "+"}Rp{" "}
                         {t.totalNilai.toLocaleString()}
                       </span>
                     </td>
@@ -258,11 +231,7 @@ export default function TransaksiTable({
 
           {/* 📄 Pagination Component */}
           <div className="mt-6 pt-6 border-t">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={totalItems}
-            />
+            <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} />
           </div>
         </CardContent>
       </Card>

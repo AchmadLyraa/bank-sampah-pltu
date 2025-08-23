@@ -8,52 +8,69 @@ import bcrypt from "bcryptjs";
 import type { PenimbanganFormData, PenarikanFormData } from "@/types";
 
 export async function getDashboardData(bankSampahId: string) {
-  const [nasabahCount, totalSaldo, inventaris, recentTransaksi] =
-    await Promise.all([
-      // Count only active Nasabah relationships for this bank
-      prisma.nasabah.count({
-        where: {
-          bankSampahId,
-          isActive: true,
+  const [
+    nasabahCount,
+    totalSaldoNasabah,
+    inventaris,
+    transaksiAgg,
+    recentTransaksi,
+  ] = await Promise.all([
+    // Count active nasabah
+    prisma.nasabah.count({
+      where: { bankSampahId, isActive: true },
+    }),
+
+    // Sum saldo nasabah
+    prisma.nasabah.aggregate({
+      where: { bankSampahId, isActive: true },
+      _sum: { saldo: true },
+    }),
+
+    prisma.inventarisSampah.findMany({
+      where: { bankSampahId },
+      orderBy: { jenisSampah: "asc" },
+    }),
+
+    // 🔥 Ambil semua total per jenis transaksi
+    prisma.transaksi.groupBy({
+      by: ["jenis"],
+      where: { bankSampahId },
+      _sum: { totalNilai: true },
+    }),
+
+    prisma.transaksi.findMany({
+      where: { bankSampahId },
+      include: {
+        nasabah: { select: { person: { select: { nama: true } } } },
+        detailTransaksi: {
+          include: { inventarisSampah: { select: { jenisSampah: true } } },
         },
-      }),
-      // Sum saldo only from active Nasabah relationships for this bank
-      prisma.nasabah.aggregate({
-        where: {
-          bankSampahId,
-          isActive: true,
-        },
-        _sum: { saldo: true },
-      }),
-      prisma.inventarisSampah.findMany({
-        where: { bankSampahId },
-        orderBy: { jenisSampah: "asc" },
-      }),
-      prisma.transaksi.findMany({
-        where: { bankSampahId },
-        include: {
-          nasabah: {
-            // 🆕 Include Nasabah relationship and its Person data
-            select: {
-              person: {
-                select: { nama: true },
-              },
-            },
-          },
-          detailTransaksi: {
-            include: {
-              inventarisSampah: { select: { jenisSampah: true } },
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      }),
-    ]);
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
+  ]);
+
+  // Map hasil groupBy ke object
+  const sumByJenis = transaksiAgg.reduce<Record<string, number>>((acc, t) => {
+    acc[t.jenis] = t._sum.totalNilai || 0;
+    return acc;
+  }, {});
+
+  // 💰 Saldo Nasabah
+  const saldoNasabah = totalSaldoNasabah._sum.saldo || 0;
+
+  // 🏦 Saldo Bank Sampah pakai rumus baru
+  const saldoBankSampah =
+    (sumByJenis["PENJUALAN_SAMPAH"] || 0) +
+    (sumByJenis["PEMASUKAN_UMUM"] || 0) -
+    ((sumByJenis["PEMASUKAN"] || 0) +
+      (sumByJenis["PENGELUARAN_UMUM"] || 0));
 
   return {
     nasabahCount,
-    totalSaldo: totalSaldo._sum.saldo || 0,
+    saldoNasabah,
+    saldoBankSampah,
     inventaris,
     recentTransaksi,
   };

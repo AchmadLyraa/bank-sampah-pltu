@@ -138,4 +138,6 @@ enum JenisTransaksi {
   PEMASUKAN
   PENGELUARAN
   PENJUALAN_SAMPAH
+  PEMASUKAN_UMUM // ➕ Baru
+  PENGELUARAN_UMUM // ➕ Baru
 }

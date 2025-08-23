@@ -45,8 +45,20 @@ export default function RecentTransactions({
             Pemasukan
           </Badge>
         );
+      case "PEMASUKAN_UMUM":
+        return (
+          <Badge variant="default" className="bg-emerald-100 text-emerald-800">
+            Pemasukan Umum
+          </Badge>
+        );
       case "PENGELUARAN":
         return <Badge variant="destructive">Pengeluaran</Badge>;
+      case "PENGELUARAN_UMUM":
+        return (
+          <Badge variant="destructive" className="bg-red-100 text-red-800">
+            Pengeluaran Umum
+          </Badge>
+        );
       case "PENJUALAN_SAMPAH":
         return <Badge variant="secondary">Penjualan</Badge>;
       default:
@@ -139,13 +151,17 @@ export default function RecentTransactions({
                   <p
                     className={`font-bold ${
                       transaksi.jenis === "PEMASUKAN" ||
+                      transaksi.jenis === "PEMASUKAN_UMUM" ||
                       transaksi.jenis === "PENJUALAN_SAMPAH"
                         ? "text-green-600"
                         : "text-red-600"
                     }`}
                   >
-                    {transaksi.jenis === "PENGELUARAN" ? "-" : "+"}Rp{" "}
-                    {transaksi.totalNilai.toLocaleString()}
+                    {transaksi.jenis === "PENGELUARAN" ||
+                    transaksi.jenis === "PENGELUARAN_UMUM"
+                      ? "-"
+                      : "+"}
+                    Rp {transaksi.totalNilai.toLocaleString()}
                   </p>
                 </div>
               </div>

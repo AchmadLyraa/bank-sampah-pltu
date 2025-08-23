@@ -77,7 +77,12 @@ export interface InventarisSampah {
 
 export interface Transaksi {
   id: string;
-  jenis: "PEMASUKAN" | "PENGELUARAN" | "PENJUALAN_SAMPAH";
+  jenis:
+    | "PEMASUKAN"
+    | "PENGELUARAN"
+    | "PENJUALAN_SAMPAH"
+    | "PEMASUKAN_UMUM"
+    | "PENGELUARAN_UMUM";
   totalNilai: number;
   keterangan?: string | null;
   nasabahId: string | null;
