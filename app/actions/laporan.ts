@@ -1,5 +1,4 @@
 "use server";
-
 import { prisma } from "@/lib/prisma";
 
 // 🗓️ UPDATED: Tambah parameter filter tanggal
@@ -33,10 +32,10 @@ export async function getLaporanPendapatan(
       where: {
         bankSampahId,
         jenis: "PEMASUKAN",
-        ...dateFilter, // 🗓️ Apply date filter
+        ...dateFilter,
       },
       include: {
-        nasabah: { select: { person: { select: { nama: true } } } }, // 🔄 Updated include
+        nasabah: { select: { person: { select: { nama: true } } } },
         detailTransaksi: {
           include: {
             inventarisSampah: { select: { jenisSampah: true } },
@@ -45,26 +44,24 @@ export async function getLaporanPendapatan(
       },
       orderBy: { createdAt: "desc" },
     }),
-
     // Penjualan sampah ke pihak ketiga (sampah keluar)
     prisma.transaksi.findMany({
       where: {
         bankSampahId,
         jenis: "PENJUALAN_SAMPAH",
-        ...dateFilter, // 🗓️ Apply date filter
+        ...dateFilter,
       },
       orderBy: { createdAt: "desc" },
     }),
-
     // Pengeluaran (penarikan saldo nasabah)
     prisma.transaksi.findMany({
       where: {
         bankSampahId,
         jenis: "PENGELUARAN",
-        ...dateFilter, // 🗓️ Apply date filter
+        ...dateFilter,
       },
       include: {
-        nasabah: { select: { person: { select: { nama: true } } } }, // 🔄 Updated include
+        nasabah: { select: { person: { select: { nama: true } } } },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -84,30 +81,56 @@ export async function getLaporanPendapatan(
   // Calculate profit (penjualan - pembelian dari nasabah)
   const keuntungan = totalPenjualan - totalPemasukan;
 
-  // Get summary by waste type with date filter
-  const summaryByType = await prisma.detailTransaksi.groupBy({
-    by: ["inventarisSampahId"],
-    where: {
-      transaksi: {
-        bankSampahId,
-        jenis: "PEMASUKAN",
-        ...dateFilter, // 🗓️ Apply date filter
+  // 🆕 PARALLEL QUERIES untuk summary pembelian DAN penjualan
+  const [summaryByTypePembelian, summaryByTypePenjualan] = await Promise.all([
+    // Summary PEMBELIAN by waste type
+    prisma.detailTransaksi.groupBy({
+      by: ["inventarisSampahId"],
+      where: {
+        transaksi: {
+          bankSampahId,
+          jenis: "PEMASUKAN",
+          ...dateFilter,
+        },
       },
-    },
-    _sum: {
-      beratKg: true,
-      subtotal: true,
-    },
-    _count: {
-      id: true,
-    },
-  });
+      _sum: {
+        beratKg: true,
+        subtotal: true,
+      },
+      _count: {
+        id: true,
+      },
+    }),
+    // 🆕 Summary PENJUALAN by waste type
+    prisma.detailTransaksi.groupBy({
+      by: ["inventarisSampahId"],
+      where: {
+        transaksi: {
+          bankSampahId,
+          jenis: "PENJUALAN_SAMPAH",
+          ...dateFilter,
+        },
+      },
+      _sum: {
+        beratKg: true,
+        subtotal: true,
+      },
+      _count: {
+        id: true,
+      },
+    }),
+  ]);
 
-  // Get waste type names
+  // Get waste type names untuk kedua summary
+  const allInventarisIds = [
+    ...summaryByTypePembelian.map((s) => s.inventarisSampahId),
+    ...summaryByTypePenjualan.map((s) => s.inventarisSampahId),
+  ];
+
   const wasteTypes = await prisma.inventarisSampah.findMany({
     where: {
       id: {
-        in: summaryByType.map((s) => s.inventarisSampahId),
+        in: [...new Set(allInventarisIds)], // Remove duplicates
       },
     },
     select: {
@@ -116,7 +139,21 @@ export async function getLaporanPendapatan(
     },
   });
 
-  const summaryWithNames = summaryByType.map((summary) => {
+  // 🔄 Format summary PEMBELIAN
+  const summaryByType = summaryByTypePembelian.map((summary) => {
+    const wasteType = wasteTypes.find(
+      (w) => w.id === summary.inventarisSampahId,
+    );
+    return {
+      jenisSampah: wasteType?.jenisSampah || "Unknown",
+      totalBerat: summary._sum.beratKg || 0,
+      totalNilai: summary._sum.subtotal || 0,
+      jumlahTransaksi: summary._count.id,
+    };
+  });
+
+  // 🆕 Format summary PENJUALAN
+  const penjualanSummaryByType = summaryByTypePenjualan.map((summary) => {
     const wasteType = wasteTypes.find(
       (w) => w.id === summary.inventarisSampahId,
     );
@@ -136,8 +173,8 @@ export async function getLaporanPendapatan(
     pemasukan,
     penjualanSampah,
     pengeluaran,
-    summaryByType: summaryWithNames,
-    // 📊 Return filter info
+    summaryByType: summaryByType, // Pembelian summary
+    penjualanSummaryByType: penjualanSummaryByType, // 🆕 Penjualan summary
     filterInfo: {
       startDate,
       endDate,
