@@ -74,10 +74,8 @@ export default function LoginForm() {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
         <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-          <LogIn className="h-6 w-6 text-green-600" />
-          Login
+          <p className="text-gray-600">Silahkan Masuk ke Akun Anda</p>
         </CardTitle>
-        <p className="text-gray-600">Masuk ke akun Anda</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

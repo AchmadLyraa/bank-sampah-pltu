@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/app/actions/auth";
+import Image from "next/image";
 
 interface ClientNavigationProps {
   userType: "bank-sampah" | "nasabah" | "controller";
@@ -195,8 +196,14 @@ function SidebarNavigation({ userType, userName }: ClientNavigationProps) {
         {/* Header */}
         <div className="flex items-center flex-shrink-0 px-4 py-6 border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-              <Package className="h-5 w-5 text-white" />
+            <div className="w-8 h-8  rounded-lg flex items-center justify-center">
+              <Image
+                src="/logo-1.png"
+                alt="Logo Bank Sampah"
+                width={40}
+                height={40}
+                className="object-contain"
+              />
             </div>
             <div>
               <h1 className="text-md font-bold text-gray-900">
