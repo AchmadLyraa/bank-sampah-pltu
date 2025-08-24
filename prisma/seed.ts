@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { execSync } from "child_process"; // 🆕 Import execSync
 
 const prisma = new PrismaClient();
