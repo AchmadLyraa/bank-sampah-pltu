@@ -108,14 +108,14 @@ export default function GeneralTransactionForm({
                         key={opt.value}
                         value={opt.value}
                         onSelect={() => {
-                          setJenis(opt.value)
-                          setOpen(false)
+                          setJenis(opt.value);
+                          setOpen(false);
                         }}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            jenis === opt.value ? "opacity-100" : "opacity-0"
+                            jenis === opt.value ? "opacity-100" : "opacity-0",
                           )}
                         />
                         {opt.label}
@@ -140,13 +140,17 @@ export default function GeneralTransactionForm({
           <div className="space-y-2">
             <Label>Total Nilai</Label>
             <Input
-              type="number"
-              min="1"
-              value={totalNilai}
-              onChange={(e) =>
-                setTotalNilai(e.target.value ? Number(e.target.value) : "")
+              type="text" // ← ubah dari "number" ke "text"
+              value={
+                totalNilai === "" || totalNilai === 0
+                  ? ""
+                  : `Rp ${Number(totalNilai).toLocaleString("id-ID")}`
               }
-              placeholder="Rp"
+              onChange={(e) => {
+                const rawValue = e.target.value.replace(/[^\d]/g, "");
+                setTotalNilai(rawValue === "" ? "" : Number(rawValue));
+              }}
+              placeholder="Rp 0" // ← ubah placeholder
               required
             />
           </div>

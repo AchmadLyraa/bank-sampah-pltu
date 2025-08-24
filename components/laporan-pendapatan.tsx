@@ -7,11 +7,11 @@ import {
   Package,
   ArrowUpDown,
   Calendar,
-  ShoppingCart, // 🆕 Icon untuk penjualan
-  BarChart3, // 🆕 Icon untuk grafik
+  ShoppingCart,
+  BarChart3,
 } from "lucide-react";
-import { useEffect, useRef } from "react"; // 🆕 Untuk D3
-import * as d3 from "d3"; // 🆕 Import D3
+import { useEffect, useRef } from "react";
+import * as d3 from "d3";
 import { DateTime } from "luxon";
 
 interface LaporanPendapatanProps {
@@ -29,7 +29,6 @@ interface LaporanPendapatanProps {
       totalNilai: number;
       jumlahTransaksi: number;
     }[];
-    // 🆕 TAMBAHAN: Summary penjualan
     penjualanSummaryByType: {
       jenisSampah: string;
       totalBerat: number;
@@ -45,7 +44,7 @@ interface LaporanPendapatanProps {
 }
 
 export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
-  const chartRef = useRef<SVGSVGElement>(null); // 🆕 Ref untuk grafik
+  const chartRef = useRef<SVGSVGElement>(null);
 
   const {
     totalPemasukan,
@@ -56,40 +55,55 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
     penjualanSampah,
     pengeluaran,
     summaryByType,
-    penjualanSummaryByType, // 🆕 Destructure penjualan summary
+    penjualanSummaryByType,
     filterInfo,
   } = data;
 
-  // 🆕 Buat grafik profit/loss seperti saham
+  // Helper function untuk format rupiah dinamis
+  const formatRupiah = (value: number) => {
+    const absValue = Math.abs(value);
+
+    if (absValue >= 1000000000) {
+      // Milyar
+      return `${value >= 0 ? "+" : "-"}Rp ${(absValue / 1000000000).toFixed(1)}B`;
+    } else if (absValue >= 1000000) {
+      // Juta
+      return `${value >= 0 ? "+" : "-"}Rp ${(absValue / 1000000).toFixed(1)}M`;
+    } else if (absValue >= 1000) {
+      // Ribu
+      return `${value >= 0 ? "+" : "-"}Rp ${(absValue / 1000).toFixed(0)}K`;
+    } else {
+      // Satuan
+      return `${value >= 0 ? "+" : ""}Rp ${value.toLocaleString("id-ID")}`;
+    }
+  };
+
   useEffect(() => {
     if (!chartRef.current) return;
 
-    // Clear previous chart
     d3.select(chartRef.current).selectAll("*").remove();
 
-    // Gabungkan semua transaksi dan urutkan berdasarkan waktu
     const allTransactions = [
       ...pemasukan.map((t) => ({
         date: new Date(t.createdAt),
-        value: -t.totalNilai, // Negatif karena pengeluaran
+        value: -t.totalNilai,
         type: "pembelian",
         keterangan: t.nasabah?.person?.nama || "Pembelian",
       })),
       ...penjualanSampah.map((t) => ({
         date: new Date(t.createdAt),
-        value: t.totalNilai, // Positif karena pemasukan
+        value: t.totalNilai,
         type: "penjualan",
         keterangan: t.keterangan || "Penjualan",
       })),
       ...pengeluaran.map((t) => ({
         date: new Date(t.createdAt),
-        value: -t.totalNilai, // Negatif karena pengeluaran
+        value: -t.totalNilai,
         type: "penarikan",
         keterangan: t.nasabah?.person?.nama || "Penarikan",
       })),
     ].sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    // Hitung cumulative profit/loss
     let cumulativeProfit = 0;
     const chartData = allTransactions.map((t) => {
       cumulativeProfit += t.value;
@@ -100,7 +114,6 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
     });
 
     if (chartData.length === 0) {
-      // Tampilkan pesan jika tidak ada data
       const svg = d3
         .select(chartRef.current)
         .attr("width", 500)
@@ -118,21 +131,16 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
       return;
     }
 
-    // Dimensi
     const margin = { top: 20, right: 30, bottom: 60, left: 80 };
     const width = 600 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
 
-    // SVG setup
     const svg = d3.select(chartRef.current);
-    // .attr("width", width + margin.left + margin.right)
-    // .attr("height", height + margin.top + margin.bottom);
 
     const g = svg
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Scales
     const xScale = d3
       .scaleTime()
       .range([0, width])
@@ -146,7 +154,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
       .scaleLinear()
       .range([height, 0])
       .domain([
-        Math.min(yExtent[0], 0) * 1.1, // Extend domain untuk padding
+        Math.min(yExtent[0], 0) * 1.1,
         Math.max(yExtent[1], 0) * 1.1,
       ]);
 
@@ -160,14 +168,12 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
       .style("stroke-dasharray", "3,3")
       .style("opacity", 0.7);
 
-    // Line generator
     const line = d3
       .line<(typeof chartData)[0]>()
       .x((d) => xScale(d.date))
       .y((d) => yScale(d.cumulativeProfit))
       .curve(d3.curveMonotoneX);
 
-    // Area generator untuk gradient
     const area = d3
       .area<(typeof chartData)[0]>()
       .x((d) => xScale(d.date))
@@ -175,7 +181,6 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
       .y1((d) => yScale(d.cumulativeProfit))
       .curve(d3.curveMonotoneX);
 
-    // Gradient definitions
     const defs = svg.append("defs");
 
     const gradientProfit = defs
@@ -244,7 +249,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
       .attr("stroke-width", 2)
       .attr("d", line);
 
-    // Dots untuk setiap transaksi
+    // Dots
     g.selectAll(".dot")
       .data(chartData)
       .enter()
@@ -271,19 +276,16 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
       )
       .style("font-size", "11px");
 
-    // Y Axis
+    // Y Axis dengan format dinamis
     g.append("g")
       .call(
         d3.axisLeft(yScale).tickFormat((d) => {
-          const val = Number(d);
-          return val >= 0
-            ? `+Rp ${(val / 1000).toFixed(0)}K`
-            : `-Rp ${Math.abs(val / 1000).toFixed(0)}K`;
+          return formatRupiah(Number(d));
         }),
       )
       .style("font-size", "11px");
 
-    // Current value label
+    // Current value label dengan format dinamis
     const finalValue = chartData[chartData.length - 1].cumulativeProfit;
     g.append("text")
       .attr("x", width - 10)
@@ -292,12 +294,9 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
       .style("font-size", "12px")
       .style("font-weight", "bold")
       .style("fill", finalValue >= 0 ? "#16a34a" : "#dc2626")
-      .text(
-        `${finalValue >= 0 ? "+" : ""}Rp ${(finalValue / 1000000).toFixed(2)}M`,
-      );
+      .text(formatRupiah(finalValue));
   }, [pemasukan, penjualanSampah, pengeluaran]);
 
-  // 📅 Format filter info
   const getFilterText = () => {
     if (!filterInfo?.startDate || !filterInfo?.endDate) {
       return "Semua Data";
@@ -315,7 +314,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
 
   return (
     <div className="space-y-6">
-      {/* 🗓️ Filter Info Banner */}
+      {/* Filter Info Banner */}
       {filterInfo && (
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-4">
@@ -323,7 +322,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-900">
-                  📊 {getFilterText()}
+                  {getFilterText()}
                 </span>
               </div>
               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
@@ -409,7 +408,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
         </Card>
       </div>
 
-      {/* 🆕 GRAFIK D3.js */}
+      {/* Grafik D3.js */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -444,20 +443,17 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
             <div
               className={`text-lg font-bold ${keuntungan >= 0 ? "text-green-600" : "text-red-600"}`}
             >
-              Total: {keuntungan >= 0 ? "+" : ""}Rp{" "}
-              {keuntungan.toLocaleString()}
+              Total: {formatRupiah(keuntungan)}
             </div>
             <div className="text-xs text-gray-500">
-              Grafik menunjukkan akumulasi keuntungan/kerugian dari waktu ke
-              waktu
+              Grafik menunjukkan akumulasi keuntungan/kerugian dari waktu ke waktu
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* 🔄 DUA TABEL: Pembelian dan Penjualan Summary */}
+      {/* Summary Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Summary Pembelian by Waste Type */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -513,7 +509,6 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
           </CardContent>
         </Card>
 
-        {/* 🆕 Summary Penjualan by Waste Type */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -572,7 +567,6 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
 
       {/* Recent Transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Sales */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -633,7 +627,6 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
           </CardContent>
         </Card>
 
-        {/* Recent Purchases */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -685,7 +678,6 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
           </CardContent>
         </Card>
 
-        {/* 🆕 Recent Withdrawals (Penarikan) */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

@@ -37,10 +37,10 @@ export default function InventarisAlatForm({
   const [form, setForm] = useState({
     nama: "",
     jenis: "",
-    jenisCustom: "", // 🆕 Custom jenis input
+    jenisCustom: "",
     merk: "",
     kondisi: "",
-    hargaBeli: "",
+    hargaBeli: 0, // selalu number
     metodePerolehan: "",
   });
 
@@ -54,7 +54,7 @@ export default function InventarisAlatForm({
     "Peralatan Kantor",
     "Mesin Industri",
     "Peralatan Komputer",
-    "custom", // Option untuk custom input
+    "custom",
   ];
 
   const kondisiOptions = [
@@ -84,7 +84,7 @@ export default function InventarisAlatForm({
         jenisCustom: jenisOptions.includes(data.jenis) ? "" : data.jenis,
         merk: data.merk || "",
         kondisi: data.kondisi,
-        hargaBeli: data.hargaBeli.toString(),
+        hargaBeli: Number(data.hargaBeli), // pastikan number
         metodePerolehan: data.metodePerolehan,
       });
     } catch (error) {
@@ -101,10 +101,10 @@ export default function InventarisAlatForm({
     try {
       const formData = {
         nama: form.nama,
-        jenis: form.jenis === "custom" ? form.jenisCustom : form.jenis, // 🎯 Logic untuk custom jenis
+        jenis: form.jenis === "custom" ? form.jenisCustom : form.jenis,
         merk: form.merk,
         kondisi: form.kondisi,
-        hargaBeli: Number(form.hargaBeli),
+        hargaBeli: form.hargaBeli, // udah number
         metodePerolehan: form.metodePerolehan,
       };
 
@@ -114,14 +114,13 @@ export default function InventarisAlatForm({
         await addInventarisAlat(formData);
       }
 
-      // Reset form
       setForm({
         nama: "",
         jenis: "",
         jenisCustom: "",
         merk: "",
         kondisi: "",
-        hargaBeli: "",
+        hargaBeli: 0,
         metodePerolehan: "",
       });
 
@@ -137,14 +136,13 @@ export default function InventarisAlatForm({
   function handleOpenChange(newOpen: boolean) {
     setOpen(newOpen);
     if (!newOpen && !isEditMode) {
-      // Reset form only if not in edit mode or closing
       setForm({
         nama: "",
         jenis: "",
         jenisCustom: "",
         merk: "",
         kondisi: "",
-        hargaBeli: "",
+        hargaBeli: 0,
         metodePerolehan: "",
       });
     }
@@ -187,7 +185,7 @@ export default function InventarisAlatForm({
               />
             </div>
 
-            {/* Jenis Alat - Select Dropdown */}
+            {/* Jenis Alat */}
             <div className="space-y-2">
               <Select
                 value={form.jenis}
@@ -208,7 +206,6 @@ export default function InventarisAlatForm({
                 </SelectContent>
               </Select>
 
-              {/* Custom Jenis Input - Muncul ketika pilih "custom" */}
               {form.jenis === "custom" && (
                 <Input
                   placeholder="Tulis jenis alat custom *"
@@ -231,7 +228,7 @@ export default function InventarisAlatForm({
               />
             </div>
 
-            {/* Kondisi - Select Dropdown */}
+            {/* Kondisi */}
             <div>
               <Select
                 value={form.kondisi}
@@ -275,14 +272,20 @@ export default function InventarisAlatForm({
             {/* Harga Beli */}
             <div>
               <Input
+                type="text"
                 placeholder="Harga Beli (Rp) *"
-                type="number"
-                min="0"
-                step="1000"
-                value={form.hargaBeli}
-                onChange={(e) =>
-                  setForm({ ...form, hargaBeli: e.target.value })
+                value={
+                  form.hargaBeli > 0
+                    ? `Rp ${form.hargaBeli.toLocaleString("id-ID")}`
+                    : ""
                 }
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace(/\D/g, "");
+                  const numericValue = rawValue
+                    ? Number.parseInt(rawValue, 10)
+                    : 0;
+                  setForm({ ...form, hargaBeli: numericValue });
+                }}
                 required
               />
             </div>

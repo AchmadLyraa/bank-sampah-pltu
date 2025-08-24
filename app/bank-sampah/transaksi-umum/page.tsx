@@ -16,12 +16,9 @@ export default async function LaporanPage() {
   return (
     <LayoutWrapper userType="bank-sampah" userName={session.user.name || ""}>
       <div className="max-w-4xl mx-auto py-6 px-4 space-y-6">
-        <h1 className="text-2xl font-bold">Laporan Bank Sampah</h1>
+        <h1 className="text-2xl font-bold">Transaksi Bank Sampah</h1>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Tambah Transaksi Umum</h2>
-          <GeneralTransactionForm bankSampahId={bankSampahId} />
-        </div>
+        <GeneralTransactionForm bankSampahId={bankSampahId} />
       </div>
     </LayoutWrapper>
   );
