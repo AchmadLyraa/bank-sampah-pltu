@@ -25,21 +25,22 @@ model Controller {
 }
 
 model BankSampah {
-  id         String             @id @default(cuid())
-  nama       String
-  alamat     String
-  telepon    String
-  email      String             @unique
-  password   String
-  longitude  Float? // Added longitude for location
-  latitude   Float? // Added latitude for location
-  isActive   Boolean            @default(true) // Added active status
-  role       Role               @default(BANK_SAMPAH) // Added role field
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
-  inventaris InventarisSampah[]
-  nasabah    Nasabah[]
-  transaksi  Transaksi[]
+  id             String             @id @default(cuid())
+  nama           String
+  alamat         String
+  telepon        String
+  email          String             @unique
+  password       String
+  longitude      Float? // Added longitude for location
+  latitude       Float? // Added latitude for location
+  isActive       Boolean            @default(true) // Added active status
+  role           Role               @default(BANK_SAMPAH) // Added role field
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  inventaris     InventarisSampah[]
+  nasabah        Nasabah[]
+  transaksi      Transaksi[]
+  inventarisAlat InventarisAlat[]
 
   @@map("bank_sampah")
 }
@@ -132,6 +133,23 @@ model DetailTransaksi {
   transaksi          Transaksi        @relation(fields: [transaksiId], references: [id])
 
   @@map("detail_transaksi")
+}
+
+model InventarisAlat {
+  id              String   @id @default(cuid())
+  nama            String
+  jenis           String
+  merk            String?
+  kondisi         String
+  hargaBeli       Float
+  metodePerolehan String
+  bankSampahId    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  bankSampah BankSampah @relation(fields: [bankSampahId], references: [id])
+
+  @@map("inventaris_alat")
 }
 
 enum JenisTransaksi {

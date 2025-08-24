@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, History, BarChart3, ArrowUpDown } from "lucide-react";
+import {
+  Package,
+  History,
+  BarChart3,
+  ArrowUpDown,
+  Archive,
+} from "lucide-react";
 
 export default function QuickActions() {
   return (
@@ -17,7 +23,7 @@ export default function QuickActions() {
               className="w-full h-20 flex flex-col gap-2 bg-transparent"
             >
               <Package className="h-6 w-6" />
-              <span className="text-sm">Inventaris</span>
+              <span className="text-sm">Inventaris Sampah</span>
             </Button>
           </Link>
 
@@ -48,6 +54,15 @@ export default function QuickActions() {
             >
               <ArrowUpDown className="h-6 w-6" />
               <span className="text-sm">Transaksi Umum</span>
+            </Button>
+          </Link>
+          <Link href="/bank-sampah/inventaris-alat">
+            <Button
+              variant="outline"
+              className="w-full h-20 flex flex-col gap-2 bg-transparent"
+            >
+              <Archive className="h-6 w-6" />
+              <span className="text-sm">Inventaris Alat</span>
             </Button>
           </Link>
         </div>
