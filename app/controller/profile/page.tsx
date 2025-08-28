@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import LayoutWrapper from "@/components/layout-wrapper";
 import EditControllerProfileForm from "@/components/edit-controller-profile-form";
+import Image from "next/image";
 
 export default async function ControllerProfilePage() {
   const session = await getServerSession(authOptions);
@@ -28,6 +29,9 @@ export default async function ControllerProfilePage() {
     >
       <div className="max-w-4xl mx-auto py-6 px-4">
         <div className="mb-8">
+          <div className="block md:hidden mb-4">
+            <Image src="/logo-2.png" alt="Logo" width={250} height={250} />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">
             Profil Controller
           </h1>

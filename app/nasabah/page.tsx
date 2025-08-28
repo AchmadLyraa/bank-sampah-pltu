@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { getNasabahDashboardData } from "@/app/actions/nasabah";
 import LayoutWrapper from "@/components/layout-wrapper";
 import NasabahDashboard from "@/components/nasabah-dashboard";
+import Image from "next/image";
 
 export default async function NasabahPage() {
   const session = await getServerSession(authOptions);
@@ -43,6 +44,9 @@ export default async function NasabahPage() {
   return (
     <LayoutWrapper userType="nasabah" userName={session.user.name || ""}>
       <div className="max-w-4xl mx-auto py-6 px-4">
+        <div className="block md:hidden mb-4">
+          <Image src="/logo-2.png" alt="Logo" width={250} height={250} />
+        </div>
         <NasabahDashboard
           nasabah={nasabah}
           transaksi={transaksi}
