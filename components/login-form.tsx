@@ -73,8 +73,8 @@ export default function LoginForm() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
-        <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-          <p className="text-gray-600">Silahkan Masuk ke Akun Anda</p>
+        <CardTitle className="flex items-center justify-center gap-1 text-xl">
+          <p className="text-gray-600">Silahkan Masuk</p>
         </CardTitle>
       </CardHeader>
       <CardContent>

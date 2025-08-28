@@ -36,7 +36,7 @@ const bankSampahNavItems = [
   },
   {
     href: "/bank-sampah/penimbangan",
-    label: "Timbang",
+    label: "Beli Sampah",
     icon: Scale,
     special: true,
   },
@@ -196,7 +196,7 @@ function SidebarNavigation({ userType, userName }: ClientNavigationProps) {
         {/* Header */}
         <div className="flex items-center flex-shrink-0 px-4 py-6 border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8  rounded-lg flex items-center justify-center">
+            {/*<div className="w-8 h-8  rounded-lg flex items-center justify-center self-start">
               <Image
                 src="/logo-1.png"
                 alt="Logo Bank Sampah"
@@ -204,8 +204,15 @@ function SidebarNavigation({ userType, userName }: ClientNavigationProps) {
                 height={40}
                 className="object-contain"
               />
-            </div>
+            </div>*/}
             <div>
+              <Image
+                src="/logo-2.png"
+                alt="Logo Bank Sampah"
+                width={180}
+                height={180}
+                className="object-contain mb-2"
+              />
               <h1 className="text-md font-bold text-gray-900">
                 Aplikasi Bank Sampah
               </h1>

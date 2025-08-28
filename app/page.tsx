@@ -25,9 +25,6 @@ export default async function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Aplikasi Bank Sampah
-          </h1>
           <Image
             src="/logo.png"
             alt="Sistem Manajemen Bank Sampah"
@@ -36,6 +33,9 @@ export default async function HomePage() {
             className="object-contain mx-auto"
             priority
           />
+          <h1 className="text-2xl font-bold text-gray-900 mt-2">
+            Aplikasi Bank Sampah
+          </h1>
         </div>
         <LoginForm />
       </div>
