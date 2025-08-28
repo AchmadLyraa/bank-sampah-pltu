@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import PenimbanganForm from "@/components/penimbangan-form";
 import LayoutWrapper from "@/components/layout-wrapper";
+import Image from "next/image";
 
 export default async function PenimbanganPage() {
   const session = await getServerSession(authOptions);
@@ -42,6 +43,9 @@ export default async function PenimbanganPage() {
     >
       <div className="max-w-4xl mx-auto py-6 px-4">
         <div className="mb-8">
+          <div className="block md:hidden mb-4">
+            <Image src="/logo-2.png" alt="Logo" width={250} height={250} />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">
             Penimbangan Sampah
           </h1>

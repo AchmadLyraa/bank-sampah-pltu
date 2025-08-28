@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Lock } from "lucide-react";
 import EditBankSampahProfileForm from "@/components/edit-bank-sampah-profile-form";
 import ChangeBankSampahPasswordForm from "@/components/change-bank-sampah-password-form";
+import Image from "next/image";
 
 export default async function BankSampahProfilePage() {
   const session = await getServerSession(authOptions);
@@ -39,6 +40,9 @@ export default async function BankSampahProfilePage() {
     >
       <div className="max-w-4xl mx-auto py-6 px-4">
         <div className="mb-8">
+          <div className="block md:hidden mb-4">
+            <Image src="/logo-2.png" alt="Logo" width={250} height={250} />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">
             Profil Bank Sampah
           </h1>

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import InventarisTable from "@/components/inventaris-table";
 import TambahInventarisModal from "@/components/tambah-inventaris-modal";
 import LayoutWrapper from "@/components/layout-wrapper";
+import Image from "next/image";
 
 export default async function InventarisPage() {
   const session = await getServerSession(authOptions);
@@ -26,6 +27,9 @@ export default async function InventarisPage() {
       <div className="max-w-6xl mx-auto py-6 px-4">
         <div className="mb-8 flex sm:items-center items-start justify-between sm:flex-row flex-col">
           <div className="mb-4 sm:mb-0">
+            <div className="block md:hidden mb-4">
+              <Image src="/logo-2.png" alt="Logo" width={250} height={250} />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900">
               Inventaris Sampah
             </h1>

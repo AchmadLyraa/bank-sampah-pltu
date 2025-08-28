@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { getLaporanPendapatan } from "@/app/actions/laporan";
 import LayoutWrapper from "@/components/layout-wrapper";
 import LaporanClient from "@/components/laporan-client"; // 🆕 Import client component
+import Image from "next/image";
 
 export default async function LaporanPage() {
   const session = await getServerSession(authOptions);
@@ -22,7 +23,10 @@ export default async function LaporanPage() {
     >
       <div className="max-w-7xl mx-auto py-6 px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <div className="block md:hidden mb-4">
+            <Image src="/logo-2.png" alt="Logo" width={250} height={250} />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             📊 Laporan Pendapatan
           </h1>
           <p className="text-gray-600">

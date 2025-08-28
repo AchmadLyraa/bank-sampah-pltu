@@ -5,6 +5,7 @@ import { getNasabahList } from "@/app/actions/nasabah-management";
 import LayoutWrapper from "@/components/layout-wrapper";
 import NasabahListWithSearch from "@/components/nasabah-list-with-search";
 import TambahNasabahModal from "@/components/tambah-nasabah-modal";
+import Image from "next/image";
 
 export default async function NasabahPage() {
   const session = await getServerSession(authOptions);
@@ -22,7 +23,12 @@ export default async function NasabahPage() {
       <div className="max-w-6xl mx-auto py-6 px-4">
         <div className="mb-8 flex items-center justify-between flex-wrap">
           <div className="flex-[100%] sm:flex-1 sm:mb-0 mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">Kelola Nasabah</h1>
+            <div className="block md:hidden mb-4">
+              <Image src="/logo-2.png" alt="Logo" width={250} height={250} />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              Kelola Nasabah
+            </h1>
             <p className="text-gray-600">
               Daftar nasabah dan tambah nasabah baru
             </p>
