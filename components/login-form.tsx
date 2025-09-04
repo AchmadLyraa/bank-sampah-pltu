@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,12 +56,26 @@ export default function LoginForm() {
         setLoading(false);
       } else if (result?.ok) {
         setIsRedirecting(true);
+
+        // INI KUNCINYA: Force refresh session dengan getSession() instead of update()
+        // getSession() fetch fresh dari server, bukan dari context
+        const freshSession = await getSession();
+
         const intendedUrl = sessionStorage.getItem("intendedUrl");
         if (intendedUrl) {
           sessionStorage.removeItem("intendedUrl");
           router.push(intendedUrl);
         } else {
-          router.push("/");
+          const role = freshSession?.user?.userType;
+          if (role === "nasabah") {
+            router.push("/nasabah");
+          } else if (role === "bank-sampah") {
+            router.push("/bank-sampah");
+          } else if (role === "controller") {
+            router.push("/controller");
+          } else {
+            router.push("/");
+          }
         }
       }
     } catch (err) {
