@@ -38,6 +38,8 @@ npm install
 cp .env.example .env
 
 # Push database schema
+### use session pooler
+npx prisma generate
 npm run db:push
 
 # Seed database dengan data demo
