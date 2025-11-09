@@ -50,7 +50,8 @@ export const authOptions: NextAuthOptions = {
     maxAge: 24 * 60 * 60, // 24 hours
   },
   jwt: {
-    maxAge: 24 * 60 * 60, // 24 hours
+    // maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 0,
   },
   callbacks: {
     async jwt({
@@ -76,8 +77,8 @@ export const authOptions: NextAuthOptions = {
 
       // Handle session update
       if (trigger === "update" && session?.user) {
-            token.name = session.user.name;
-            token.activeBankSampahId = session.user.activeBankSampahId;
+        token.name = session.user.name;
+        token.activeBankSampahId = session.user.activeBankSampahId;
       }
 
       return token;

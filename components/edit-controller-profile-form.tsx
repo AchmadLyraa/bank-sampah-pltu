@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { updateControllerProfile } from "@/app/actions/controller";
 import { logoutAction } from "@/app/actions/auth";
 import { User, Loader2, LogOut } from "lucide-react";
+import LogoutButton from "./LogoutButton";
 
 interface EditControllerProfileFormProps {
   controller: {
@@ -73,7 +74,7 @@ export default function EditControllerProfileForm({
           <User className="h-5 w-5" />
           Edit Profil
         </CardTitle>
-        <form action={logoutAction}>
+        {/*<form action={logoutAction} method="post">
           <Button
             type="submit"
             variant="ghost"
@@ -82,7 +83,8 @@ export default function EditControllerProfileForm({
             <LogOut className="h-5 w-5 mr-2" />
             Logout
           </Button>
-        </form>
+        </form>*/}
+        <LogoutButton />
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">

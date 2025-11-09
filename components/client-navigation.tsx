@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/app/actions/auth";
 import Image from "next/image";
+import LogoutButton from "./LogoutButton";
 
 interface ClientNavigationProps {
   userType: "bank-sampah" | "nasabah" | "controller";
@@ -139,16 +140,17 @@ function BottomNavigation({ userType, userName }: ClientNavigationProps) {
 
         {/* Conditional last button: Logout for nasabah, Profile for bank-sampah */}
         {userType === "nasabah" ? (
-          <form action={logoutAction} className="flex-1">
-            <Button
-              type="submit"
-              variant="ghost"
-              className="flex flex-col items-center justify-center py-2 px-3 w-full h-auto text-gray-600 hover:text-red-600 hover:bg-red-50"
-            >
-              <LogOut className="h-5 w-5 mb-1 text-red-600" />
-              <span className="text-xs font-medium text-red-600">Logout</span>
-            </Button>
-          </form>
+          // <form action={logoutAction} className="flex-1">
+          //   <Button
+          //     type="submit"
+          //     variant="ghost"
+          //     className="flex flex-col items-center justify-center py-2 px-3 w-full h-auto text-gray-600 hover:text-red-600 hover:bg-red-50"
+          //   >
+          //     <LogOut className="h-5 w-5 mb-1 text-red-600" />
+          //     <span className="text-xs font-medium text-red-600">Logout</span>
+          //   </Button>
+          // </form>
+          <LogoutButton />
         ) : userType === "bank-sampah" ? (
           <Link
             href="/bank-sampah/profile"
@@ -248,16 +250,17 @@ function SidebarNavigation({ userType, userName }: ClientNavigationProps) {
         {/* Conditional last button: Logout for nasabah, Profile for bank-sampah */}
         <div className="flex-shrink-0 px-4 py-4 border-t border-gray-200">
           {userType === "nasabah" ? (
-            <form action={logoutAction}>
-              <Button
-                type="submit"
-                variant="ghost"
-                className="w-full justify-start text-gray-700 hover:text-red-600 hover:bg-red-50"
-              >
-                <LogOut className="mr-3 h-5 w-5" />
-                Logout
-              </Button>
-            </form>
+            // <form action={logoutAction}>
+            //   <Button
+            //     type="submit"
+            //     variant="ghost"
+            //     className="w-full justify-start text-gray-700 hover:text-red-600 hover:bg-red-50"
+            //   >
+            //     <LogOut className="mr-3 h-5 w-5" />
+            //     Logout
+            //   </Button>
+            // </form>
+            <LogoutButton />
           ) : userType === "bank-sampah" ? (
             <Link
               href="/bank-sampah/profile"

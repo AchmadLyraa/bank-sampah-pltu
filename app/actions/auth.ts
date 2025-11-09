@@ -11,21 +11,40 @@ export async function logoutAction() {
   try {
     const cookieStore = cookies();
 
-    // Clear NextAuth session cookies
-    cookieStore.delete("next-auth.session-token");
-    cookieStore.delete("__Secure-next-auth.session-token");
-    cookieStore.delete("next-auth.csrf-token");
-    cookieStore.delete("__Host-next-auth.csrf-token");
+    // Daftar lengkap cookie NextAuth / mungkin muncul di browser mu
+    const cookieNames = [
+      "__Host-next-auth.csrf-token",
+      "__Secure-next-auth.csrf-token",
+      "__Secure-next-auth.callback-url",
+      "__Secure-next-auth.session-token",
+      "next-auth.csrf-token",
+      "next-auth.session-token",
+      // supabase / custom cookie - tambahin bila ada
+      "sb-access-token",
+      "sb-refresh-token",
+      "session",
+      "token",
+    ];
 
-    // Clear any custom session cookies if they exist
-    cookieStore.delete("session");
+    // Hapus setiap cookie dengan path '/'
+    // cookies().delete biasanya mengirim Set-Cookie untuk menghapus
+    for (const name of cookieNames) {
+      try {
+        cookieStore.delete(name, { path: "/" });
+      } catch (e) {
+        // ignore error per cookie supaya logout tetap lanjut
+        console.warn("Failed deleting cookie", name, e);
+      }
+    }
 
+    // Revalidate homepage cache supaya halaman publik uptodate
     revalidatePath("/");
-  } catch (error) {
-    console.error("Logout error:", error);
+  } catch (err) {
+    console.error("Logout action error:", err);
   }
 
-  redirect("/");
+  // Redirect ke login
+  return redirect("/");
 }
 
 export async function updateSelectedBankSampahAction(bankSampahId: string) {

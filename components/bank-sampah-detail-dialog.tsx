@@ -224,7 +224,7 @@ export function BankSampahDetailDialog({
                     <p className="text-lg font-bold">
                       {formatCurrency(data.statistics.totalSaldo)}
                     </p>
-                    <p className="text-sm text-gray-600">Total Saldo</p>
+                    <p className="text-sm text-gray-600">Total Saldo Nasabah</p>
                   </CardContent>
                 </Card>
 

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { updateBankSampahProfileAction } from "@/app/actions/bank-sampah";
 import { logoutAction } from "@/app/actions/auth";
 import { User, Loader2, MapPin, Phone, LogOut, Navigation } from "lucide-react";
+import LogoutButton from "./LogoutButton";
 
 interface EditBankSampahProfileFormProps {
   bankSampah: {
@@ -66,7 +67,7 @@ export default function EditBankSampahProfileForm({
           <User className="h-5 w-5" />
           Edit Profil
         </CardTitle>
-        <form action={logoutAction}>
+        {/*<form action={logoutAction}>
           <Button
             type="submit"
             variant="ghost"
@@ -75,7 +76,8 @@ export default function EditBankSampahProfileForm({
             <LogOut className="h-5 w-5 mr-2" />
             Logout
           </Button>
-        </form>
+        </form>*/}
+        <LogoutButton />
       </CardHeader>
       <CardContent>
         <form action={handleSubmit} className="space-y-4">

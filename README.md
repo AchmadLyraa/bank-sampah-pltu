@@ -39,6 +39,7 @@ cp .env.example .env
 
 # Push database schema
 ### use session pooler
+### kasih method session pooler di supabase
 npx prisma generate
 npm run db:push
 
