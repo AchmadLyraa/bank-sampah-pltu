@@ -96,11 +96,7 @@ export default function DashboardStats({ data }: DashboardStatsProps) {
         <CardContent>
           <div className="text-2xl font-bold">
             {totalStok.toFixed(1)}
-            {data.inventaris.length > 0
-              ? data.inventaris[0].satuan === "KG"
-                ? " kg"
-                : " pcs"
-              : " kg"}
+            {" kg/pcs"}
           </div>{" "}
           <p className="text-xs text-muted-foreground">Stok sampah tersedia</p>
         </CardContent>

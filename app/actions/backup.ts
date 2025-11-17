@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 type RingkasanItem = {
   jenisSampah: string;
+  satuan: string;
   totalBerat: number;
   totalNilai: number;
   jumlahTransaksi: number;
@@ -38,10 +39,11 @@ export async function getBackupData(bankSampahId: string) {
         prisma.inventarisSampah.findMany({
           where: { bankSampahId },
           select: {
-            id: true, // 🆕 di-include utk pemetaan nama
+            id: true,
             jenisSampah: true,
-            hargaPerKg: true,
-            stokKg: true,
+            satuan: true,
+            hargaPerUnit: true,
+            stokUnit: true,
             isActive: true,
             createdAt: true,
           },
@@ -60,9 +62,9 @@ export async function getBackupData(bankSampahId: string) {
     // 📈 Summary dasar (TIDAK DIUBAH)
     const totalNasabah = nasabahList.length;
     const totalSaldo = nasabahList.reduce((sum, n) => sum + n.saldo, 0);
-    const totalStok = inventarisList.reduce((sum, i) => sum + i.stokKg, 0);
+    const totalStok = inventarisList.reduce((sum, i) => sum + i.stokUnit, 0);
     const totalNilaiInventaris = inventarisList.reduce(
-      (sum, i) => sum + i.stokKg * i.hargaPerKg,
+      (sum, i) => sum + i.stokUnit * i.hargaPerUnit,
       0,
     );
 
@@ -83,11 +85,25 @@ export async function getBackupData(bankSampahId: string) {
       await Promise.all([
         prisma.detailTransaksi.findMany({
           where: { transaksi: { bankSampahId, jenis: "PENJUALAN_SAMPAH" } },
-          select: { inventarisSampahId: true, beratKg: true, subtotal: true },
+          select: {
+            inventarisSampahId: true,
+            jumlahUnit: true,
+            subtotal: true,
+            inventarisSampah: {
+              select: { satuan: true },
+            },
+          },
         }),
         prisma.detailTransaksi.findMany({
           where: { transaksi: { bankSampahId, jenis: "PEMASUKAN" } },
-          select: { inventarisSampahId: true, beratKg: true, subtotal: true },
+          select: {
+            inventarisSampahId: true,
+            jumlahUnit: true,
+            subtotal: true,
+            inventarisSampah: {
+              select: { satuan: true },
+            },
+          },
         }),
         // 🆕 Fallback total transaksi jika detail kosong
         prisma.transaksi.groupBy({
@@ -108,24 +124,36 @@ export async function getBackupData(bankSampahId: string) {
     function aggregate(
       details: {
         inventarisSampahId: string;
-        beratKg: number;
+        jumlahUnit: number;
         subtotal: number;
+        inventarisSampah: { satuan: string } | null;
       }[],
     ): RingkasanItem[] {
       const acc = new Map<
         string,
-        { totalBerat: number; totalNilai: number; count: number }
+        {
+          totalBerat: number;
+          totalNilai: number;
+          count: number;
+          satuan: string;
+        }
       >();
       for (const row of details) {
         const key = row.inventarisSampahId;
-        const prev = acc.get(key) || { totalBerat: 0, totalNilai: 0, count: 0 };
-        prev.totalBerat += row.beratKg || 0;
+        const prev = acc.get(key) || {
+          totalBerat: 0,
+          totalNilai: 0,
+          count: 0,
+          satuan: row.inventarisSampah?.satuan || "KG",
+        };
+        prev.totalBerat += row.jumlahUnit || 0;
         prev.totalNilai += row.subtotal || 0;
         prev.count += 1;
         acc.set(key, prev);
       }
       return Array.from(acc.entries()).map(([id, v]) => ({
         jenisSampah: invMap.get(id) || "Unknown",
+        satuan: v.satuan,
         totalBerat: v.totalBerat,
         totalNilai: v.totalNilai,
         jumlahTransaksi: v.count,
@@ -144,6 +172,7 @@ export async function getBackupData(bankSampahId: string) {
         penjualanSummary = [
           {
             jenisSampah: "Semua Jenis",
+            satuan: "KG",
             totalBerat: 0,
             totalNilai: f._sum?.totalNilai || 0,
             jumlahTransaksi: f._count?._all || 0,
@@ -159,6 +188,7 @@ export async function getBackupData(bankSampahId: string) {
         pembelianSummary = [
           {
             jenisSampah: "Semua Jenis",
+            satuan: "KG",
             totalBerat: 0,
             totalNilai: f._sum?.totalNilai || 0,
             jumlahTransaksi: f._count?._all || 0,

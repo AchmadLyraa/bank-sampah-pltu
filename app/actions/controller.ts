@@ -957,7 +957,7 @@ export async function updateInventarisSampah(formData: FormData) {
     const harga = Number.parseFloat(hargaPerUnit);
     const stok = Number.parseFloat(stokUnit);
 
-    if (isNaN(harga) || isNaN(stok) || harga < 0 || stok < 0) {
+    if (isNaN(harga) || isNaN(stok) || harga <= 0 || stok <= 0) {
       return {
         success: false,
         error: "Harga dan stok harus berupa angka positif",

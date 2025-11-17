@@ -106,7 +106,7 @@ export function AddInventarisDialog({
               type="number"
               step="0.01"
               min="0"
-              placeholder="5000"
+              placeholder="Contoh: 5000"
               required
               disabled={loading}
             />

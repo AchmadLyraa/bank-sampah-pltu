@@ -66,7 +66,7 @@ export default function TambahInventarisModal({
       return;
     }
 
-    if (!formData.hargaPerUnit || Number(formData.hargaPerUnit) <= 0) {
+    if (formData.hargaPerUnit === "" || Number(formData.hargaPerUnit) < 0) {
       setError("Harga per unit harus lebih dari 0");
       return;
     }

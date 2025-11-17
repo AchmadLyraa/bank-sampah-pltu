@@ -82,13 +82,13 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
       color: primaryColor,
     },
     {
-      label: "Total Saldo",
+      label: "Total Saldo Nasabah",
       value: `Rp ${summary.totalSaldo.toLocaleString("id-ID")}`,
       color: greenColor,
     },
     {
       label: "Total Stok",
-      value: `${summary.totalStok.toFixed(1)} kg`,
+      value: `${summary.totalStok.toFixed(1)} unit`,
       color: primaryColor,
     },
     {
@@ -221,9 +221,9 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     (index + 1).toString(),
     item.jenisSampah,
     item.isActive ? "Aktif" : "Non-aktif",
-    `Rp ${item.hargaPerKg.toLocaleString("id-ID")}`,
-    `${item.stokKg.toFixed(1)} kg`,
-    `Rp ${(item.stokKg * item.hargaPerKg).toLocaleString("id-ID")}`,
+    `Rp ${item.hargaPerUnit.toLocaleString("id-ID")}`,
+    `${item.stokUnit.toFixed(1)} ${item.satuan === "KG" ? "kg" : "pcs"}`,
+    `Rp ${(item.stokUnit * item.hargaPerUnit).toLocaleString("id-ID")}`,
     new Date(item.createdAt).toLocaleDateString("id-ID"),
   ]);
 
@@ -245,7 +245,7 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
         "No",
         "Jenis Sampah",
         "Status",
-        "Harga/kg",
+        "Harga/Unit",
         "Stok",
         "Total Nilai",
         "Tgl Buat",
@@ -309,10 +309,12 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
   const penjualanRows = penjualanSummary.map((r: any, idx: number) => [
     (idx + 1).toString(),
     r.jenisSampah,
-    `${(r.totalBerat ?? 0).toFixed(1)} kg`,
+    `${(r.totalBerat ?? 0).toFixed(1)} ${r.satuan === "KG" ? "kg" : "pcs"}`,
     `Rp ${(r.totalNilai ?? 0).toLocaleString("id-ID")}`,
     (r.jumlahTransaksi ?? 0).toString(),
-    r.totalBerat > 0 ? `Rp ${(r.rataHarga ?? 0).toLocaleString("id-ID")}` : "-",
+    r.totalBerat > 0
+      ? `Rp ${(r.rataHarga ?? 0).toLocaleString("id-ID")}/${r.satuan === "KG" ? "kg" : "pcs"}`
+      : "-",
   ]);
 
   // 🆕 Total bawah tabel (pakai reduce dari summary agar benar)
@@ -337,10 +339,10 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
       [
         "No",
         "Jenis Sampah",
-        "Total Berat",
+        "Total Unit",
         "Total Nilai",
         "Jumlah Transaksi",
-        "Rata-rata Harga/kg",
+        "Rata-rata Harga/Unit",
       ],
     ],
     body: penjualanRows,
@@ -387,10 +389,12 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
   const pembelianRows = pembelianSummary.map((r: any, idx: number) => [
     (idx + 1).toString(),
     r.jenisSampah,
-    `${(r.totalBerat ?? 0).toFixed(1)} kg`,
+    `${(r.totalBerat ?? 0).toFixed(1)} ${r.satuan === "KG" ? "kg" : "pcs"}`,
     `Rp ${(r.totalNilai ?? 0).toLocaleString("id-ID")}`,
     (r.jumlahTransaksi ?? 0).toString(),
-    r.totalBerat > 0 ? `Rp ${(r.rataHarga ?? 0).toLocaleString("id-ID")}` : "-",
+    r.totalBerat > 0
+      ? `Rp ${(r.rataHarga ?? 0).toLocaleString("id-ID")}/${r.satuan === "KG" ? "kg" : "pcs"}`
+      : "-",
   ]);
 
   const totalNilaiPembelian =
@@ -414,10 +418,10 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
       [
         "No",
         "Jenis Sampah",
-        "Total Berat",
+        "Total Unit",
         "Total Nilai",
         "Jumlah Transaksi",
-        "Rata-rata Harga/kg",
+        "Rata-rata Harga/Unit",
       ],
     ],
     body: pembelianRows,

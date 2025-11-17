@@ -168,30 +168,6 @@ export default function LoginForm() {
                 : "Masuk"}
           </Button>
         </form>
-
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="font-semibold text-blue-900 mb-2">🔑 Akun Demo:</p>
-          <div className="space-y-2 text-sm">
-            <div className="bg-white p-2 rounded border">
-              <p className="font-medium text-blue-800">👨‍💼 Admin Bank Sampah:</p>
-              <p className="text-blue-700">📧 admin@banksampah.com</p>
-              <p className="text-blue-700">🔒 password123</p>
-            </div>
-            <div className="bg-white p-2 rounded border">
-              <p className="font-medium text-green-800">👤 Nasabah:</p>
-              <p className="text-green-700">📧 budi@email.com</p>
-              <p className="text-green-700">🔒 password123</p>
-            </div>
-            <div className="bg-white p-2 rounded border">
-              <p className="font-medium text-purple-800">⚙️ Controller:</p>
-              <p className="text-purple-700">📧 admin@controller.com</p>
-              <p className="text-purple-700">🔒 password123</p>
-            </div>
-          </div>
-          <p className="text-xs text-blue-600 mt-2">
-            💡 Sistem akan otomatis mendeteksi jenis akun Anda
-          </p>
-        </div>
       </CardContent>
     </Card>
   );
