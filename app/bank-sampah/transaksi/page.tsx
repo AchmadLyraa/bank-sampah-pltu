@@ -38,7 +38,12 @@ export default async function TransaksiPage({
       nasabah: { select: { person: { select: { nama: true } } } },
       detailTransaksi: {
         include: {
-          inventarisSampah: { select: { jenisSampah: true } },
+          inventarisSampah: {
+            select: {
+              jenisSampah: true,
+              satuan: true,
+            },
+          },
         },
       },
     },

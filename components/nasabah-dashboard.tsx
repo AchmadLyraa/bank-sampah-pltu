@@ -169,7 +169,8 @@ export default function NasabahDashboard({
                             {t.detailTransaksi.map((detail, idx) => (
                               <span key={detail.id}>
                                 {detail.inventarisSampah?.jenisSampah} (
-                                {detail.beratKg}kg)
+                                {detail.jumlahUnit}
+                                {detail.inventarisSampah?.satuan || "KG"})
                                 {idx < t.detailTransaksi!.length - 1 && ", "}
                               </span>
                             ))}
@@ -232,7 +233,8 @@ export default function NasabahDashboard({
                             {item.jenisSampah}
                           </td>
                           <td className="py-3 px-4">
-                            Rp {item.hargaPerKg.toLocaleString()}
+                            Rp {item.hargaPerUnit.toLocaleString()} /{" "}
+                            {item.satuan || "KG"}
                           </td>
                           <td className="py-3 px-4">
                             <Badge

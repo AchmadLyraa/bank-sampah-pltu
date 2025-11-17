@@ -1,127 +1,185 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { createInventarisAction } from "@/app/actions/inventaris-management"
-import { PackagePlus, Loader2 } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Plus } from "lucide-react";
+import { createInventarisAction } from "@/app/actions/inventaris-management";
+import type { SatuanUkuran } from "@/types";
 
 interface TambahInventarisModalProps {
-  bankSampahId: string
+  bankSampahId: string;
 }
 
-export default function TambahInventarisModal({ bankSampahId }: TambahInventarisModalProps) {
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+export default function TambahInventarisModal({
+  bankSampahId,
+}: TambahInventarisModalProps) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    jenisSampah: "",
+    satuan: "KG" as SatuanUkuran,
+    hargaPerUnit: "",
+  });
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true)
-    setMessage(null)
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setError(null);
+  };
 
-    // Add bankSampahId to formData
-    formData.append("bankSampahId", bankSampahId)
+  const handleSatuanChange = (value: SatuanUkuran) => {
+    setFormData((prev) => ({
+      ...prev,
+      satuan: value,
+    }));
+    setError(null);
+  };
 
-    try {
-      const result = await createInventarisAction(formData)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
 
-      if (result.error) {
-        setMessage({ type: "error", text: result.error })
-      } else {
-        setMessage({ type: "success", text: "Jenis sampah berhasil ditambahkan!" })
-        // Reset form
-        const form = document.getElementById("modal-tambah-inventaris-form") as HTMLFormElement
-        form?.reset()
-        // Close modal after success
-        setTimeout(() => {
-          setOpen(false)
-          setMessage(null)
-        }, 1500)
-      }
-    } catch (error) {
-      setMessage({ type: "error", text: "Terjadi kesalahan saat menambahkan jenis sampah" })
-    } finally {
-      setLoading(false)
+    if (!formData.jenisSampah.trim()) {
+      setError("Nama jenis sampah harus diisi");
+      return;
     }
-  }
+
+    if (!formData.hargaPerUnit || Number(formData.hargaPerUnit) <= 0) {
+      setError("Harga per unit harus lebih dari 0");
+      return;
+    }
+
+    setLoading(true);
+
+    const data = new FormData();
+    data.append("jenisSampah", formData.jenisSampah.trim());
+    data.append("satuan", formData.satuan);
+    data.append("hargaPerUnit", formData.hargaPerUnit);
+    data.append("bankSampahId", bankSampahId);
+
+    const result = await createInventarisAction(data);
+
+    if (result.error) {
+      setError(result.error);
+      setLoading(false);
+    } else {
+      setOpen(false);
+      setFormData({
+        jenisSampah: "",
+        satuan: "KG",
+        hargaPerUnit: "",
+      });
+      setLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="flex items-center gap-2">
-          <PackagePlus className="h-4 w-4" />
-          Tambah Jenis Sampah
+          <Plus className="h-4 w-4" />
+          Tambah Inventaris
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <PackagePlus className="h-5 w-5" />
-            Tambah Jenis Sampah Baru
-          </DialogTitle>
+          <DialogTitle>Tambah Jenis Sampah Baru</DialogTitle>
         </DialogHeader>
 
-        <form id="modal-tambah-inventaris-form" action={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="modal-jenis-sampah">Jenis Sampah</Label>
-            <Input
-              id="modal-jenis-sampah"
-              name="jenisSampah"
-              placeholder="Contoh: Plastik Botol, Kertas Koran, dll"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="modal-harga-per-kg">Harga per Kg (Rp)</Label>
-            <Input
-              id="modal-harga-per-kg"
-              name="hargaPerKg"
-              type="number"
-              min="1"
-              step="1"
-              placeholder="Contoh: 2000"
-              required
-            />
-          </div>
-
-          <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-            <p className="font-medium text-blue-900">Catatan:</p>
-            <p className="text-blue-700">• Stok awal akan dimulai dari 0 kg</p>
-            <p className="text-blue-700">• Harga dapat diubah kapan saja</p>
-          </div>
-
-          {message && (
-            <div
-              className={`p-3 rounded-lg text-sm ${
-                message.type === "success"
-                  ? "bg-green-50 text-green-800 border border-green-200"
-                  : "bg-red-50 text-red-800 border border-red-200"
-              }`}
-            >
-              {message.text}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+              {error}
             </div>
           )}
+
+          <div className="space-y-2">
+            <Label htmlFor="jenisSampah">Jenis Sampah</Label>
+            <Input
+              id="jenisSampah"
+              name="jenisSampah"
+              placeholder="misal: Plastik, Kertas, dll"
+              value={formData.jenisSampah}
+              onChange={handleInputChange}
+              disabled={loading}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="satuan">Satuan Ukuran</Label>
+            <Select value={formData.satuan} onValueChange={handleSatuanChange}>
+              <SelectTrigger id="satuan">
+                <SelectValue placeholder="Pilih satuan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="KG">🪣 Kilogram (kg)</SelectItem>
+                <SelectItem value="PCS">📦 Pieces (pcs)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="hargaPerUnit">
+              Harga per {formData.satuan === "KG" ? "kg" : "pcs"}
+            </Label>
+            <div className="flex items-center">
+              <span className="text-gray-500 mr-2">Rp</span>
+              <Input
+                id="hargaPerUnit"
+                name="hargaPerUnit"
+                type="number"
+                min="0"
+                step="100"
+                placeholder="0"
+                value={formData.hargaPerUnit}
+                onChange={handleInputChange}
+                disabled={loading}
+                required
+                className="flex-1"
+              />
+            </div>
+          </div>
 
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="flex-1"
               disabled={loading}
+              className="flex-1"
             >
               Batal
             </Button>
-            <Button type="submit" className="flex-1" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Tambah Jenis Sampah
+            <Button type="submit" disabled={loading} className="flex-1">
+              {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Tambah
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

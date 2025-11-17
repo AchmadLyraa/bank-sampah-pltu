@@ -38,7 +38,7 @@ export async function getLaporanPendapatan(
         nasabah: { select: { person: { select: { nama: true } } } },
         detailTransaksi: {
           include: {
-            inventarisSampah: { select: { jenisSampah: true } },
+            inventarisSampah: { select: { jenisSampah: true, satuan: true } },
           },
         },
       },
@@ -84,8 +84,7 @@ export async function getLaporanPendapatan(
   // 🆕 PARALLEL QUERIES untuk summary pembelian DAN penjualan
   const [summaryByTypePembelian, summaryByTypePenjualan] = await Promise.all([
     // Summary PEMBELIAN by waste type
-    prisma.detailTransaksi.groupBy({
-      by: ["inventarisSampahId"],
+    prisma.detailTransaksi.findMany({
       where: {
         transaksi: {
           bankSampahId,
@@ -93,17 +92,18 @@ export async function getLaporanPendapatan(
           ...dateFilter,
         },
       },
-      _sum: {
-        beratKg: true,
-        subtotal: true,
-      },
-      _count: {
-        id: true,
+      include: {
+        inventarisSampah: {
+          select: {
+            id: true,
+            jenisSampah: true,
+            satuan: true,
+          },
+        },
       },
     }),
     // 🆕 Summary PENJUALAN by waste type
-    prisma.detailTransaksi.groupBy({
-      by: ["inventarisSampahId"],
+    prisma.detailTransaksi.findMany({
       where: {
         transaksi: {
           bankSampahId,
@@ -111,59 +111,58 @@ export async function getLaporanPendapatan(
           ...dateFilter,
         },
       },
-      _sum: {
-        beratKg: true,
-        subtotal: true,
-      },
-      _count: {
-        id: true,
+      include: {
+        inventarisSampah: {
+          select: {
+            id: true,
+            jenisSampah: true,
+            satuan: true,
+          },
+        },
       },
     }),
   ]);
 
   // Get waste type names untuk kedua summary
-  const allInventarisIds = [
-    ...summaryByTypePembelian.map((s) => s.inventarisSampahId),
-    ...summaryByTypePenjualan.map((s) => s.inventarisSampahId),
-  ];
-
-  const wasteTypes = await prisma.inventarisSampah.findMany({
-    where: {
-      id: {
-        in: [...new Set(allInventarisIds)], // Remove duplicates
-      },
-    },
-    select: {
-      id: true,
-      jenisSampah: true,
-    },
+  // 🔄 Group by inventaris untuk pembelian
+  const summaryByTypeMap = new Map<string, any>();
+  summaryByTypePembelian.forEach((detail) => {
+    const key = detail.inventarisSampahId;
+    if (!summaryByTypeMap.has(key)) {
+      summaryByTypeMap.set(key, {
+        jenisSampah: detail.inventarisSampah?.jenisSampah || "Unknown",
+        satuan: detail.inventarisSampah?.satuan || "kg",
+        totalBerat: 0,
+        totalNilai: 0,
+        jumlahTransaksi: 0,
+      });
+    }
+    const item = summaryByTypeMap.get(key)!;
+    item.totalBerat += detail.jumlahUnit;
+    item.totalNilai += detail.subtotal;
+    item.jumlahTransaksi += 1;
   });
+  const summaryByType = Array.from(summaryByTypeMap.values());
 
-  // 🔄 Format summary PEMBELIAN
-  const summaryByType = summaryByTypePembelian.map((summary) => {
-    const wasteType = wasteTypes.find(
-      (w) => w.id === summary.inventarisSampahId,
-    );
-    return {
-      jenisSampah: wasteType?.jenisSampah || "Unknown",
-      totalBerat: summary._sum.beratKg || 0,
-      totalNilai: summary._sum.subtotal || 0,
-      jumlahTransaksi: summary._count.id,
-    };
+  // 🆕 Group by inventaris untuk penjualan
+  const penjualanSummaryMap = new Map<string, any>();
+  summaryByTypePenjualan.forEach((detail) => {
+    const key = detail.inventarisSampahId;
+    if (!penjualanSummaryMap.has(key)) {
+      penjualanSummaryMap.set(key, {
+        jenisSampah: detail.inventarisSampah?.jenisSampah || "Unknown",
+        satuan: detail.inventarisSampah?.satuan || "kg",
+        totalBerat: 0,
+        totalNilai: 0,
+        jumlahTransaksi: 0,
+      });
+    }
+    const item = penjualanSummaryMap.get(key)!;
+    item.totalBerat += detail.jumlahUnit;
+    item.totalNilai += detail.subtotal;
+    item.jumlahTransaksi += 1;
   });
-
-  // 🆕 Format summary PENJUALAN
-  const penjualanSummaryByType = summaryByTypePenjualan.map((summary) => {
-    const wasteType = wasteTypes.find(
-      (w) => w.id === summary.inventarisSampahId,
-    );
-    return {
-      jenisSampah: wasteType?.jenisSampah || "Unknown",
-      totalBerat: summary._sum.beratKg || 0,
-      totalNilai: summary._sum.subtotal || 0,
-      jumlahTransaksi: summary._count.id,
-    };
-  });
+  const penjualanSummaryByType = Array.from(penjualanSummaryMap.values());
 
   return {
     totalPemasukan,

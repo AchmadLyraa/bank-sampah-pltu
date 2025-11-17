@@ -31,12 +31,15 @@ export async function getNasabahDashboardData(
   }
 
   // 2. Get transactions for this specific nasabah relationship
+  // di getNasabahDashboardData — transaksi query
   const transaksi = await prisma.transaksi.findMany({
-    where: { nasabahId: nasabahRelationship.id }, // Filter by the Nasabah relationship ID
+    where: { nasabahId: nasabahRelationship.id },
     include: {
       detailTransaksi: {
         include: {
-          inventarisSampah: { select: { jenisSampah: true } },
+          inventarisSampah: {
+            select: { jenisSampah: true, satuan: true, hargaPerUnit: true },
+          },
         },
       },
     },

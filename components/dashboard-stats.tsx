@@ -23,7 +23,10 @@ interface DashboardStatsProps {
 
 export default function DashboardStats({ data }: DashboardStatsProps) {
   const [open, setOpen] = useState(false);
-  const totalStok = data.inventaris.reduce((sum, item) => sum + item.stokKg, 0);
+  const totalStok = data.inventaris.reduce(
+    (sum, item) => sum + item.stokUnit,
+    0,
+  );
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -91,7 +94,14 @@ export default function DashboardStats({ data }: DashboardStatsProps) {
           <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalStok.toFixed(1)} kg</div>
+          <div className="text-2xl font-bold">
+            {totalStok.toFixed(1)}
+            {data.inventaris.length > 0
+              ? data.inventaris[0].satuan === "KG"
+                ? " kg"
+                : " pcs"
+              : " kg"}
+          </div>{" "}
           <p className="text-xs text-muted-foreground">Stok sampah tersedia</p>
         </CardContent>
       </Card>

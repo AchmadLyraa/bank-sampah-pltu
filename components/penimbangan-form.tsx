@@ -1,78 +1,102 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { NasabahCombobox } from "@/components/nasabah-combobox"
-import { penimbanganAction } from "@/app/actions/bank-sampah"
-import { Plus, Trash2, Loader2 } from "lucide-react"
-import type { Nasabah, InventarisSampah } from "@/types"
+import type React from "react";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { NasabahCombobox } from "@/components/nasabah-combobox";
+import { penimbanganAction } from "@/app/actions/bank-sampah";
+import { Plus, Trash2, Loader2 } from "lucide-react";
+import type { Nasabah, InventarisSampah } from "@/types";
 
 interface PenimbanganFormProps {
-  nasabahList: Nasabah[]
-  inventarisList: InventarisSampah[]
+  nasabahList: Nasabah[];
+  inventarisList: InventarisSampah[];
 }
 
 interface PenimbanganItem {
-  inventarisSampahId: string
-  beratKg: number
+  inventarisSampahId: string;
+  jumlahUnit: number;
 }
 
-export default function PenimbanganForm({ nasabahList, inventarisList }: PenimbanganFormProps) {
-  const [selectedNasabah, setSelectedNasabah] = useState("")
-  const [items, setItems] = useState<PenimbanganItem[]>([{ inventarisSampahId: "", beratKg: 0 }])
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+export default function PenimbanganForm({
+  nasabahList,
+  inventarisList,
+}: PenimbanganFormProps) {
+  const [selectedNasabah, setSelectedNasabah] = useState("");
+  const [items, setItems] = useState<PenimbanganItem[]>([
+    { inventarisSampahId: "", jumlahUnit: 0 },
+  ]);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const addItem = () => {
-    setItems([...items, { inventarisSampahId: "", beratKg: 0 }])
-  }
+    setItems([...items, { inventarisSampahId: "", jumlahUnit: 0 }]);
+  };
 
   const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
-  }
+    setItems(items.filter((_, i) => i !== index));
+  };
 
-  const updateItem = (index: number, field: keyof PenimbanganItem, value: string | number) => {
-    const newItems = [...items]
-    newItems[index] = { ...newItems[index], [field]: value }
-    setItems(newItems)
-  }
+  const updateItem = (
+    index: number,
+    field: keyof PenimbanganItem,
+    value: string | number,
+  ) => {
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setItems(newItems);
+  };
 
   const calculateTotal = () => {
     return items.reduce((total, item) => {
-      const inventaris = inventarisList.find((inv) => inv.id === item.inventarisSampahId)
-      return total + (inventaris ? item.beratKg * inventaris.hargaPerKg : 0)
-    }, 0)
-  }
+      const inventaris = inventarisList.find(
+        (inv) => inv.id === item.inventarisSampahId,
+      );
+      return (
+        total + (inventaris ? item.jumlahUnit * inventaris.hargaPerUnit : 0)
+      );
+    }, 0);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedNasabah || items.some((item) => !item.inventarisSampahId || item.beratKg <= 0)) {
-      alert("Mohon lengkapi semua data")
-      return
+    e.preventDefault();
+
+    if (
+      !selectedNasabah ||
+      items.some((item) => !item.inventarisSampahId || item.jumlahUnit <= 0)
+    ) {
+      alert("Mohon lengkapi semua data");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       await penimbanganAction({
         nasabahId: selectedNasabah,
-        items: items.filter((item) => item.inventarisSampahId && item.beratKg > 0),
-      })
-      setSuccess(true)
-      setSelectedNasabah("")
-      setItems([{ inventarisSampahId: "", beratKg: 0 }])
-      setTimeout(() => setSuccess(false), 3000)
+        items: items.filter(
+          (item) => item.inventarisSampahId && item.jumlahUnit > 0,
+        ),
+      });
+      setSuccess(true);
+      setSelectedNasabah("");
+      setItems([{ inventarisSampahId: "", jumlahUnit: 0 }]);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
-      alert("Terjadi kesalahan saat menyimpan data")
+      alert("Terjadi kesalahan saat menyimpan data");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Card>
@@ -94,67 +118,109 @@ export default function PenimbanganForm({ nasabahList, inventarisList }: Penimba
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Item Sampah</Label>
-              <Button type="button" onClick={addItem} size="sm" variant="outline">
+              <Button
+                type="button"
+                onClick={addItem}
+                size="sm"
+                variant="outline"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Tambah Item
               </Button>
             </div>
 
-            {items.map((item, index) => (
-              <div key={index} className="flex gap-4 items-end p-4 border rounded-lg flex-wrap">
-                <div className="flex-1">
-                  <Label>Jenis Sampah</Label>
-                  <Select
-                    value={item.inventarisSampahId}
-                    onValueChange={(value) => updateItem(index, "inventarisSampahId", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih jenis sampah..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {inventarisList.map((inventaris) => (
-                        <SelectItem key={inventaris.id} value={inventaris.id}>
-                          {inventaris.jenisSampah} - Rp {inventaris.hargaPerKg.toLocaleString()}/kg
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            {items.map((item, index) => {
+              const selectedInventaris = inventarisList.find(
+                (inv) => inv.id === item.inventarisSampahId,
+              );
+              const satuanLabel =
+                selectedInventaris?.satuan === "KG" ? "kg" : "pcs";
+              const satuanEmoji =
+                selectedInventaris?.satuan === "KG" ? "🪣" : "📦";
 
-                <div className="w-32">
-                  <Label>Berat (kg)</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={item.beratKg || ""}
-                    onChange={(e) => updateItem(index, "beratKg", Number.parseFloat(e.target.value) || 0)}
-                    placeholder="0.0"
-                  />
-                </div>
-
-                <div className="w-32">
-                  <Label>Subtotal</Label>
-                  <div className="h-10 px-3 py-2 border rounded-md bg-gray-50 text-sm">
-                    Rp {(() => {
-                      const inventaris = inventarisList.find((inv) => inv.id === item.inventarisSampahId)
-                      return inventaris ? (item.beratKg * inventaris.hargaPerKg).toLocaleString() : "0"
-                    })()}
+              return (
+                <div
+                  key={index}
+                  className="flex gap-4 items-end p-4 border rounded-lg flex-wrap"
+                >
+                  <div className="flex-1 min-w-[200px]">
+                    <Label>Jenis Sampah</Label>
+                    <Select
+                      value={item.inventarisSampahId}
+                      onValueChange={(value) =>
+                        updateItem(index, "inventarisSampahId", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih jenis sampah..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {inventarisList.map((inventaris) => (
+                          <SelectItem key={inventaris.id} value={inventaris.id}>
+                            {inventaris.jenisSampah} - Rp{" "}
+                            {inventaris.hargaPerUnit.toLocaleString()}/
+                            {inventaris.satuan === "KG" ? "kg" : "pcs"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
 
-                {items.length > 1 && (
-                  <Button type="button" onClick={() => removeItem(index)} size="sm" variant="destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
+                  <div className="w-32">
+                    <Label>Jumlah ({satuanLabel})</Label>
+                    <Input
+                      type="number"
+                      step={selectedInventaris?.satuan === "KG" ? "0.1" : "1"}
+                      min="0"
+                      value={item.jumlahUnit || ""}
+                      onChange={(e) =>
+                        updateItem(
+                          index,
+                          "jumlahUnit",
+                          Number.parseFloat(e.target.value) || 0,
+                        )
+                      }
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="w-40">
+                    <Label>Subtotal</Label>
+                    <div className="h-10 px-3 py-2 border rounded-md bg-gray-50 text-sm">
+                      Rp{" "}
+                      {(() => {
+                        const inv = inventarisList.find(
+                          (iv) => iv.id === item.inventarisSampahId,
+                        );
+                        return inv
+                          ? (
+                              item.jumlahUnit * inv.hargaPerUnit
+                            ).toLocaleString()
+                          : "0";
+                      })()}
+                    </div>
+                  </div>
+
+                  {items.length > 1 && (
+                    <Button
+                      type="button"
+                      onClick={() => removeItem(index)}
+                      size="sm"
+                      variant="destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
             <span className="text-lg font-semibold">Total:</span>
-            <span className="text-xl font-bold text-green-600">Rp {calculateTotal().toLocaleString()}</span>
+            <span className="text-xl font-bold text-green-600">
+              Rp {calculateTotal().toLocaleString()}
+            </span>
           </div>
 
           {success && (
@@ -170,5 +236,5 @@ export default function PenimbanganForm({ nasabahList, inventarisList }: Penimba
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

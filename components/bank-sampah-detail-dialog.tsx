@@ -232,7 +232,7 @@ export function BankSampahDetailDialog({
                   <CardContent className="p-4 text-center">
                     <Package className="h-8 w-8 mx-auto mb-2 text-orange-600" />
                     <p className="text-2xl font-bold">
-                      {data.statistics.totalStokTerkumpul} kg
+                      {data.statistics.totalStokTerkumpul} unit
                     </p>
                     <p className="text-sm text-gray-600">Stok Terkumpul</p>
                   </CardContent>
@@ -398,10 +398,12 @@ export function BankSampahDetailDialog({
                             <div className="flex items-center gap-3">
                               <div className="text-right">
                                 <p className="font-medium">
-                                  {formatCurrency(item.hargaPerKg)}/kg
+                                  {formatCurrency(item.hargaPerUnit)} /{" "}
+                                  {item.satuan || "UNIT"}
                                 </p>
                                 <p className="text-sm text-gray-600">
-                                  Stok: {item.stokKg} kg
+                                  Stok: {item.stokUnit ?? 0}{" "}
+                                  {item.satuan?.toLowerCase() || "unit"}
                                 </p>
                               </div>
                               <Button

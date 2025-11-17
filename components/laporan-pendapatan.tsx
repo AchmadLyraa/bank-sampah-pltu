@@ -22,12 +22,14 @@ interface LaporanPendapatanProps {
     pengeluaran: any[];
     summaryByType: {
       jenisSampah: string;
+      satuan: string;
       totalBerat: number;
       totalNilai: number;
       jumlahTransaksi: number;
     }[];
     penjualanSummaryByType: {
       jenisSampah: string;
+      satuan: string;
       totalBerat: number;
       totalNilai: number;
       jumlahTransaksi: number;
@@ -186,10 +188,10 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
                   <thead>
                     <tr className="border-b">
                       <th className="text-left py-2 px-2">Jenis Sampah</th>
-                      <th className="text-left py-2 px-2">Berat (kg)</th>
+                      <th className="text-left py-2 px-2">Jumlah Unit</th>
                       <th className="text-left py-2 px-2">Total Nilai</th>
                       <th className="text-left py-2 px-2">Transaksi</th>
-                      <th className="text-left py-2 px-2">Rata/kg</th>
+                      <th className="text-left py-2 px-2">Rata/Unit</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -199,7 +201,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
                           {item.jenisSampah}
                         </td>
                         <td className="py-2 px-2">
-                          {item.totalBerat.toFixed(1)}
+                          {item.totalBerat.toFixed(1)} {item.satuan}
                         </td>
                         <td className="py-2 px-2 text-red-600 font-semibold text-nowrap">
                           Rp {item.totalNilai.toLocaleString()}
@@ -241,10 +243,10 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
                   <thead>
                     <tr className="border-b">
                       <th className="text-left py-2 px-2">Jenis Sampah</th>
-                      <th className="text-left py-2 px-2">Berat (kg)</th>
+                      <th className="text-left py-2 px-2">Jumlah Unit</th>
                       <th className="text-left py-2 px-2">Total Nilai</th>
                       <th className="text-left py-2 px-2">Transaksi</th>
-                      <th className="text-left py-2 px-2">Rata/kg</th>
+                      <th className="text-left py-2 px-2">Rata/Unit</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -254,7 +256,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
                           {item.jenisSampah}
                         </td>
                         <td className="py-2 px-2">
-                          {item.totalBerat.toFixed(1)}
+                          {item.totalBerat.toFixed(1)} {item.satuan}
                         </td>
                         <td className="py-2 px-2 text-green-600 font-semibold text-nowrap">
                           Rp {item.totalNilai.toLocaleString()}
@@ -316,7 +318,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
                             {transaksi.detailTransaksi
                               .map(
                                 (d: any) =>
-                                  `${d.inventarisSampah.jenisSampah} (${d.beratKg}kg)`,
+                                  `${d.inventarisSampah.jenisSampah} (${d.jumlahUnit} ${d.inventarisSampah?.satuan || "kg"})`,
                               )
                               .join(", ")}
                           </p>
@@ -375,7 +377,7 @@ export default function LaporanPendapatan({ data }: LaporanPendapatanProps) {
                           {transaksi.detailTransaksi
                             .map(
                               (d: any) =>
-                                `${d.inventarisSampah.jenisSampah} (${d.beratKg}kg)`,
+                                `${d.inventarisSampah.jenisSampah} (${d.jumlahUnit} ${d.inventarisSampah?.satuan || "kg"})`,
                             )
                             .join(", ")}
                         </p>

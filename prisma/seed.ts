@@ -82,14 +82,14 @@ async function main() {
 
   // 📦 Buat atau update Inventaris untuk semua Bank Sampah
   const inventarisTemplate = [
-    { jenisSampah: "Plastik Botol", hargaPerKg: 2000 },
-    { jenisSampah: "Plastik Kemasan", hargaPerKg: 1500 },
-    { jenisSampah: "Kertas Koran", hargaPerKg: 1000 },
-    { jenisSampah: "Kertas Kardus", hargaPerKg: 1200 },
-    { jenisSampah: "Kaleng Aluminum", hargaPerKg: 15000 },
-    { jenisSampah: "Besi", hargaPerKg: 3000 },
-    { jenisSampah: "Botol Kaca", hargaPerKg: 800 },
-    { jenisSampah: "Plastik PP", hargaPerKg: 2200 },
+    { jenisSampah: "Plastik Botol", hargaPerUnit: 2000, satuan: "KG" },
+    { jenisSampah: "Plastik Kemasan", hargaPerUnit: 1500, satuan: "KG" },
+    { jenisSampah: "Kertas Koran", hargaPerUnit: 1000, satuan: "KG" },
+    { jenisSampah: "Kertas Kardus", hargaPerUnit: 1200, satuan: "KG" },
+    { jenisSampah: "Kaleng Aluminum", hargaPerUnit: 15000, satuan: "KG" },
+    { jenisSampah: "Besi", hargaPerUnit: 3000, satuan: "KG" },
+    { jenisSampah: "Botol Kaca", hargaPerUnit: 800, satuan: "KG" },
+    { jenisSampah: "Plastik PP", hargaPerUnit: 2200, satuan: "KG" },
   ];
 
   for (const bankSampah of bankSampahs) {
@@ -104,18 +104,20 @@ async function main() {
     for (const template of inventarisTemplate) {
       await prisma.inventarisSampah.upsert({
         where: {
-          bankSampahId_jenisSampah: {
+          bankSampahId_jenisSampah_satuan: {
             bankSampahId: bankSampah.id,
             jenisSampah: template.jenisSampah,
+            satuan: "KG",
           },
         },
         update: {
-          hargaPerKg: Math.round(template.hargaPerKg * priceMultiplier),
+          hargaPerUnit: Math.round(template.hargaPerUnit * priceMultiplier),
         },
         create: {
           jenisSampah: template.jenisSampah,
-          hargaPerKg: Math.round(template.hargaPerKg * priceMultiplier),
-          stokKg: 0,
+          hargaPerUnit: Math.round(template.hargaPerUnit * priceMultiplier),
+          stokUnit: 0,
+          satuan: "KG",
           isActive: true,
           bankSampahId: bankSampah.id,
         },
@@ -249,7 +251,7 @@ async function main() {
     personEmail: string,
     bankId: string,
     jenisSampahName: string,
-    beratKg: number,
+    jumlahUnit: number,
     keterangan: string,
     transactionType: "PEMASUKAN" | "PENGELUARAN",
   ) {
@@ -272,15 +274,15 @@ async function main() {
     const detailTransaksiData = [];
 
     if (transactionType === "PEMASUKAN" && inventarisItem) {
-      totalNilai = beratKg * inventarisItem.hargaPerKg;
+      totalNilai = jumlahUnit * inventarisItem.hargaPerUnit;
       detailTransaksiData.push({
         inventarisSampahId: inventarisItem.id,
-        beratKg: beratKg,
-        hargaPerKg: inventarisItem.hargaPerKg,
+        jumlahUnit: jumlahUnit,
+        hargaPerUnit: inventarisItem.hargaPerUnit,
         subtotal: totalNilai,
       });
     } else if (transactionType === "PENGELUARAN") {
-      totalNilai = beratKg; // For withdrawals, beratKg is actually the amount
+      totalNilai = jumlahUnit; // For withdrawals, jumlahUnit is actually the amount
     }
 
     const transaksi = await prisma.transaksi.create({
@@ -311,7 +313,7 @@ async function main() {
     if (transactionType === "PEMASUKAN" && inventarisItem) {
       await prisma.inventarisSampah.update({
         where: { id: inventarisItem.id },
-        data: { stokKg: { increment: beratKg } },
+        data: { stokUnit: { increment: jumlahUnit } },
       });
     }
     console.log(

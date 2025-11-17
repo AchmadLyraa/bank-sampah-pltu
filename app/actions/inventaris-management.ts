@@ -1,38 +1,47 @@
+// app/actions/inventaris-management.ts
 "use server";
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
+import type { SatuanUkuran } from "@/types";
 
 export async function createInventarisAction(formData: FormData) {
   const jenisSampah = formData.get("jenisSampah") as string;
-  const hargaPerKg = Number.parseFloat(formData.get("hargaPerKg") as string);
+  const satuan = formData.get("satuan") as SatuanUkuran;
+  const hargaPerUnit = Number.parseFloat(
+    formData.get("hargaPerUnit") as string,
+  );
   const bankSampahId = formData.get("bankSampahId") as string;
 
   try {
-    // Check if jenis sampah already exists for this bank sampah
+    // Check if jenis sampah + satuan already exists for this bank sampah
     const existingInventaris = await prisma.inventarisSampah.findFirst({
       where: {
         jenisSampah: {
           equals: jenisSampah,
           mode: "insensitive",
         },
+        satuan,
         bankSampahId,
       },
     });
 
     if (existingInventaris) {
-      return { error: "Jenis sampah sudah ada dalam inventaris" };
+      return {
+        error: `${jenisSampah} (${satuan}) sudah ada dalam inventaris`,
+      };
     }
 
     // Create inventaris
     await prisma.inventarisSampah.create({
       data: {
         jenisSampah,
-        hargaPerKg,
-        stokKg: 0,
-        isActive: true, // 🆕 Default active
+        satuan,
+        hargaPerUnit,
+        stokUnit: 0,
+        isActive: true,
         bankSampahId,
       },
     });
@@ -58,7 +67,7 @@ export async function deleteInventarisAction(formData: FormData) {
       return { error: "Inventaris tidak ditemukan" };
     }
 
-    if (inventaris.stokKg > 0) {
+    if (inventaris.stokUnit > 0) {
       return {
         error: "Tidak dapat menghapus jenis sampah yang masih memiliki stok",
       };
@@ -97,11 +106,11 @@ export async function toggleInventarisStatusAction(formData: FormData) {
   try {
     await prisma.inventarisSampah.update({
       where: { id },
-      data: { isActive: !isActive }, // Toggle status
+      data: { isActive: !isActive },
     });
 
     revalidatePath("/bank-sampah/inventaris");
-    revalidatePath("/bank-sampah/penimbangan"); // Refresh penimbangan page too
+    revalidatePath("/bank-sampah/penimbangan");
     return { success: true };
   } catch (error) {
     console.error("Error toggling inventaris status:", error);
@@ -138,14 +147,17 @@ export async function addInventarisAlat(data: {
 }
 
 // 🆕 NEW: Edit functionality
-export async function updateInventarisAlat(id: string, data: {
-  nama: string;
-  jenis: string;
-  merk?: string;
-  kondisi: string;
-  hargaBeli: number;
-  metodePerolehan: string;
-}) {
+export async function updateInventarisAlat(
+  id: string,
+  data: {
+    nama: string;
+    jenis: string;
+    merk?: string;
+    kondisi: string;
+    hargaBeli: number;
+    metodePerolehan: string;
+  },
+) {
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.userType !== "bank-sampah") {
     throw new Error("Unauthorized");

@@ -1,3 +1,4 @@
+// app/actions/bank-sampah.ts
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -64,8 +65,7 @@ export async function getDashboardData(bankSampahId: string) {
   const saldoBankSampah =
     (sumByJenis["PENJUALAN_SAMPAH"] || 0) +
     (sumByJenis["PEMASUKAN_UMUM"] || 0) -
-    ((sumByJenis["PEMASUKAN"] || 0) +
-      (sumByJenis["PENGELUARAN_UMUM"] || 0));
+    ((sumByJenis["PEMASUKAN"] || 0) + (sumByJenis["PENGELUARAN_UMUM"] || 0));
 
   return {
     nasabahCount,
@@ -78,16 +78,20 @@ export async function getDashboardData(bankSampahId: string) {
 
 export async function updateInventarisAction(formData: FormData) {
   const id = formData.get("id") as string;
-  const hargaPerKg = Number.parseFloat(formData.get("hargaPerKg") as string);
+  const hargaPerUnit = Number.parseFloat(
+    formData.get("hargaPerUnit") as string,
+  );
 
   await prisma.inventarisSampah.update({
     where: { id },
-    data: { hargaPerKg },
+    data: { hargaPerUnit },
   });
 
   revalidatePath("/bank-sampah/inventaris");
   return { success: true };
 }
+
+// Add this to app/actions/bank-sampah.ts
 
 export async function penimbanganAction(data: PenimbanganFormData) {
   const { nasabahId, items } = data;
@@ -100,16 +104,15 @@ export async function penimbanganAction(data: PenimbanganFormData) {
     const inventaris = await prisma.inventarisSampah.findUnique({
       where: { id: item.inventarisSampahId },
     });
-
     if (!inventaris) continue;
 
-    const subtotal = item.beratKg * inventaris.hargaPerKg;
+    const subtotal = item.jumlahUnit * inventaris.hargaPerUnit;
     totalNilai += subtotal;
 
     detailItems.push({
       inventarisSampahId: item.inventarisSampahId,
-      beratKg: item.beratKg,
-      hargaPerKg: inventaris.hargaPerKg,
+      jumlahUnit: item.jumlahUnit,
+      hargaPerUnit: inventaris.hargaPerUnit,
       subtotal,
     });
   }
@@ -117,7 +120,7 @@ export async function penimbanganAction(data: PenimbanganFormData) {
   // Create transaction
   const nasabahRelationship = await prisma.nasabah.findUnique({
     where: { id: nasabahId },
-    include: { person: true }, // Include person data for checks/info
+    include: { person: true },
   });
 
   if (!nasabahRelationship) {
@@ -135,7 +138,7 @@ export async function penimbanganAction(data: PenimbanganFormData) {
       jenis: "PEMASUKAN",
       totalNilai,
       keterangan: "Penjualan sampah",
-      nasabahId, // Use the Nasabah relationship ID
+      nasabahId,
       bankSampahId: nasabahRelationship.bankSampahId,
       detailTransaksi: {
         create: detailItems,
@@ -153,12 +156,13 @@ export async function penimbanganAction(data: PenimbanganFormData) {
   for (const item of items) {
     await prisma.inventarisSampah.update({
       where: { id: item.inventarisSampahId },
-      data: { stokKg: { increment: item.beratKg } },
+      data: { stokUnit: { increment: item.jumlahUnit } },
     });
   }
 
   revalidatePath("/bank-sampah");
   revalidatePath("/bank-sampah/penimbangan");
+
   return { success: true, transaksiId: transaksi.id };
 }
 
@@ -210,16 +214,18 @@ export async function penarikanAction(data: PenarikanFormData) {
 export async function penjualanSampahAction(formData: FormData) {
   try {
     const inventarisSampahId = formData.get("inventarisSampahId") as string;
-    const beratKg = Number.parseFloat(formData.get("beratKg") as string);
-    const hargaPerKg = Number.parseFloat(formData.get("hargaPerKg") as string); // CHANGED: dari hargaJual ke hargaPerKg
+    const jumlahUnit = Number.parseFloat(formData.get("jumlahUnit") as string);
+    const hargaPerUnit = Number.parseFloat(
+      formData.get("hargaPerUnit") as string,
+    );
 
     // Validasi input
     if (
       !inventarisSampahId ||
-      !beratKg ||
-      !hargaPerKg ||
-      beratKg <= 0 ||
-      hargaPerKg <= 0
+      !jumlahUnit ||
+      !hargaPerUnit ||
+      jumlahUnit <= 0 ||
+      hargaPerUnit <= 0
     ) {
       throw new Error("Data tidak valid");
     }
@@ -232,33 +238,33 @@ export async function penjualanSampahAction(formData: FormData) {
       throw new Error("Inventaris tidak ditemukan");
     }
 
-    if (inventaris.stokKg < beratKg) {
+    if (inventaris.stokUnit < jumlahUnit) {
       throw new Error(
-        `Stok tidak mencukupi. Stok tersedia: ${inventaris.stokKg}kg`,
+        `Stok tidak mencukupi. Stok tersedia: ${inventaris.stokUnit}${inventaris.satuan}`,
       );
     }
 
-    // 🔧 FIXED: Hitung total dengan benar
-    const totalNilai = beratKg * hargaPerKg;
+    // Hitung total
+    const totalNilai = jumlahUnit * hargaPerUnit;
 
     // Create transaction
     const transaksi = await prisma.transaksi.create({
       data: {
         jenis: "PENJUALAN_SAMPAH",
         totalNilai,
-        keterangan: `Penjualan ${inventaris.jenisSampah} ${beratKg}kg @ Rp${hargaPerKg.toLocaleString()}/kg`,
+        keterangan: `Penjualan ${inventaris.jenisSampah} ${jumlahUnit}${inventaris.satuan} @ Rp${hargaPerUnit.toLocaleString()}/${inventaris.satuan}`,
         nasabahId: null,
         bankSampahId: inventaris.bankSampahId,
       },
     });
 
-    // 🆕 TAMBAHKAN INI - buat detail transaksi
+    // Create detail transaksi
     await prisma.detailTransaksi.create({
       data: {
-        transaksiId: transaksi.id, // 👈 ID dari transaksi yang baru dibuat
+        transaksiId: transaksi.id,
         inventarisSampahId: inventarisSampahId,
-        beratKg: beratKg,
-        hargaPerKg: hargaPerKg,
+        jumlahUnit: jumlahUnit,
+        hargaPerUnit: hargaPerUnit,
         subtotal: totalNilai,
       },
     });
@@ -266,7 +272,7 @@ export async function penjualanSampahAction(formData: FormData) {
     // Update stok
     await prisma.inventarisSampah.update({
       where: { id: inventarisSampahId },
-      data: { stokKg: { decrement: beratKg } },
+      data: { stokUnit: { decrement: jumlahUnit } },
     });
 
     revalidatePath("/bank-sampah");
@@ -275,10 +281,10 @@ export async function penjualanSampahAction(formData: FormData) {
 
     return {
       success: true,
-      message: `Berhasil jual ${beratKg}kg dengan total Rp${totalNilai.toLocaleString()}!`,
+      message: `Berhasil jual ${jumlahUnit}${inventaris.satuan} dengan total Rp${totalNilai.toLocaleString()}!`,
       data: {
-        beratKg,
-        hargaPerKg,
+        jumlahUnit,
+        hargaPerUnit,
         totalNilai,
       },
     };

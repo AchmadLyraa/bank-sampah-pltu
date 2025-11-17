@@ -67,9 +67,10 @@ export interface AuthenticatedNasabah extends Nasabah {
 export interface InventarisSampah {
   id: string;
   jenisSampah: string;
-  hargaPerKg: number;
-  stokKg: number;
-  isActive: boolean; // 🆕 NEW FIELD
+  satuan: SatuanUkuran;
+  hargaPerUnit: number;
+  stokUnit: number;
+  isActive: boolean;
   bankSampahId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -97,11 +98,10 @@ export interface DetailTransaksi {
   id: string;
   transaksiId: string;
   inventarisSampahId: string;
-  beratKg: number;
-  hargaPerKg: number;
+  jumlahUnit: number;
+  hargaPerUnit: number;
   subtotal: number;
   createdAt: Date;
-  inventarisSampah?: InventarisSampah;
 }
 
 export interface LoginFormData {
@@ -113,7 +113,7 @@ export interface PenimbanganFormData {
   nasabahId: string;
   items: {
     inventarisSampahId: string;
-    beratKg: number;
+    jumlahUnit: number;
   }[];
 }
 
@@ -136,3 +136,5 @@ export interface Controller {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type SatuanUkuran = "KG" | "PCS";

@@ -33,8 +33,9 @@ export function EditInventarisDialog({
   const [message, setMessage] = useState("");
   const [formData, setFormData] = useState({
     jenisSampah: "",
-    hargaPerKg: "",
-    stokKg: "",
+    satuan: "KG",
+    hargaPerUnit: "",
+    stokUnit: "",
     isActive: true,
   });
 
@@ -42,8 +43,9 @@ export function EditInventarisDialog({
     if (inventaris) {
       setFormData({
         jenisSampah: inventaris.jenisSampah || "",
-        hargaPerKg: inventaris.hargaPerKg?.toString() || "",
-        stokKg: inventaris.stokKg?.toString() || "",
+        satuan: inventaris.satuan || "KG",
+        hargaPerUnit: inventaris.hargaPerUnit?.toString() || "",
+        stokUnit: inventaris.stokUnit?.toString() || "",
         isActive: inventaris.isActive ?? true,
       });
     }
@@ -57,8 +59,9 @@ export function EditInventarisDialog({
     const submitFormData = new FormData();
     submitFormData.append("inventarisId", inventaris.id);
     submitFormData.append("jenisSampah", formData.jenisSampah);
-    submitFormData.append("hargaPerKg", formData.hargaPerKg);
-    submitFormData.append("stokKg", formData.stokKg);
+    submitFormData.append("satuan", formData.satuan);
+    submitFormData.append("hargaPerUnit", formData.hargaPerUnit);
+    submitFormData.append("stokUnit", formData.stokUnit);
     submitFormData.append("isActive", formData.isActive.toString());
 
     try {
@@ -107,28 +110,48 @@ export function EditInventarisDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="hargaPerKg">Harga per Kg (Rp)</Label>
+            <Label htmlFor="satuan">Satuan</Label>
+            <select
+              id="satuan"
+              value={formData.satuan}
+              onChange={(e) => handleInputChange("satuan", e.target.value)}
+              className="w-full px-3 py-2 border rounded-md"
+              disabled={loading}
+            >
+              <option value="KG">Kilogram (kg)</option>
+              <option value="PCS">Pieces (pcs)</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="hargaPerUnit">
+              Harga per {formData.satuan === "KG" ? "Kg" : "Pcs"} (Rp)
+            </Label>
             <Input
-              id="hargaPerKg"
+              id="hargaPerUnit"
               type="number"
               min="0"
               step="100"
-              value={formData.hargaPerKg}
-              onChange={(e) => handleInputChange("hargaPerKg", e.target.value)}
+              value={formData.hargaPerUnit}
+              onChange={(e) =>
+                handleInputChange("hargaPerUnit", e.target.value)
+              }
               required
-              placeholder="Masukkan harga per kg"
+              placeholder="Masukkan harga per unit"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="stokKg">Stok (Kg)</Label>
+            <Label htmlFor="stokUnit">
+              Stok ({formData.satuan === "KG" ? "Kg" : "Pcs"})
+            </Label>
             <Input
-              id="stokKg"
+              id="stokUnit"
               type="number"
               min="0"
-              step="0.1"
-              value={formData.stokKg}
-              onChange={(e) => handleInputChange("stokKg", e.target.value)}
+              step={formData.satuan === "KG" ? "0.1" : "1"}
+              value={formData.stokUnit}
+              onChange={(e) => handleInputChange("stokUnit", e.target.value)}
               required
               placeholder="Masukkan stok dalam kg"
             />

@@ -25,11 +25,14 @@ interface TransaksiWithDetails {
     id: string;
     transaksiId: string;
     inventarisSampahId: string;
-    beratKg: number;
-    hargaPerKg: number;
+    jumlahUnit: number;
+    hargaPerUnit: number;
     subtotal: number;
     createdAt: Date;
-    inventarisSampah: { jenisSampah: string } | null;
+    inventarisSampah: {
+      jenisSampah: string;
+      satuan: "KG" | "PCS"; // TAMBAH INI
+    } | null;
   }[];
 }
 
@@ -76,15 +79,23 @@ export default function TransaksiTable({
   const getTransactionBadge = (jenis: TransaksiWithDetails["jenis"]) => {
     switch (jenis) {
       case "PEMASUKAN":
-        return <Badge className="bg-green-100 text-green-800">Pemasukan</Badge>;
+        return <Badge variant="secondary">Pemasukan</Badge>;
       case "PEMASUKAN_UMUM":
-        return <Badge className="bg-green-50 text-green-700">Pemasukan Umum</Badge>;
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            Pemasukan Umum
+          </Badge>
+        );
       case "PENGELUARAN":
         return <Badge variant="destructive">Pengeluaran</Badge>;
       case "PENGELUARAN_UMUM":
-        return <Badge className="bg-red-50 text-red-700">Pengeluaran Umum</Badge>;
+        return <Badge variant="destructive">Pengeluaran Umum</Badge>;
       case "PENJUALAN_SAMPAH":
-        return <Badge variant="secondary">Penjualan</Badge>;
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            Penjualan
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{jenis}</Badge>;
     }
@@ -92,9 +103,7 @@ export default function TransaksiTable({
 
   // ✅ Hitung total per kategori (halaman ini)
   const totalPemasukan = transaksi
-    .filter((t) =>
-      ["PEMASUKAN", "PENJUALAN_SAMPAH", "PEMASUKAN_UMUM"].includes(t.jenis)
-    )
+    .filter((t) => ["PENJUALAN_SAMPAH", "PEMASUKAN_UMUM"].includes(t.jenis))
     .reduce((sum, t) => sum + t.totalNilai, 0);
 
   const totalPengeluaran = transaksi
@@ -108,13 +117,17 @@ export default function TransaksiTable({
           <Card>
             <CardContent className="p-6">
               <div className="text-2xl font-bold text-gray-400">Loading...</div>
-              <p className="text-sm text-gray-600">Total Pemasukan (Halaman Ini)</p>
+              <p className="text-sm text-gray-600">
+                Total Pemasukan (Halaman Ini)
+              </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
               <div className="text-2xl font-bold text-gray-400">Loading...</div>
-              <p className="text-sm text-gray-600">Total Pengeluaran (Halaman Ini)</p>
+              <p className="text-sm text-gray-600">
+                Total Pengeluaran (Halaman Ini)
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -150,7 +163,9 @@ export default function TransaksiTable({
             <div className="text-2xl font-bold text-green-600">
               Rp {totalPemasukan.toLocaleString()}
             </div>
-            <p className="text-sm text-gray-600">Total Pemasukan (Halaman Ini)</p>
+            <p className="text-sm text-gray-600">
+              Total Pemasukan (Halaman Ini)
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -158,7 +173,9 @@ export default function TransaksiTable({
             <div className="text-2xl font-bold text-red-600">
               Rp {totalPengeluaran.toLocaleString()}
             </div>
-            <p className="text-sm text-gray-600">Total Pengeluaran (Halaman Ini)</p>
+            <p className="text-sm text-gray-600">
+              Total Pengeluaran (Halaman Ini)
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -196,16 +213,27 @@ export default function TransaksiTable({
               <tbody>
                 {transaksi.map((t) => (
                   <tr key={t.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm">{formatDateTime(t.createdAt)}</td>
-                    <td className="py-3 px-4">{getTransactionBadge(t.jenis)}</td>
-                    <td className="py-3 px-4">{t.nasabah?.person?.nama || "Bank Sampah"}</td>
+                    <td className="py-3 px-4 text-sm">
+                      {formatDateTime(t.createdAt)}
+                    </td>
+                    <td className="py-3 px-4">
+                      {getTransactionBadge(t.jenis)}
+                    </td>
+                    <td className="py-3 px-4">
+                      {t.nasabah?.person?.nama || "Bank Sampah"}
+                    </td>
                     <td className="py-3 px-4 text-sm">{t.keterangan || "-"}</td>
                     <td className="py-3 px-4 text-sm">
                       {t.detailTransaksi && t.detailTransaksi.length > 0 && (
                         <div className="space-y-1">
                           {t.detailTransaksi.map((detail) => (
-                            <div key={detail.id} className="text-xs text-gray-600">
-                              {detail.inventarisSampah?.jenisSampah}: {detail.beratKg}kg
+                            <div
+                              key={detail.id}
+                              className="text-xs text-gray-600"
+                            >
+                              {detail.inventarisSampah?.jenisSampah}:{" "}
+                              {detail.jumlahUnit}{" "}
+                              {detail.inventarisSampah?.satuan || "kg"}
                             </div>
                           ))}
                         </div>
@@ -214,13 +242,21 @@ export default function TransaksiTable({
                     <td className="py-3 px-4 text-right">
                       <span
                         className={`font-bold ${
-                          ["PEMASUKAN", "PENJUALAN_SAMPAH", "PEMASUKAN_UMUM"].includes(t.jenis)
-                            ? "text-green-600"
-                            : "text-red-600"
+                          t.jenis === "PEMASUKAN"
+                            ? "text-gray-500" // secondary grey
+                            : ["PENJUALAN_SAMPAH", "PEMASUKAN_UMUM"].includes(
+                                  t.jenis,
+                                )
+                              ? "text-green-600"
+                              : "text-red-600"
                         }`}
                       >
-                        {["PENGELUARAN", "PENGELUARAN_UMUM"].includes(t.jenis) ? "-" : "+"}Rp{" "}
-                        {t.totalNilai.toLocaleString()}
+                        {["PENGELUARAN", "PENGELUARAN_UMUM"].includes(t.jenis)
+                          ? "-"
+                          : t.jenis === "PEMASUKAN"
+                            ? "" // gak usah +/-
+                            : "+"}
+                        Rp {t.totalNilai.toLocaleString()}
                       </span>
                     </td>
                   </tr>
@@ -231,7 +267,11 @@ export default function TransaksiTable({
 
           {/* 📄 Pagination Component */}
           <div className="mt-6 pt-6 border-t">
-            <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+            />
           </div>
         </CardContent>
       </Card>

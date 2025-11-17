@@ -12,10 +12,10 @@ interface RecentTransactionItem
   detailTransaksi?: {
     id: string;
     createdAt: Date;
-    hargaPerKg: number;
+    hargaPerUnit: number;
     transaksiId: string;
     inventarisSampahId: string;
-    beratKg: number;
+    jumlahUnit: number;
     subtotal: number;
     inventarisSampah: { jenisSampah: string } | null;
   }[];
@@ -40,27 +40,23 @@ export default function RecentTransactions({
   const getTransactionBadge = (jenis: string) => {
     switch (jenis) {
       case "PEMASUKAN":
-        return (
-          <Badge variant="default" className="bg-green-100 text-green-800">
-            Pemasukan
-          </Badge>
-        );
+        return <Badge variant="secondary">Pemasukan</Badge>;
       case "PEMASUKAN_UMUM":
         return (
-          <Badge variant="default" className="bg-emerald-100 text-emerald-800">
+          <Badge variant="default" className="bg-green-100 text-green-800">
             Pemasukan Umum
           </Badge>
         );
       case "PENGELUARAN":
         return <Badge variant="destructive">Pengeluaran</Badge>;
       case "PENGELUARAN_UMUM":
+        return <Badge variant="destructive">Pengeluaran Umum</Badge>;
+      case "PENJUALAN_SAMPAH":
         return (
-          <Badge variant="destructive" className="bg-red-100 text-red-800">
-            Pengeluaran Umum
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            Penjualan
           </Badge>
         );
-      case "PENJUALAN_SAMPAH":
-        return <Badge variant="secondary">Penjualan</Badge>;
       default:
         return <Badge variant="outline">{jenis}</Badge>;
     }
@@ -150,17 +146,20 @@ export default function RecentTransactions({
                 <div className="sm:flex-1 sm:text-right flex-[100%]">
                   <p
                     className={`font-bold ${
-                      transaksi.jenis === "PEMASUKAN" ||
-                      transaksi.jenis === "PEMASUKAN_UMUM" ||
-                      transaksi.jenis === "PENJUALAN_SAMPAH"
-                        ? "text-green-600"
-                        : "text-red-600"
+                      transaksi.jenis === "PEMASUKAN"
+                        ? "text-gray-500" // secondary grey
+                        : transaksi.jenis === "PENJUALAN_SAMPAH" ||
+                            transaksi.jenis === "PEMASUKAN_UMUM"
+                          ? "text-green-600"
+                          : "text-red-600"
                     }`}
                   >
                     {transaksi.jenis === "PENGELUARAN" ||
                     transaksi.jenis === "PENGELUARAN_UMUM"
                       ? "-"
-                      : "+"}
+                      : transaksi.jenis === "PEMASUKAN"
+                        ? "" // gak usah +/-
+                        : "+"}
                     Rp {transaksi.totalNilai.toLocaleString()}
                   </p>
                 </div>

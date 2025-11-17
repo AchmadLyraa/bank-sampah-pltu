@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -94,8 +94,9 @@ model Nasabah {
 model InventarisSampah {
   id              String            @id @default(cuid())
   jenisSampah     String
-  hargaPerKg      Float
-  stokKg          Float             @default(0)
+  satuan          SatuanUkuran      @default(KG)
+  hargaPerUnit    Float
+  stokUnit        Float             @default(0)
   isActive        Boolean           @default(true)
   bankSampahId    String
   createdAt       DateTime          @default(now())
@@ -103,7 +104,7 @@ model InventarisSampah {
   detailTransaksi DetailTransaksi[]
   bankSampah      BankSampah        @relation(fields: [bankSampahId], references: [id])
 
-  @@unique([bankSampahId, jenisSampah])
+  @@unique([bankSampahId, jenisSampah, satuan])
   @@map("inventaris_sampah")
 }
 
@@ -126,8 +127,8 @@ model DetailTransaksi {
   id                 String           @id @default(cuid())
   transaksiId        String
   inventarisSampahId String
-  beratKg            Float
-  hargaPerKg         Float
+  jumlahUnit         Float
+  hargaPerUnit       Float
   subtotal           Float
   createdAt          DateTime         @default(now())
   inventarisSampah   InventarisSampah @relation(fields: [inventarisSampahId], references: [id])
@@ -159,4 +160,9 @@ enum JenisTransaksi {
   PENJUALAN_SAMPAH
   PEMASUKAN_UMUM // ➕ Baru
   PENGELUARAN_UMUM // ➕ Baru
+}
+
+enum SatuanUkuran {
+  KG
+  PCS
 }

@@ -521,6 +521,14 @@ export async function getBankSampahDetail(bankSampahId: string) {
     const inventaris = await prisma.inventarisSampah.findMany({
       where: { bankSampahId },
       orderBy: { jenisSampah: "asc" },
+      select: {
+        id: true,
+        jenisSampah: true,
+        satuan: true,
+        hargaPerUnit: true,
+        stokUnit: true,
+        isActive: true,
+      },
     });
 
     const transaksi = await prisma.transaksi.findMany({
@@ -528,16 +536,24 @@ export async function getBankSampahDetail(bankSampahId: string) {
       include: {
         nasabah: {
           include: {
-            person: {
+            person: { select: { nama: true } },
+          },
+        },
+        detailTransaksi: {
+          include: {
+            inventarisSampah: {
               select: {
-                nama: true,
+                id: true,
+                jenisSampah: true,
+                satuan: true,
+                hargaPerUnit: true,
               },
             },
           },
         },
       },
       orderBy: { createdAt: "desc" },
-      take: 50, // Limit to latest 50 transactions
+      take: 50,
     });
 
     const totalPemasukan = await prisma.transaksi.aggregate({
@@ -564,8 +580,9 @@ export async function getBankSampahDetail(bankSampahId: string) {
       _sum: { totalNilai: true },
     });
 
+    // total stok terkumpul -> sum stokUnit (bukan stokKg)
     const totalStokTerkumpul = inventaris.reduce(
-      (sum, item) => sum + item.stokKg,
+      (sum, item) => sum + (item.stokUnit ?? 0),
       0,
     );
 
@@ -593,6 +610,18 @@ export async function getBankSampahDetail(bankSampahId: string) {
       keterangan: t.keterangan,
       createdAt: t.createdAt,
       nasabahNama: t.nasabah?.person?.nama || "Sistem",
+      detailTransaksi:
+        t.detailTransaksi?.map((d) => ({
+          id: d.id,
+          jumlahUnit: d.jumlahUnit, // sesuai schema baru
+          hargaPerUnit: d.hargaPerUnit,
+          subtotal: d.subtotal,
+          inventarisSampah: {
+            id: d.inventarisSampah?.id,
+            jenisSampah: d.inventarisSampah?.jenisSampah,
+            satuan: d.inventarisSampah?.satuan,
+          },
+        })) || [],
     }));
 
     const data = {
@@ -910,16 +939,23 @@ export async function updateInventarisSampah(formData: FormData) {
 
     const inventarisId = formData.get("inventarisId") as string;
     const jenisSampah = formData.get("jenisSampah") as string;
-    const hargaPerKg = formData.get("hargaPerKg") as string;
-    const stokKg = formData.get("stokKg") as string;
+    const hargaPerUnit = formData.get("hargaPerUnit") as string;
+    const stokUnit = formData.get("stokUnit") as string;
+    const satuan = formData.get("satuan") as string;
     const isActive = formData.get("isActive") === "true";
 
-    if (!inventarisId || !jenisSampah || !hargaPerKg || !stokKg) {
+    if (
+      !inventarisId ||
+      !jenisSampah ||
+      !hargaPerUnit ||
+      !stokUnit ||
+      !satuan
+    ) {
       return { success: false, error: "Semua field wajib diisi" };
     }
 
-    const harga = Number.parseFloat(hargaPerKg);
-    const stok = Number.parseFloat(stokKg);
+    const harga = Number.parseFloat(hargaPerUnit);
+    const stok = Number.parseFloat(stokUnit);
 
     if (isNaN(harga) || isNaN(stok) || harga < 0 || stok < 0) {
       return {
@@ -940,8 +976,9 @@ export async function updateInventarisSampah(formData: FormData) {
       where: { id: inventarisId },
       data: {
         jenisSampah,
-        hargaPerKg: harga,
-        stokKg: stok,
+        satuan,
+        hargaPerUnit: harga,
+        stokUnit: stok,
         isActive,
       },
     });
@@ -971,15 +1008,22 @@ export async function addInventarisSampah(formData: FormData) {
 
     const bankSampahId = formData.get("bankSampahId") as string;
     const jenisSampah = formData.get("jenisSampah") as string;
-    const hargaPerKg = formData.get("hargaPerKg") as string;
-    const stokKg = formData.get("stokKg") as string;
+    const hargaPerUnit = formData.get("hargaPerUnit") as string;
+    const stokUnit = formData.get("stokUnit") as string; // hidden = 0
+    const satuan = formData.get("satuan") as string;
 
-    if (!bankSampahId || !jenisSampah || !hargaPerKg || !stokKg) {
+    if (
+      !bankSampahId ||
+      !jenisSampah ||
+      !hargaPerUnit ||
+      !stokUnit ||
+      !satuan
+    ) {
       return { success: false, error: "Semua field wajib diisi" };
     }
 
-    const harga = Number.parseFloat(hargaPerKg);
-    const stok = Number.parseFloat(stokKg);
+    const harga = Number.parseFloat(hargaPerUnit);
+    const stok = Number.parseFloat(stokUnit);
 
     if (isNaN(harga) || isNaN(stok) || harga < 0 || stok < 0) {
       return {
@@ -988,21 +1032,11 @@ export async function addInventarisSampah(formData: FormData) {
       };
     }
 
-    const bankSampah = await prisma.bankSampah.findUnique({
-      where: { id: bankSampahId },
-    });
-
-    if (!bankSampah) {
-      return { success: false, error: "Bank sampah tidak ditemukan" };
-    }
-
     const existingInventaris = await prisma.inventarisSampah.findFirst({
       where: {
         bankSampahId,
-        jenisSampah: {
-          equals: jenisSampah,
-          mode: "insensitive",
-        },
+        jenisSampah: { equals: jenisSampah, mode: "insensitive" },
+        satuan,
       },
     });
 
@@ -1017,8 +1051,9 @@ export async function addInventarisSampah(formData: FormData) {
       data: {
         bankSampahId,
         jenisSampah,
-        hargaPerKg: harga,
-        stokKg: stok,
+        satuan,
+        hargaPerUnit: harga,
+        stokUnit: stok,
         isActive: true,
       },
     });
