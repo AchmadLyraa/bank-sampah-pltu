@@ -12,7 +12,7 @@
     "db:seed": "tsx prisma/seed.ts"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed-controller.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.0",

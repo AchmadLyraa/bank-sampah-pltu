@@ -6,22 +6,23 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding Controller Only...");
 
-  const hashedPassword = await bcrypt.hash("k4lt1mt3luk", 10);
-
-  const controller = await prisma.controller.upsert({
+  // HAPUS CONTROLLER LAMA
+  await prisma.controller.deleteMany({
     where: { email: "admin@controller.com" },
-    update: {
-      password: hashedPassword, // selalu di-update biar fresh
-    },
-    create: {
+  });
+
+  const hashedPassword = await bcrypt.hash("kaltimteluk!", 10);
+
+  const controller = await prisma.controller.create({
+    data: {
       nama: "Super Admin Controller",
       email: "admin@controller.com",
       password: hashedPassword,
     },
   });
 
-  console.log("✅ Controller created/updated");
-  console.log(`LOGIN: ${controller.email} / k4lt1mt3luk`);
+  console.log("✅ Controller recreated from scratch");
+  console.log(`LOGIN: ${controller.email} / kaltimteluk!`);
 }
 
 main()
