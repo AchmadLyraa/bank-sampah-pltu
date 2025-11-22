@@ -13,7 +13,7 @@ export default async function BankSampahProfilePage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user || session.user.userType !== "bank-sampah") {
-    redirect("/");
+    redirect("/api/auth/signout?callbackUrl=/");
   }
 
   const bankSampah = await prisma.bankSampah.findUnique({
@@ -30,7 +30,7 @@ export default async function BankSampahProfilePage() {
   });
 
   if (!bankSampah) {
-    redirect("/");
+    redirect("/api/auth/signout?callbackUrl=/");
   }
 
   return (

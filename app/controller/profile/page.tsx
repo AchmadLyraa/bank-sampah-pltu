@@ -10,7 +10,7 @@ export default async function ControllerProfilePage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user || session.user.userType !== "controller") {
-    redirect("/");
+    redirect("/api/auth/signout?callbackUrl=/");
   }
 
   const controller = await prisma.controller.findUnique({
@@ -19,7 +19,7 @@ export default async function ControllerProfilePage() {
   });
 
   if (!controller) {
-    redirect("/");
+    redirect("/api/auth/signout?callbackUrl=/");
   }
 
   return (

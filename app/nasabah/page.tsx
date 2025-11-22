@@ -10,7 +10,7 @@ export default async function NasabahPage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user || session.user.userType !== "nasabah") {
-    redirect("/");
+    redirect("/api/auth/signout?callbackUrl=/");
   }
 
   const selectedBankSampahId =
@@ -18,7 +18,7 @@ export default async function NasabahPage() {
     session.user.bankSampahRelations?.[0]?.bankSampahId;
 
   if (!selectedBankSampahId) {
-    redirect("/");
+    redirect("/api/auth/signout?callbackUrl=/");
   }
 
   const { nasabah, transaksi, inventarisList, error } =
