@@ -270,7 +270,7 @@ export function BankSampahDetailDialog({
                   <CardContent className="p-4 text-center">
                     <Package className="h-8 w-8 mx-auto mb-2 text-orange-600" />
                     <p className="text-2xl font-bold">
-                      {data.statistics.totalStokTerkumpul} unit
+                      {data.statistics.totalStokTerkumpul.toFixed(2)} unit
                     </p>
                     <p className="text-sm text-gray-600">Stok Terkumpul</p>
                   </CardContent>

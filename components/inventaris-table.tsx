@@ -423,7 +423,7 @@ function SellWasteForm({
             <Input
               type="number"
               step={item.satuan === "KG" ? "0.1" : "1"}
-              min="1"
+              min={item.satuan === "KG" ? "0.1" : "1"}
               max={item.stokUnit}
               placeholder="0"
               value={jumlahUnit || ""}

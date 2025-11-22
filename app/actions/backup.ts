@@ -81,7 +81,7 @@ export async function getBackupData(bankSampahId: string) {
     };
 
     // 🆕 FIX UTAMA: Ambil detailTransaksi lalu agregasi manual (lebih robust dari groupBy yang bisa kosong)
-    const [penjualanDetail, pembelianDetail, totalsFallback] =
+    const [penjualanDetail, pembelianDetail, totalsFallback, transaksiDetail] =
       await Promise.all([
         prisma.detailTransaksi.findMany({
           where: { transaksi: { bankSampahId, jenis: "PENJUALAN_SAMPAH" } },
@@ -114,6 +114,24 @@ export async function getBackupData(bankSampahId: string) {
           },
           _sum: { totalNilai: true },
           _count: { _all: true },
+        }),
+        prisma.transaksi.findMany({
+          where: { bankSampahId },
+          include: {
+            nasabah: { select: { person: { select: { nama: true } } } },
+            detailTransaksi: {
+              include: {
+                inventarisSampah: {
+                  select: {
+                    jenisSampah: true,
+                    satuan: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 100,
         }),
       ]);
 
@@ -203,6 +221,7 @@ export async function getBackupData(bankSampahId: string) {
       nasabahList,
       inventarisList,
       transaksiList,
+      transaksiDetail,
       summary: {
         totalNasabah,
         totalSaldo,

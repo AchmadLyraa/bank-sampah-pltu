@@ -15,6 +15,7 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     inventarisList,
     summary,
     generatedAt,
+    transaksiDetail,
     // 🆕 Ambil ringkasan penjualan & pembelian dari server action
     penjualanSummary = [],
     pembelianSummary = [],
@@ -497,6 +498,77 @@ export async function generateBackupPDF(data: any): Promise<Buffer> {
     doc.setTextColor(...grayColor);
     doc.text(bankSampah?.nama || "Bank Sampah", 20, footerY + 12);
   }
+
+  // 📜 Page 5: RIWAYAT TRANSAKSI (100 TERAKHIR)
+  doc.addPage();
+  yPosition = 25;
+
+  doc.setFontSize(16);
+  doc.setTextColor(...primaryColor);
+  doc.text(
+    `RIWAYAT TRANSAKSI (${transaksiDetail.length} transaksi terakhir)`,
+    20,
+    yPosition,
+  );
+  yPosition += 8;
+
+  const transaksiRows = transaksiDetail.map((t: any, idx: number) => [
+    (idx + 1).toString(),
+    new Date(t.createdAt).toLocaleDateString("id-ID"),
+    t.jenis === "PEMASUKAN"
+      ? "Pemasukan"
+      : t.jenis === "PENGELUARAN"
+        ? "Pengeluaran"
+        : t.jenis === "PENJUALAN_SAMPAH"
+          ? "Penjualan"
+          : t.jenis === "PEMASUKAN_UMUM"
+            ? "Pemasukan Umum"
+            : "Pengeluaran Umum",
+    t.nasabah?.person?.nama || "Bank Sampah",
+    t.keterangan || "-",
+    t.detailTransaksi
+      ?.map(
+        (d: any) =>
+          `${d.inventarisSampah?.jenisSampah}: ${d.jumlahUnit} ${d.inventarisSampah?.satuan || "kg"}`,
+      )
+      .join(", ") || "-",
+    `Rp ${t.totalNilai.toLocaleString("id-ID")}`,
+  ]);
+
+  doc.autoTable({
+    startY: yPosition,
+    head: [
+      [
+        "No",
+        "Tanggal",
+        "Jenis",
+        "User",
+        "Keterangan",
+        "Detail Barang",
+        "Nilai",
+      ],
+    ],
+    body: transaksiRows,
+    theme: "grid",
+    headStyles: {
+      fillColor: primaryColor,
+      textColor: [255, 255, 255],
+      fontSize: 8,
+      fontStyle: "bold",
+      halign: "center",
+    },
+    bodyStyles: { fontSize: 7, textColor: [0, 0, 0] },
+    columnStyles: {
+      0: { cellWidth: 10, halign: "center" },
+      1: { cellWidth: 18, halign: "center" },
+      2: { cellWidth: 20, halign: "center" },
+      3: { cellWidth: 25 },
+      4: { cellWidth: 20 },
+      5: { cellWidth: 40 },
+      6: { cellWidth: 27, halign: "right" },
+    },
+    margin: { left: 20, right: 20 },
+  });
 
   // Convert to buffer
   const pdfArrayBuffer = doc.output("arraybuffer");
