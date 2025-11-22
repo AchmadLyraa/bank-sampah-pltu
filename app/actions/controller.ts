@@ -1135,3 +1135,52 @@ export async function updateBankSampahCoordinate(
     return { success: false, error: "Terjadi kesalahan sistem" };
   }
 }
+
+export async function getBankSampahTransaksi(
+  bankSampahId: string,
+  page: number = 1,
+  itemsPerPage: number = 20,
+) {
+  try {
+    const skip = (page - 1) * itemsPerPage;
+
+    const totalTransaksi = await prisma.transaksi.count({
+      where: { bankSampahId },
+    });
+
+    const transaksi = await prisma.transaksi.findMany({
+      where: { bankSampahId },
+      include: {
+        nasabah: { select: { person: { select: { nama: true } } } },
+        detailTransaksi: {
+          include: {
+            inventarisSampah: {
+              select: {
+                jenisSampah: true,
+                satuan: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: itemsPerPage,
+    });
+
+    const totalPages = Math.ceil(totalTransaksi / itemsPerPage);
+
+    return {
+      success: true,
+      data: {
+        transaksi,
+        currentPage: page,
+        totalPages,
+        totalItems: totalTransaksi,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching transaksi:", error);
+    return { success: false, error: "Gagal mengambil data transaksi" };
+  }
+}

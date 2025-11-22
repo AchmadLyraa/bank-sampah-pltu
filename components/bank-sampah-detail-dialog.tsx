@@ -38,6 +38,9 @@ import { AddNasabahDialog } from "@/components/add-nasabah-dialog";
 import { EditInventarisDialog } from "@/components/edit-inventaris-dialog";
 import { AddInventarisDialog } from "@/components/add-inventaris-dialog";
 import BackupDownloadButtonController from "@/components/backup-download-button-controller";
+import TransaksiTable from "@/components/transaksi-table";
+import { getBankSampahTransaksi } from "@/app/actions/controller";
+import { useSearchParams } from "next/navigation";
 
 interface BankSampahDetailDialogProps {
   open: boolean;
@@ -62,6 +65,9 @@ export function BankSampahDetailDialog({
   const [selectedInventaris, setSelectedInventaris] = useState<any>(null);
   const [editCoordinateOpen, setEditCoordinateOpen] = useState(false);
   const [coordinateLoading, setCoordinateLoading] = useState(false);
+  const [transactionPage, setTransactionPage] = useState(1);
+  const [transactionData, setTransactionData] = useState<any>(null);
+  const [transactionLoading, setTransactionLoading] = useState(false);
 
   const fetchDetail = async () => {
     if (!open || !bankSampahId) return;
@@ -94,6 +100,30 @@ export function BankSampahDetailDialog({
       console.error("Error toggling nasabah status:", error);
     }
   };
+
+  const fetchTransactions = async (page: number = 1) => {
+    setTransactionLoading(true);
+    try {
+      const result = await getBankSampahTransaksi(bankSampahId, page, 20);
+      if (result.success) {
+        setTransactionData(result.data);
+        setTransactionPage(page);
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    } finally {
+      setTransactionLoading(false);
+    }
+  };
+
+  const searchParams = useSearchParams();
+  const pageFromUrl = Number(searchParams.get("page")) || 1;
+
+  useEffect(() => {
+    if (open && bankSampahId) {
+      fetchTransactions(pageFromUrl);
+    }
+  }, [open, bankSampahId, pageFromUrl]);
 
   const handleEditInventaris = (inventaris: any) => {
     setSelectedInventaris(inventaris);
@@ -282,7 +312,7 @@ export function BankSampahDetailDialog({
               </div>
 
               <Tabs defaultValue="nasabah" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3 overflow-auto">
                   <TabsTrigger value="nasabah">Detail Nasabah</TabsTrigger>
                   <TabsTrigger value="inventaris">
                     Inventaris Sampah
@@ -431,7 +461,20 @@ export function BankSampahDetailDialog({
                   </div>
                 </TabsContent>
                 <TabsContent value="transaksi" className="space-y-4">
-                  skidipada yes!
+                  {transactionLoading ? (
+                    <div className="text-center py-8">Loading transaksi...</div>
+                  ) : transactionData ? (
+                    <TransaksiTable
+                      transaksi={transactionData.transaksi}
+                      currentPage={transactionData.currentPage}
+                      totalPages={transactionData.totalPages}
+                      totalItems={transactionData.totalItems}
+                    />
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      Gagal memuat riwayat transaksi
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
