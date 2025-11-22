@@ -556,6 +556,12 @@ export async function getBankSampahDetail(bankSampahId: string) {
       take: 50,
     });
 
+    const transaksiAgg = await prisma.transaksi.groupBy({
+      by: ["jenis"],
+      where: { bankSampahId },
+      _sum: { totalNilai: true },
+    });
+
     const totalPemasukan = await prisma.transaksi.aggregate({
       where: {
         bankSampahId,
@@ -624,6 +630,21 @@ export async function getBankSampahDetail(bankSampahId: string) {
         })) || [],
     }));
 
+    const sumByJenis: Record<string, number> = transaksiAgg.reduce(
+      (acc, t) => {
+        acc[t.jenis] = t._sum.totalNilai || 0;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    const saldoNasabah = totalSaldo; // yang udah ada
+
+    const saldoBankSampah =
+      (sumByJenis["PENJUALAN_SAMPAH"] || 0) +
+      (sumByJenis["PEMASUKAN_UMUM"] || 0) -
+      ((sumByJenis["PEMASUKAN"] || 0) + (sumByJenis["PENGELUARAN_UMUM"] || 0));
+
     const data = {
       bankSampah,
       statistics: {
@@ -631,8 +652,11 @@ export async function getBankSampahDetail(bankSampahId: string) {
         nasabahAktif,
         nasabahNonaktif,
         totalSaldo,
+        saldoNasabah,
         totalInventaris,
         totalTransaksi,
+        saldoBankSampah,
+        totalGabungan: saldoNasabah + saldoBankSampah,
         totalPemasukan: totalPemasukan._sum.totalNilai || 0,
         totalPenjualan: totalPenjualan._sum.totalNilai || 0,
         totalPenarikan: totalPenarikan._sum.totalNilai || 0,

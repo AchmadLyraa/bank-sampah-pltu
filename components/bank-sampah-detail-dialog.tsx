@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,6 +53,7 @@ export function BankSampahDetailDialog({
   bankSampahName,
 }: BankSampahDetailDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [openSaldo, setOpenSaldo] = useState(false);
   const [data, setData] = useState<any>(null);
   const [nasabahSearch, setNasabahSearch] = useState("");
   const [addNasabahOpen, setAddNasabahOpen] = useState(false);
@@ -222,9 +224,15 @@ export function BankSampahDetailDialog({
                   <CardContent className="p-4 text-center">
                     <Wallet className="h-8 w-8 mx-auto mb-2 text-green-600" />
                     <p className="text-lg font-bold">
-                      {formatCurrency(data.statistics.totalSaldo)}
+                      {formatCurrency(data.statistics.totalGabungan)}
                     </p>
-                    <p className="text-sm text-gray-600">Total Saldo Nasabah</p>
+                    <p className="text-sm text-gray-600">Total Saldo</p>
+                    <Button
+                      onClick={() => setOpenSaldo(true)}
+                      className="mt-3 w-full bg-green-600 text-white hover:bg-green-700"
+                    >
+                      Lihat Detail
+                    </Button>
                   </CardContent>
                 </Card>
 
@@ -279,6 +287,7 @@ export function BankSampahDetailDialog({
                   <TabsTrigger value="inventaris">
                     Inventaris Sampah
                   </TabsTrigger>
+                  <TabsTrigger value="transaksi">Riwayat Transaksi</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="nasabah" className="space-y-4">
@@ -421,6 +430,9 @@ export function BankSampahDetailDialog({
                     ))}
                   </div>
                 </TabsContent>
+                <TabsContent value="transaksi" className="space-y-4">
+                  skidipada yes!
+                </TabsContent>
               </Tabs>
             </div>
           ) : (
@@ -429,6 +441,36 @@ export function BankSampahDetailDialog({
             </div>
           )}
         </DialogContent>
+      </Dialog>
+
+      <Dialog open={openSaldo} onOpenChange={setOpenSaldo}>
+        {data && (
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Detail Saldo</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Saldo Bank Sampah</span>
+                <span className="font-bold">
+                  {formatCurrency(data.statistics.saldoBankSampah)}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Saldo Nasabah</span>
+                <span className="font-bold">
+                  {formatCurrency(data.statistics.saldoNasabah)}
+                </span>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button onClick={() => setOpenSaldo(false)}>Tutup</Button>
+            </DialogFooter>
+          </DialogContent>
+        )}
       </Dialog>
 
       <AddNasabahDialog
