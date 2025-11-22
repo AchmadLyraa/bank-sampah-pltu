@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -38,6 +46,7 @@ export default function PenimbanganForm({
   ]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const addItem = () => {
     setItems([...items, { inventarisSampahId: "", jumlahUnit: 0 }]);
@@ -79,6 +88,11 @@ export default function PenimbanganForm({
       return;
     }
 
+    setShowConfirm(true);
+  };
+
+  const handleConfirm = async () => {
+    setShowConfirm(false);
     setLoading(true);
     try {
       await penimbanganAction({
@@ -233,6 +247,69 @@ export default function PenimbanganForm({
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Simpan Penimbangan
           </Button>
+          <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Konfirmasi Penimbangan</DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm font-medium">
+                    Nasabah:{" "}
+                    {nasabahList.find((n) => n.id === selectedNasabah)?.person
+                      ?.nama || "-"}
+                  </p>
+                </div>
+
+                {items
+                  .filter(
+                    (item) => item.inventarisSampahId && item.jumlahUnit > 0,
+                  )
+                  .map((item, idx) => {
+                    const inv = inventarisList.find(
+                      (i) => i.id === item.inventarisSampahId,
+                    );
+                    return (
+                      <div
+                        key={idx}
+                        className="p-3 bg-gray-50 rounded-lg text-sm"
+                      >
+                        <p className="font-medium">{inv?.jenisSampah}</p>
+                        <p className="text-gray-600">
+                          {item.jumlahUnit}{" "}
+                          {inv?.satuan === "KG" ? "kg" : "pcs"} @ Rp{" "}
+                          {inv?.hargaPerUnit.toLocaleString()}
+                        </p>
+                        <p className="text-green-600 font-semibold">
+                          = Rp{" "}
+                          {(
+                            item.jumlahUnit * (inv?.hargaPerUnit || 0)
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                    );
+                  })}
+
+                <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-sm text-gray-600">Total:</p>
+                  <p className="text-xl font-bold text-green-600">
+                    Rp {calculateTotal().toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowConfirm(false)}>
+                  Batal
+                </Button>
+                <Button onClick={handleConfirm} disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Ya, Simpan
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </form>
       </CardContent>
     </Card>
